@@ -1,0 +1,125 @@
+{
+  "card_id": "poe-class-necromancer-overview",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "concept_card",
+  "category": "class_ascendancy",
+  "subcategory": "ascendancy_overview",
+  "title": "死灵师概览：为什么它适合世界线首期 PoE 模块",
+  "summary": "死灵师是世界线 PoE 首批样本里最适合展示低预算、成长清晰和召唤玩法闭环的升华。它更依赖召唤物规模、宝石等级与机制理解，而不是昂贵装备。",
+  "keywords": [
+    "女巫",
+    "死灵师",
+    "升华",
+    "召唤",
+    "开荒"
+  ],
+  "tags": [
+    "Ascendancy",
+    "Minion",
+    "Starter",
+    "Witch"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "universal",
+  "experience_level": "new",
+  "playstyle": [
+    "minion",
+    "spell",
+    "tanky"
+  ],
+  "budget_level": "low",
+  "content_goals": [
+    "league_start",
+    "mapping",
+    "general"
+  ],
+  "class_name": "Witch",
+  "ascendancy": "Necromancer",
+  "skill_gems": [
+    "Summon Raging Spirit",
+    "Raise Zombie",
+    "Summon Skeletons"
+  ],
+  "support_gems": [
+    "Minion Damage Support",
+    "Unleash Support",
+    "Melee Splash Support"
+  ],
+  "unique_items": [],
+  "key_passives": [
+    "Minion Instability"
+  ],
+  "mechanics": [
+    "minion_scaling",
+    "minion_survivability",
+    "gem_level"
+  ],
+  "build_name": "Necromancer Minion Starter",
+  "build_id": "necro-minion-starter",
+  "recommended_for": [
+    "新手开荒",
+    "低预算玩家",
+    "想以召唤玩法稳定推进剧情和地图的玩家"
+  ],
+  "avoid_for": [
+    "追求极限跑图速度的玩家",
+    "更偏好本体站桩爆发操作的玩家"
+  ],
+  "answer_template": "build_recommendation",
+  "graph_entities": [
+    "Witch",
+    "Necromancer",
+    "Summon Raging Spirit"
+  ],
+  "graph_relations": [
+    "ASCENDS_TO",
+    "CORE_SKILL",
+    "DOCUMENTED_BY"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/witch-necromancer-overview",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "如果世界线只保留一条最适合答辩演示的新手路线，死灵师通常是最稳的一条，因为它能同时展示职业、升华、技能、装备与机制的完整链路。",
+    "sections": [
+      {
+        "heading": "核心定位",
+        "points": [
+          "死灵师通过召唤物承接主要输出，角色本体更像是调度者和生存中枢。",
+          "它的伤害成长与宝石等级、召唤物数量、辅助连接和关键机制理解关系更大。",
+          "装备门槛通常比高端弓系或法术爆发流派更低，适合做首批样本。"
+        ]
+      },
+      {
+        "heading": "为什么适合新手",
+        "points": [
+          "剧情期的容错更高，不需要频繁贴脸站位。",
+          "技能升级路线直观，适合做成长型知识卡和 FAQ。",
+          "很容易把职业、升华、召唤机制和装备选择串成图谱链路。"
+        ]
+      },
+      {
+        "heading": "常见误区",
+        "points": [
+          "误以为召唤玩法完全不需要角色本体防御，结果进黄图后连续猝死。",
+          "只堆召唤物伤害，不补宝石等级、光环与基础抗性。",
+          "过早追求复杂终局形态，忽略剧情和前期地图的稳定推进。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "新手第一只角色为什么适合死灵师？",
+    "死灵师开荒最该优先补什么？",
+    "召唤玩法是不是一定便宜又无脑？"
+  ],
+  "next_cards": [
+    "poe-build-srs-necromancer",
+    "poe-progression-witch-campaign",
+    "poe-rec-low-budget-minion"
+  ]
+}

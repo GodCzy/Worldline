@@ -1,0 +1,113 @@
+{
+  "card_id": "poe-progression-witch-campaign",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "progression_card",
+  "category": "progression_growth",
+  "subcategory": "campaign_to_mapping",
+  "title": "女巫从剧情到地图的过渡路线",
+  "summary": "这张成长卡把女巫召唤开荒的重点拆成剧情、第一次升华、进图前准备和黄图过渡四个阶段，方便后续 Agent 做分阶段回答。",
+  "keywords": [
+    "女巫",
+    "成长路线",
+    "剧情",
+    "地图",
+    "开荒"
+  ],
+  "tags": [
+    "Progression",
+    "Witch",
+    "Campaign",
+    "Mapping"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "campaign",
+  "experience_level": "new",
+  "playstyle": [
+    "minion",
+    "spell",
+    "tanky"
+  ],
+  "budget_level": "low",
+  "content_goals": [
+    "league_start",
+    "mapping"
+  ],
+  "class_name": "Witch",
+  "ascendancy": "Necromancer",
+  "skill_gems": [
+    "Summon Raging Spirit",
+    "Raise Zombie"
+  ],
+  "support_gems": [
+    "Minion Damage Support",
+    "Unleash Support"
+  ],
+  "mechanics": [
+    "phase_based_progression",
+    "resistance_cap",
+    "labyrinth_timing"
+  ],
+  "build_name": "Witch Campaign to Maps",
+  "build_id": "witch-campaign-to-maps",
+  "recommended_for": [
+    "想知道每个阶段先做什么的新手"
+  ],
+  "avoid_for": [],
+  "answer_template": "progression_guide",
+  "graph_entities": [
+    "Class:Witch",
+    "Ascendancy:Necromancer",
+    "ContentGoal:League Start"
+  ],
+  "graph_relations": [
+    "ASCENDS_TO",
+    "RECOMMENDS_NEXT",
+    "DOCUMENTED_BY"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/witch-campaign-to-maps",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "PoE 新手最容易卡住的不是不会打怪，而是不知道当前阶段真正该优先补什么。这张卡就是用来把阶段目标拉直。",
+    "sections": [
+      {
+        "heading": "剧情期",
+        "points": [
+          "优先保证主技能、连法和基础移动手感。",
+          "不要为了看起来更强而提前切入复杂终局玩法。",
+          "角色本体要及时补抗性和生命，不要把全部资源都丢给输出。"
+        ]
+      },
+      {
+        "heading": "第一次升华与进图前",
+        "points": [
+          "升华节点的意义是稳定 Build 主方向，而不是立刻解决所有问题。",
+          "进图前先确保抗性、血量和技能连法处于可用状态。",
+          "如果推进开始发虚，优先检查基础防御和技能等级。"
+        ]
+      },
+      {
+        "heading": "黄图过渡",
+        "points": [
+          "黄图不是强行冲伤害的阶段，而是补齐防御和结构稳定性的阶段。",
+          "开始接触更多复杂机制时，生存层和移动习惯要同步升级。",
+          "如果出现连续猝死，优先回看 FAQ 与机制卡，不要盲目硬冲。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "女巫剧情期最重要的三件事是什么？",
+    "什么时候从剧情推进切到地图准备？",
+    "黄图前为什么要先补防御而不是盲目换伤害装？"
+  ],
+  "next_cards": [
+    "poe-build-srs-necromancer",
+    "poe-faq-labyrinth-timing",
+    "poe-faq-yellow-map-defense"
+  ]
+}

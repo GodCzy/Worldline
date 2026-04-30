@@ -1,0 +1,99 @@
+{
+  "card_id": "poe-faq-labyrinth-timing",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "faq_card",
+  "category": "faq_pitfall",
+  "subcategory": "ascendancy_timing",
+  "title": "什么时候做迷宫和拿升华点更合理",
+  "summary": "迷宫不是越晚越好，也不是一解锁就必须硬冲。更合理的做法是根据当前强度、推进节奏和升华收益判断时机。",
+  "keywords": [
+    "迷宫",
+    "升华",
+    "时间点",
+    "新手",
+    "FAQ"
+  ],
+  "tags": [
+    "FAQ",
+    "Labyrinth",
+    "Ascendancy"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "campaign",
+  "experience_level": "new",
+  "playstyle": [
+    "melee",
+    "ranged",
+    "spell",
+    "minion"
+  ],
+  "budget_level": "universal",
+  "content_goals": [
+    "league_start",
+    "general"
+  ],
+  "mechanics": [
+    "labyrinth_timing",
+    "ascendancy_power_spike"
+  ],
+  "recommended_for": [
+    "不知道什么时候该做迷宫的新手"
+  ],
+  "avoid_for": [],
+  "answer_template": "faq_quick_answer",
+  "graph_entities": [
+    "Ascendancy:Necromancer",
+    "Ascendancy:Deadeye",
+    "Ascendancy:Juggernaut"
+  ],
+  "graph_relations": [
+    "ASCENDS_TO",
+    "RECOMMENDS_NEXT"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/labyrinth-timing-faq",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "升华点很重要，但迷宫的正确时机不是固定等级，而是当前打得过且拿到后能明显提升推进效率。",
+    "sections": [
+      {
+        "heading": "判断原则",
+        "points": [
+          "如果当前推进平稳、角色有明显升华收益，就应该尽量及时完成迷宫。",
+          "如果角色脆弱、手感混乱、抗性未补，硬冲迷宫只会增加失败成本。",
+          "迷宫是成长节点，不是独立挑战玩法。"
+        ]
+      },
+      {
+        "heading": "新手最常见误区",
+        "points": [
+          "把迷宫无限往后拖，结果错过关键升华带来的成长窗口。",
+          "一解锁就硬打，忽略了当下 Build 是否具备基本稳定性。",
+          "只把迷宫看成操作测试，而不是成长路线的一部分。"
+        ]
+      },
+      {
+        "heading": "最小建议",
+        "points": [
+          "当角色能稳定推进当前区域时，再把迷宫作为阶段任务完成。",
+          "优先把迷宫收益理解为让 Build 更完整，而不是额外奖励。",
+          "如果不确定时机，先回看成长路线卡，再看职业或升华概览卡。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "迷宫是不是越早打越好？",
+    "什么时候拿升华点最合适？",
+    "如果打迷宫总翻车，我应该先补什么？"
+  ],
+  "next_cards": [
+    "poe-progression-witch-campaign",
+    "poe-class-necromancer-overview",
+    "poe-class-deadeye-overview"
+  ]
+}

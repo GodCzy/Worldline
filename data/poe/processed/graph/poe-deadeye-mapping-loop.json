@@ -1,0 +1,139 @@
+{
+  "graph_id": "poe-deadeye-mapping-loop",
+  "theme": "poe",
+  "module": "poe",
+  "label": "锐眼清图闭环",
+  "focus": "returning_player_ranged_mapping",
+  "entry_card_id": "poe-class-deadeye-overview",
+  "source_card_ids": [
+    "poe-class-deadeye-overview",
+    "poe-build-lightning-arrow-deadeye",
+    "poe-mechanic-spell-suppression",
+    "poe-faq-yellow-map-defense"
+  ],
+  "nodes": [
+    {
+      "id": "class:ranger",
+      "type": "Class",
+      "label": "Ranger",
+      "group": "class",
+      "card_refs": [
+        "poe-class-deadeye-overview"
+      ]
+    },
+    {
+      "id": "ascendancy:deadeye",
+      "type": "Ascendancy",
+      "label": "Deadeye",
+      "group": "ascendancy",
+      "card_refs": [
+        "poe-class-deadeye-overview",
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "id": "build:lightning-arrow-deadeye",
+      "type": "Build",
+      "label": "Lightning Arrow Deadeye",
+      "group": "build",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "id": "skill:lightning-arrow",
+      "type": "SkillGem",
+      "label": "Lightning Arrow",
+      "group": "skill",
+      "card_refs": [
+        "poe-class-deadeye-overview",
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "id": "mechanic:spell-suppression",
+      "type": "Mechanic",
+      "label": "Spell Suppression",
+      "group": "mechanic",
+      "card_refs": [
+        "poe-mechanic-spell-suppression",
+        "poe-faq-yellow-map-defense"
+      ]
+    },
+    {
+      "id": "card:poe-build-lightning-arrow-deadeye",
+      "type": "KnowledgeCard",
+      "label": "闪电箭锐眼 Build 卡",
+      "group": "card",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "id": "card:poe-faq-yellow-map-defense",
+      "type": "KnowledgeCard",
+      "label": "黄图生存 FAQ 卡",
+      "group": "card",
+      "card_refs": [
+        "poe-faq-yellow-map-defense"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "class:ranger",
+      "target": "ascendancy:deadeye",
+      "relation": "ASCENDS_TO",
+      "card_refs": [
+        "poe-class-deadeye-overview"
+      ]
+    },
+    {
+      "source": "ascendancy:deadeye",
+      "target": "build:lightning-arrow-deadeye",
+      "relation": "ENABLES_BUILD",
+      "card_refs": [
+        "poe-class-deadeye-overview",
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "source": "build:lightning-arrow-deadeye",
+      "target": "skill:lightning-arrow",
+      "relation": "CORE_SKILL",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "source": "build:lightning-arrow-deadeye",
+      "target": "mechanic:spell-suppression",
+      "relation": "SCALES_WITH",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye",
+        "poe-mechanic-spell-suppression"
+      ]
+    },
+    {
+      "source": "build:lightning-arrow-deadeye",
+      "target": "card:poe-build-lightning-arrow-deadeye",
+      "relation": "DOCUMENTED_BY",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye"
+      ]
+    },
+    {
+      "source": "card:poe-build-lightning-arrow-deadeye",
+      "target": "card:poe-faq-yellow-map-defense",
+      "relation": "RECOMMENDS_NEXT",
+      "card_refs": [
+        "poe-build-lightning-arrow-deadeye",
+        "poe-faq-yellow-map-defense"
+      ]
+    }
+  ],
+  "recommended_next_cards": [
+    "poe-mechanic-spell-suppression",
+    "poe-faq-yellow-map-defense"
+  ]
+}

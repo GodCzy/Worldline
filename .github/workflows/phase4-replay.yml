@@ -1,0 +1,205 @@
+name: Phase 4b M2 Replay
+
+on:
+  workflow_dispatch:
+    inputs:
+      api_base:
+        description: "API base URL used by replay"
+        required: false
+        default: "http://127.0.0.1:5050"
+        type: string
+      frontend_base:
+        description: "Frontend base URL used by replay"
+        required: false
+        default: "http://127.0.0.1:5173"
+        type: string
+      ui_source_dir:
+        description: "Existing L2 UI evidence directory on the runner workspace"
+        required: false
+        default: "artifacts/qa-phase4-m1-baseline-20260403-074449"
+        type: string
+      out_dir:
+        description: "Replay output root"
+        required: false
+        default: "artifacts"
+        type: string
+      artifact_prefix:
+        description: "Replay artifact prefix"
+        required: false
+        default: "qa-phase4-m2-harden"
+        type: string
+      timeout_seconds:
+        description: "HTTP timeout for runtime checks"
+        required: false
+        default: 12
+        type: number
+      skip_runtime:
+        description: "Skip L0 runtime checks for debugging only"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    name: M2 Replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+
+    env:
+      WORLDLINE_QA_ADMIN_TOKEN: ${{ secrets.WORLDLINE_QA_ADMIN_TOKEN }}
+      WORLDLINE_QA_USER_TOKEN: ${{ secrets.WORLDLINE_QA_USER_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Prepare replay manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          temp = Path(os.environ["RUNNER_TEMP"])
+          manifest = {
+              "api_base": os.environ["INPUT_API_BASE"],
+              "frontend_base": os.environ["INPUT_FRONTEND_BASE"],
+              "out_dir": os.environ["INPUT_OUT_DIR"],
+              "artifact_prefix": os.environ["INPUT_ARTIFACT_PREFIX"],
+              "timeout_seconds": int(os.environ["INPUT_TIMEOUT_SECONDS"]),
+              "skip_runtime": os.environ["INPUT_SKIP_RUNTIME"].lower() == "true",
+              "ui_source_dir": os.environ["INPUT_UI_SOURCE_DIR"],
+              "admin_token_file": str(temp / "worldline-admin.token"),
+              "user_token_file": str(temp / "worldline-user.token"),
+          }
+
+          (temp / "worldline-admin.token").write_text(os.environ["WORLDLINE_QA_ADMIN_TOKEN"].strip() + "\n", encoding="utf-8")
+          (temp / "worldline-user.token").write_text(os.environ["WORLDLINE_QA_USER_TOKEN"].strip() + "\n", encoding="utf-8")
+          (temp / "qa-phase4-m2-replay.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+          PY
+        env:
+          INPUT_API_BASE: ${{ inputs.api_base }}
+          INPUT_FRONTEND_BASE: ${{ inputs.frontend_base }}
+          INPUT_UI_SOURCE_DIR: ${{ inputs.ui_source_dir }}
+          INPUT_OUT_DIR: ${{ inputs.out_dir }}
+          INPUT_ARTIFACT_PREFIX: ${{ inputs.artifact_prefix }}
+          INPUT_TIMEOUT_SECONDS: ${{ inputs.timeout_seconds }}
+          INPUT_SKIP_RUNTIME: ${{ inputs.skip_runtime }}
+
+      - name: Run unified replay
+        id: replay
+        shell: bash
+        run: |
+          set -u
+          exit_code=0
+          attempts=0
+          max_attempts=2
+          while [ "$attempts" -lt "$max_attempts" ]; do
+            attempts=$((attempts + 1))
+
+            set +e
+            docker compose up -d --wait graph api 2>&1 | tee "$RUNNER_TEMP/qa-phase4-m2-prewarm.log"
+            prewarm_rc=${PIPESTATUS[0]}
+            set -e
+
+            replay_args=(--replay-manifest "$RUNNER_TEMP/qa-phase4-m2-replay.json")
+            if [ "$prewarm_rc" -ne 0 ]; then
+              replay_args+=(
+                --skip-runtime
+                --runtime-prewarm-failed-reason
+                "docker compose prewarm failed (rc=$prewarm_rc); see $RUNNER_TEMP/qa-phase4-m2-prewarm.log"
+              )
+            fi
+
+            set +e
+            python scripts/qa_phase4_m2_replay.py "${replay_args[@]}" | tee "$RUNNER_TEMP/qa-phase4-m2-replay.log"
+            exit_code=${PIPESTATUS[0]}
+            set -e
+            if [ "$exit_code" -eq 2 ] || [ "$exit_code" -eq 3 ]; then
+              if [ "$attempts" -lt "$max_attempts" ]; then
+                echo "Replay attempt $attempts failed with code $exit_code, retrying once..."
+                sleep 2
+                continue
+              fi
+            fi
+            break
+          done
+
+          run_dir="$(python - <<'PY'
+          from pathlib import Path
+          import os
+
+          log_path = Path(os.environ["RUNNER_TEMP"]) / "qa-phase4-m2-replay.log"
+          run_dir = ""
+          for line in log_path.read_text(encoding="utf-8", errors="replace").splitlines():
+              if "[m2-replay] run_dir:" in line:
+                  run_dir = line.split("[m2-replay] run_dir:", 1)[1].strip()
+          print(run_dir)
+          PY
+          )"
+
+          if [ -n "$run_dir" ] && [ -f "$RUNNER_TEMP/qa-phase4-m2-replay.json" ]; then
+            cp "$RUNNER_TEMP/qa-phase4-m2-replay.json" "$run_dir/00-replay-manifest.json"
+          fi
+
+          case "$exit_code" in
+            0) status="pass" ;;
+            2) status="runtime_failed" ;;
+            3) status="api_failed" ;;
+            4) status="ui_failed" ;;
+            5) status="summary_failed" ;;
+            6) status="precondition_failed" ;;
+            *) status="unknown" ;;
+          esac
+
+          {
+            echo "exit_code=$exit_code"
+            echo "status=$status"
+            echo "run_dir=$run_dir"
+            echo "attempts=$attempts"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## Phase 4b M2 Replay"
+            echo ""
+            echo "- exit_code: $exit_code"
+            echo "- status: $status"
+            echo "- attempts: $attempts"
+            echo "- run_dir: ${run_dir:-<missing>}"
+            echo ""
+            echo "### Exit code map"
+            echo "- 0: pass"
+            echo "- 2: runtime_failed"
+            echo "- 3: api_failed"
+            echo "- 4: ui_failed"
+            echo "- 5: summary_failed"
+            echo "- 6: precondition_failed"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit "$exit_code"
+
+      - name: Archive replay evidence
+        if: always() && steps.replay.outputs.run_dir != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-phase4-m2-replay-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.replay.outputs.run_dir }}
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Report missing replay directory
+        if: always() && steps.replay.outputs.run_dir == ''
+        shell: bash
+        run: |
+          echo "Replay run directory was not found in the log output." >> "$GITHUB_STEP_SUMMARY"
+

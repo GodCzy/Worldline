@@ -1,0 +1,99 @@
+{
+  "card_id": "poe-patch-phase1-build-selection",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "patch_note_card",
+  "category": "league_patch",
+  "subcategory": "seed_scope",
+  "title": "世界线 PoE 首批样本构筑选择说明",
+  "summary": "这不是面向真实赛季强度排名的补丁说明，而是面向世界线第一阶段演示的样本构筑选择说明。目标是覆盖召唤、远程清图、近战推进三条典型路径。",
+  "keywords": [
+    "世界线",
+    "样本构筑",
+    "PoE",
+    "版本说明",
+    "演示范围"
+  ],
+  "tags": [
+    "Patch",
+    "Seed",
+    "Scope"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "phase1-demo",
+  "game_stage": "universal",
+  "experience_level": "universal",
+  "playstyle": [
+    "minion",
+    "ranged",
+    "melee"
+  ],
+  "budget_level": "universal",
+  "content_goals": [
+    "general"
+  ],
+  "mechanics": [
+    "demo_scope",
+    "sample_selection",
+    "build_coverage"
+  ],
+  "recommended_for": [
+    "需要理解首批知识资产范围的开发者",
+    "准备答辩讲解世界线设计边界的用户"
+  ],
+  "avoid_for": [],
+  "answer_template": "faq_quick_answer",
+  "graph_entities": [
+    "Build:SRS Necromancer",
+    "Build:Lightning Arrow Deadeye",
+    "Build:Boneshatter Juggernaut"
+  ],
+  "graph_relations": [
+    "VALID_IN_PATCH",
+    "DOCUMENTED_BY"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/phase1-seed-build-selection",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "首批 PoE 样本不是为了证明谁是当前最强 Build，而是为了用最少的知识资产展示最完整的平台能力。",
+    "sections": [
+      {
+        "heading": "为什么选这三条 Build 线",
+        "points": [
+          "死灵师代表低预算、成长清晰和召唤玩法。",
+          "锐眼代表远程快刷、机动性和清图风格。",
+          "碎骨代表近战、命中、防御与连法取舍。"
+        ]
+      },
+      {
+        "heading": "这张卡的使用方式",
+        "points": [
+          "用于告诉后续实现和答辩叙事：当前阶段只覆盖三条典型体验，不追求全职业全赛季。",
+          "用于提醒开发时不要把实时赛季强度和演示样本混为一谈。",
+          "用于给推荐 MVP 提供明确的候选边界。"
+        ]
+      },
+      {
+        "heading": "后续如何扩展",
+        "points": [
+          "等知识导入与图谱闭环打通后，再逐步增加更多职业和赛季差异。",
+          "后续扩展应继续遵循 category、content_type 和 metadata 契约。",
+          "任何新增 Build 都应先回答：它能否补足当前样本的玩法覆盖空白。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "为什么世界线第一批只选三条 Build 路线？",
+    "这些样本是不是代表当前版本最强流派？",
+    "PoE 首批知识资产的范围边界是什么？"
+  ],
+  "next_cards": [
+    "poe-build-srs-necromancer",
+    "poe-build-lightning-arrow-deadeye",
+    "poe-build-boneshatter-juggernaut"
+  ]
+}

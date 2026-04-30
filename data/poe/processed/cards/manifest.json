@@ -1,0 +1,115 @@
+{
+  "module": "poe",
+  "version": "phase1-seed",
+  "card_count": 13,
+  "category_counts": {
+    "class_ascendancy": 2,
+    "skill_support": 1,
+    "item_build": 4,
+    "mechanic_defense": 2,
+    "progression_growth": 1,
+    "league_patch": 1,
+    "faq_pitfall": 2
+  },
+  "content_type_counts": {
+    "concept_card": 5,
+    "build_card": 3,
+    "progression_card": 1,
+    "faq_card": 2,
+    "patch_note_card": 1,
+    "recommendation_card": 1
+  },
+  "cards": [
+    {
+      "card_id": "poe-class-necromancer-overview",
+      "path": "data/poe/processed/cards/class_ascendancy/witch-necromancer-overview.json",
+      "content_type": "concept_card",
+      "category": "class_ascendancy",
+      "title": "死灵师概览：为什么它适合世界线首期 PoE 模块"
+    },
+    {
+      "card_id": "poe-class-deadeye-overview",
+      "path": "data/poe/processed/cards/class_ascendancy/ranger-deadeye-overview.json",
+      "content_type": "concept_card",
+      "category": "class_ascendancy",
+      "title": "锐眼概览：刷图效率与站位压力并存"
+    },
+    {
+      "card_id": "poe-mechanic-spell-suppression",
+      "path": "data/poe/processed/cards/mechanic_defense/spell-suppression-basics.json",
+      "content_type": "concept_card",
+      "category": "mechanic_defense",
+      "title": "法术压制基础：为什么它是敏系角色的核心防御"
+    },
+    {
+      "card_id": "poe-mechanic-accuracy-hit",
+      "path": "data/poe/processed/cards/mechanic_defense/accuracy-and-hit-basics.json",
+      "content_type": "concept_card",
+      "category": "mechanic_defense",
+      "title": "命中与准确度基础：伤害低不一定是面板问题"
+    },
+    {
+      "card_id": "poe-skill-boneshatter-support",
+      "path": "data/poe/processed/cards/skill_support/boneshatter-support-principles.json",
+      "content_type": "concept_card",
+      "category": "skill_support",
+      "title": "碎骨主技能连法原则：优先伤害、手感还是生存"
+    },
+    {
+      "card_id": "poe-build-srs-necromancer",
+      "path": "data/poe/processed/cards/item_build/srs-necromancer-league-start.json",
+      "content_type": "build_card",
+      "category": "item_build",
+      "title": "召唤愤怒狂灵死灵师：低预算开荒与过渡模板"
+    },
+    {
+      "card_id": "poe-build-lightning-arrow-deadeye",
+      "path": "data/poe/processed/cards/item_build/lightning-arrow-deadeye-mapper.json",
+      "content_type": "build_card",
+      "category": "item_build",
+      "title": "闪电箭锐眼：以清图效率为核心的远程方案"
+    },
+    {
+      "card_id": "poe-build-boneshatter-juggernaut",
+      "path": "data/poe/processed/cards/item_build/boneshatter-juggernaut-starter.json",
+      "content_type": "build_card",
+      "category": "item_build",
+      "title": "碎骨勇士：稳健近战开荒与黄图推进模板"
+    },
+    {
+      "card_id": "poe-progression-witch-campaign",
+      "path": "data/poe/processed/cards/progression_growth/witch-campaign-to-maps.json",
+      "content_type": "progression_card",
+      "category": "progression_growth",
+      "title": "女巫从剧情到地图的过渡路线"
+    },
+    {
+      "card_id": "poe-faq-yellow-map-defense",
+      "path": "data/poe/processed/cards/faq_pitfall/yellow-map-defense-checklist.json",
+      "content_type": "faq_card",
+      "category": "faq_pitfall",
+      "title": "为什么一进黄图就容易猝死"
+    },
+    {
+      "card_id": "poe-faq-labyrinth-timing",
+      "path": "data/poe/processed/cards/faq_pitfall/labyrinth-timing-faq.json",
+      "content_type": "faq_card",
+      "category": "faq_pitfall",
+      "title": "什么时候做迷宫和拿升华点更合理"
+    },
+    {
+      "card_id": "poe-patch-phase1-build-selection",
+      "path": "data/poe/processed/cards/league_patch/phase1-seed-build-selection.json",
+      "content_type": "patch_note_card",
+      "category": "league_patch",
+      "title": "世界线 PoE 首批样本构筑选择说明"
+    },
+    {
+      "card_id": "poe-rec-low-budget-minion",
+      "path": "data/poe/processed/cards/item_build/new-player-low-budget-minion-recommendation.json",
+      "content_type": "recommendation_card",
+      "category": "item_build",
+      "title": "新手低预算召唤推荐：先稳住推进，再考虑高天花板"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+{
+  "card_id": "poe-build-lightning-arrow-deadeye",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "build_card",
+  "category": "item_build",
+  "subcategory": "mapping_build",
+  "title": "闪电箭锐眼：以清图效率为核心的远程方案",
+  "summary": "闪电箭锐眼代表 PoE 中最直观的快刷体验。它适合作为世界线第二条演示路线，用来对比召唤流派的稳健推进和远程投射物的效率上限。",
+  "keywords": [
+    "闪电箭",
+    "锐眼",
+    "弓",
+    "清图",
+    "刷图"
+  ],
+  "tags": [
+    "Build",
+    "Deadeye",
+    "Bow",
+    "Mapping"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "mid_mapping",
+  "experience_level": "returning",
+  "playstyle": [
+    "ranged",
+    "fast_clear"
+  ],
+  "budget_level": "medium",
+  "content_goals": [
+    "mapping",
+    "currency_farm"
+  ],
+  "class_name": "Ranger",
+  "ascendancy": "Deadeye",
+  "skill_gems": [
+    "Lightning Arrow"
+  ],
+  "support_gems": [
+    "Elemental Damage with Attacks Support",
+    "Returning Projectiles Support",
+    "Inspiration Support"
+  ],
+  "unique_items": [],
+  "key_passives": [
+    "Point Blank"
+  ],
+  "mechanics": [
+    "projectile_scaling",
+    "chain_clear",
+    "spell_suppression"
+  ],
+  "build_name": "Lightning Arrow Deadeye Mapper",
+  "build_id": "lightning-arrow-deadeye-mapper",
+  "recommended_for": [
+    "喜欢远程快刷和高机动的玩家",
+    "已经具备基础站位理解的回归玩家"
+  ],
+  "avoid_for": [
+    "预算极低的开荒首发玩家",
+    "只想无脑硬吃伤害的玩家"
+  ],
+  "answer_template": "build_recommendation",
+  "graph_entities": [
+    "Build:Lightning Arrow Deadeye",
+    "SkillGem:Lightning Arrow",
+    "Ascendancy:Deadeye"
+  ],
+  "graph_relations": [
+    "CORE_SKILL",
+    "ASCENDS_TO",
+    "SUITED_FOR"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/lightning-arrow-deadeye-mapper",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "闪电箭锐眼不是最稳的第一条路，但它是最容易让人直观看到 PoE 刷图魅力的路线之一，因此很适合拿来和召唤体系做对照演示。",
+    "sections": [
+      {
+        "heading": "它强在哪",
+        "points": [
+          "清图节奏强，反馈直观，视觉表现适合演示。",
+          "玩法目标明确，推荐系统很容易根据偏好命中它。",
+          "如果站位、防御和投射物理解到位，刷图体验会明显优于稳健型路线。"
+        ]
+      },
+      {
+        "heading": "它怕什么",
+        "points": [
+          "怕预算不到位时同时缺伤害和缺防御。",
+          "怕玩家把清图 Build 当成无脑站桩 Boss Build 使用。",
+          "怕忽视法术压制和位置控制。"
+        ]
+      },
+      {
+        "heading": "世界线里的定位",
+        "points": [
+          "作为快刷偏好的代表 Build。",
+          "与死灵师形成玩法、节奏和风险的鲜明对比。",
+          "后续可直接接入推荐 MVP 里的远程快刷分支。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "为什么闪电箭锐眼适合刷图但不一定适合纯新手？",
+    "想玩远程快刷，世界线里应该先看哪套 Build？",
+    "闪电箭锐眼最怕补错什么属性？"
+  ],
+  "next_cards": [
+    "poe-class-deadeye-overview",
+    "poe-mechanic-spell-suppression",
+    "poe-faq-yellow-map-defense"
+  ]
+}

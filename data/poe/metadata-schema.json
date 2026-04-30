@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Worldline PoE Metadata Schema",
+  "type": "object",
+  "required": [
+    "theme",
+    "module",
+    "content_type",
+    "category",
+    "title",
+    "summary",
+    "tags",
+    "patch_version",
+    "source_type",
+    "curation_status"
+  ],
+  "properties": {
+    "theme": {
+      "type": "string",
+      "const": "poe"
+    },
+    "module": {
+      "type": "string",
+      "const": "poe"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": [
+        "concept_card",
+        "build_card",
+        "progression_card",
+        "faq_card",
+        "patch_note_card",
+        "recommendation_card"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "class_ascendancy",
+        "skill_support",
+        "item_build",
+        "mechanic_defense",
+        "progression_growth",
+        "league_patch",
+        "faq_pitfall"
+      ]
+    },
+    "subcategory": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "patch_version": {
+      "type": "string"
+    },
+    "league": {
+      "type": "string"
+    },
+    "game_stage": {
+      "type": "string",
+      "enum": [
+        "campaign",
+        "early_mapping",
+        "mid_mapping",
+        "bossing",
+        "endgame",
+        "universal"
+      ]
+    },
+    "experience_level": {
+      "type": "string",
+      "enum": [
+        "new",
+        "returning",
+        "experienced",
+        "universal"
+      ]
+    },
+    "playstyle": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "melee",
+          "ranged",
+          "spell",
+          "minion",
+          "totem",
+          "trap_mine",
+          "dot",
+          "tanky",
+          "fast_clear",
+          "boss_focus"
+        ]
+      }
+    },
+    "budget_level": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "universal"
+      ]
+    },
+    "content_goals": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "league_start",
+          "mapping",
+          "bossing",
+          "currency_farm",
+          "solo_self_found",
+          "hardcore",
+          "general"
+        ]
+      }
+    },
+    "class_name": {
+      "type": "string"
+    },
+    "ascendancy": {
+      "type": "string"
+    },
+    "skill_gems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "support_gems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "unique_items": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "key_passives": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "mechanics": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "build_name": {
+      "type": "string"
+    },
+    "build_id": {
+      "type": "string"
+    },
+    "recommended_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "avoid_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "answer_template": {
+      "type": "string",
+      "enum": [
+        "mechanic_explainer",
+        "build_recommendation",
+        "progression_guide",
+        "item_choice",
+        "faq_quick_answer"
+      ]
+    },
+    "graph_entities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "graph_relations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "official",
+        "wiki",
+        "guide",
+        "community",
+        "curated"
+      ]
+    },
+    "source_url": {
+      "type": "string",
+      "format": "uri"
+    },
+    "curation_status": {
+      "type": "string",
+      "enum": [
+        "seeded",
+        "reviewed",
+        "verified"
+      ]
+    },
+    "is_curated": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

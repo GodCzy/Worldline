@@ -1,0 +1,132 @@
+@import './base.css';
+@import './base.dark.css';
+@import './sigma.css';
+@import './shorts.css';
+@import './dashboard.css';
+@import './markdown-preview.less';
+
+:root {
+  --header-height: 45px;
+  --min-width: 450px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  display: flow-root;
+  min-height: 100vh;
+  color: var(--gray-900);
+  background: var(--gray-0);
+  line-height: 1.6;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'Roboto', 'HarmonyOS Sans SC', 'Segoe UI',
+    'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* layout */
+
+.layout-container {
+  width: 100%;
+  padding: 0px 30px;
+
+  h2 {
+    margin: 20px 0 10px 0;
+  }
+}
+
+.lucide-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.lucide-icon-btn svg {
+  flex-shrink: 0;
+}
+
+/* worldline shell primitives */
+
+.wl-shell {
+  color: var(--main-900);
+}
+
+.wl-shell-topbar {
+  border-bottom: 1px solid color-mix(in srgb, var(--main-80) 45%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.wl-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wl-brand-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.wl-brand-text {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--main-800);
+}
+
+.wl-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wl-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--main-120) 32%, transparent);
+  color: var(--gray-800);
+  text-decoration: none;
+  background: color-mix(in srgb, var(--gray-0) 88%, transparent);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.wl-nav-pill:hover {
+  color: var(--main-color);
+  border-color: color-mix(in srgb, var(--main-220) 45%, transparent);
+}
+
+.wl-nav-pill.router-link-active {
+  color: var(--gray-0);
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--main-600), var(--main-500));
+}
+
+.wl-shell-footer {
+  border-top: 1px solid color-mix(in srgb, var(--main-60) 55%, transparent);
+  background: color-mix(in srgb, var(--main-0) 86%, var(--gray-0));
+}
+
+.wl-shell-footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}

@@ -1,0 +1,120 @@
+{
+  "card_id": "poe-build-boneshatter-juggernaut",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "build_card",
+  "category": "item_build",
+  "subcategory": "starter_build",
+  "title": "碎骨勇士：稳健近战开荒与黄图推进模板",
+  "summary": "碎骨勇士是世界线 PoE 首批样本中的近战代表。它能承担近战、命中、防御、技能连法和推进节奏等一整套常见问题，非常适合做 FAQ 与机制卡的关联中心。",
+  "keywords": [
+    "碎骨",
+    "Juggernaut",
+    "近战",
+    "开荒",
+    "黄图"
+  ],
+  "tags": [
+    "Build",
+    "Juggernaut",
+    "Melee",
+    "Starter"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "early_mapping",
+  "experience_level": "returning",
+  "playstyle": [
+    "melee",
+    "tanky"
+  ],
+  "budget_level": "low",
+  "content_goals": [
+    "league_start",
+    "mapping",
+    "general"
+  ],
+  "class_name": "Marauder",
+  "ascendancy": "Juggernaut",
+  "skill_gems": [
+    "Boneshatter"
+  ],
+  "support_gems": [
+    "Melee Physical Damage Support",
+    "Brutality Support",
+    "Fortify Support"
+  ],
+  "unique_items": [],
+  "key_passives": [
+    "Resolute Technique"
+  ],
+  "mechanics": [
+    "accuracy",
+    "self_damage_management",
+    "armor_scaling"
+  ],
+  "build_name": "Boneshatter Juggernaut Starter",
+  "build_id": "boneshatter-jugg-starter",
+  "recommended_for": [
+    "想体验近战推进节奏的玩家",
+    "希望用一套 Build 集中理解命中与防御的玩家"
+  ],
+  "avoid_for": [
+    "不想处理贴脸风险的玩家"
+  ],
+  "answer_template": "build_recommendation",
+  "graph_entities": [
+    "Build:Boneshatter Juggernaut",
+    "Ascendancy:Juggernaut",
+    "SkillGem:Boneshatter"
+  ],
+  "graph_relations": [
+    "CORE_SKILL",
+    "ASCENDS_TO",
+    "SCALES_WITH"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/boneshatter-juggernaut-starter",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "碎骨勇士不是最轻松的玩法，但它很适合拿来解释 PoE 里为什么站得住和打得疼往往要一起解决。",
+    "sections": [
+      {
+        "heading": "适合拿来学什么",
+        "points": [
+          "如何判断攻击型 Build 的命中链是否完整。",
+          "为什么近战角色的防御层不能只靠血量和面板。",
+          "主技能连法为什么要兼顾生存与推进。"
+        ]
+      },
+      {
+        "heading": "优势",
+        "points": [
+          "逻辑强、问题集中、适合做教学式知识卡。",
+          "推进路线清晰，FAQ 和机制卡很容易围绕它展开。",
+          "作为近战代表，可以补足死灵师与锐眼之间的玩法空白。"
+        ]
+      },
+      {
+        "heading": "风险",
+        "points": [
+          "如果命中、防御和操作节奏没有一起到位，会显得笨重且容易暴毙。",
+          "玩家若不接受近战贴脸的节奏，会很快对 Build 产生抗拒。",
+          "不适合作为完全零基础玩家的唯一首发路线。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "世界线里有没有适合展示近战逻辑的 Build？",
+    "碎骨勇士为什么适合做 FAQ 与机制卡的中心流派？",
+    "如果我想理解命中和防御，哪套 Build 最适合先看？"
+  ],
+  "next_cards": [
+    "poe-skill-boneshatter-support",
+    "poe-mechanic-accuracy-hit",
+    "poe-faq-yellow-map-defense"
+  ]
+}

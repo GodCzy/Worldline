@@ -1,0 +1,132 @@
+{
+  "theme": "poe",
+  "module": "poe",
+  "version": "phase1-seed",
+  "source_manifest": "data/poe/processed/cards/manifest.json",
+  "candidates": [
+    {
+      "candidate_id": "candidate-necro-low-budget-minion",
+      "title": "SRS 死灵师开荒候选",
+      "build_card_id": "poe-build-srs-necromancer",
+      "graph_loop_id": "poe-necromancer-minion-loop",
+      "recommendation_card_ids": [
+        "poe-rec-low-budget-minion"
+      ],
+      "supporting_card_ids": [
+        "poe-class-necromancer-overview",
+        "poe-progression-witch-campaign"
+      ],
+      "filters": {
+        "experience_level": "new",
+        "playstyle": [
+          "minion",
+          "tanky"
+        ],
+        "budget_level": "low",
+        "content_goals": [
+          "league_start",
+          "mapping"
+        ]
+      },
+      "score_weights": {
+        "experience_level": 3,
+        "playstyle": 3,
+        "budget_level": 2,
+        "content_goals": 2,
+        "curation_status": 1
+      },
+      "why_selected": [
+        "对新手最稳，推进节奏清晰。",
+        "最适合与 FAQ、成长路线和推荐卡形成闭环。",
+        "低预算即可建立完整体验。"
+      ],
+      "next_cards": [
+        "poe-class-necromancer-overview",
+        "poe-progression-witch-campaign"
+      ],
+      "next_scene": "build_recommend"
+    },
+    {
+      "candidate_id": "candidate-deadeye-fast-clear",
+      "title": "闪电箭锐眼刷图候选",
+      "build_card_id": "poe-build-lightning-arrow-deadeye",
+      "graph_loop_id": "poe-deadeye-mapping-loop",
+      "recommendation_card_ids": [],
+      "supporting_card_ids": [
+        "poe-class-deadeye-overview",
+        "poe-mechanic-spell-suppression",
+        "poe-faq-yellow-map-defense"
+      ],
+      "filters": {
+        "experience_level": "returning",
+        "playstyle": [
+          "ranged",
+          "fast_clear"
+        ],
+        "budget_level": "medium",
+        "content_goals": [
+          "mapping",
+          "currency_farm"
+        ]
+      },
+      "score_weights": {
+        "experience_level": 2,
+        "playstyle": 3,
+        "budget_level": 2,
+        "content_goals": 3,
+        "curation_status": 1
+      },
+      "why_selected": [
+        "清图反馈最直观，适合快刷偏好。",
+        "能和法术压制、生存 FAQ 组成稳定的演示链。",
+        "适合作为召唤流派的对照路线。"
+      ],
+      "next_cards": [
+        "poe-mechanic-spell-suppression",
+        "poe-faq-yellow-map-defense"
+      ],
+      "next_scene": "mapping_path"
+    },
+    {
+      "candidate_id": "candidate-boneshatter-melee",
+      "title": "碎骨勇士近战候选",
+      "build_card_id": "poe-build-boneshatter-juggernaut",
+      "graph_loop_id": "poe-boneshatter-melee-loop",
+      "recommendation_card_ids": [],
+      "supporting_card_ids": [
+        "poe-skill-boneshatter-support",
+        "poe-mechanic-accuracy-hit",
+        "poe-faq-yellow-map-defense"
+      ],
+      "filters": {
+        "experience_level": "returning",
+        "playstyle": [
+          "melee",
+          "tanky"
+        ],
+        "budget_level": "low",
+        "content_goals": [
+          "league_start",
+          "mapping"
+        ]
+      },
+      "score_weights": {
+        "experience_level": 2,
+        "playstyle": 3,
+        "budget_level": 2,
+        "content_goals": 2,
+        "curation_status": 1
+      },
+      "why_selected": [
+        "适合展示近战推进、命中和防御问题的交叉关系。",
+        "FAQ 与机制卡对这条 Build 的支持最集中。",
+        "能补足召唤与弓系之外的玩法空白。"
+      ],
+      "next_cards": [
+        "poe-skill-boneshatter-support",
+        "poe-mechanic-accuracy-hit"
+      ],
+      "next_scene": "mechanic_explain"
+    }
+  ]
+}

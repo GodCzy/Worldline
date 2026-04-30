@@ -1,0 +1,100 @@
+{
+  "card_id": "poe-mechanic-accuracy-hit",
+  "theme": "poe",
+  "module": "poe",
+  "content_type": "concept_card",
+  "category": "mechanic_defense",
+  "subcategory": "attack_accuracy",
+  "title": "命中与准确度基础：伤害低不一定是面板问题",
+  "summary": "攻击型角色如果准确度不足，就会出现打不满、清图发虚、Boss 伤害不稳定的问题。很多看似伤害不足的情况，本质是命中链路没有闭合。",
+  "keywords": [
+    "准确度",
+    "命中",
+    "攻击",
+    "伤害低",
+    "近战"
+  ],
+  "tags": [
+    "Accuracy",
+    "Hit",
+    "Attack Build"
+  ],
+  "patch_version": "phase1-seed",
+  "league": "universal",
+  "game_stage": "early_mapping",
+  "experience_level": "new",
+  "playstyle": [
+    "melee",
+    "ranged"
+  ],
+  "budget_level": "low",
+  "content_goals": [
+    "mapping",
+    "bossing",
+    "general"
+  ],
+  "mechanics": [
+    "accuracy",
+    "hit_chance",
+    "attack_consistency"
+  ],
+  "recommended_for": [
+    "攻击型角色玩家",
+    "感觉面板不低但实战发虚的玩家"
+  ],
+  "avoid_for": [],
+  "answer_template": "mechanic_explainer",
+  "graph_entities": [
+    "Mechanic:Accuracy",
+    "Build:Boneshatter Juggernaut",
+    "Build:Lightning Arrow Deadeye"
+  ],
+  "graph_relations": [
+    "SCALES_WITH",
+    "DOCUMENTED_BY"
+  ],
+  "source_type": "curated",
+  "source_url": "https://worldline.local/poe/seed/accuracy-and-hit-basics",
+  "curation_status": "reviewed",
+  "is_curated": true,
+  "language": "zh-CN",
+  "body": {
+    "lead": "攻击型流派的第一层伤害前提不是暴击，也不是高端装备，而是先打中。命中率不稳定时，一切纸面伤害都容易变成错觉。",
+    "sections": [
+      {
+        "heading": "问题本质",
+        "points": [
+          "准确度影响的是攻击是否真正命中目标。",
+          "如果攻击经常落空，清图手感、单体输出和触发类效果都会一起变差。",
+          "这类问题很容易被误判成武器不够强或辅助连法不对。"
+        ]
+      },
+      {
+        "heading": "最容易踩坑的阶段",
+        "points": [
+          "剧情末期和刚进地图时，装备频繁更换，准确度经常断档。",
+          "一些新手只盯 DPS 数值，不检查命中链是否完整。",
+          "近战和弓系在这个问题上都会受影响，只是表现形式不同。"
+        ]
+      },
+      {
+        "heading": "修正思路",
+        "points": [
+          "先把命中稳定性补够，再考虑更高阶的伤害词缀。",
+          "如果流派依赖攻击触发或叠层，命中不足会造成连锁性损失。",
+          "当你感觉伤害忽高忽低时，优先排查准确度而不是盲目换武器。"
+        ]
+      }
+    ]
+  },
+  "qa_examples": [
+    "为什么我的近战角色明明武器升级了还是感觉刮痧？",
+    "攻击型 BD 的准确度要不要优先考虑？",
+    "面板伤害不低但实战慢，是不是因为命中不够？"
+  ],
+  "next_cards": [
+    "poe-skill-boneshatter-support",
+    "poe-build-boneshatter-juggernaut",
+    "poe-faq-yellow-map-defense"
+  ]
+}

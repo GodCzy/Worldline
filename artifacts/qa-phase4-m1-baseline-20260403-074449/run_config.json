@@ -1,0 +1,20 @@
+{
+  "contract_version": "phase4-m1",
+  "package_prefix": "qa-phase4-m1-baseline",
+  "api_base": "http://127.0.0.1:5050",
+  "frontend_base": "http://127.0.0.1:5173",
+  "out_dir": "D:\\worldline\\artifacts\\qa-phase4-m1-baseline-20260403-074449",
+  "timeout_seconds": 12,
+  "has_admin_token": true,
+  "has_user_token": true,
+  "allow_temp_user": false,
+  "self_check": false,
+  "note": "No create/update/delete API is called in this script.",
+  "runtime_health_file": "10-runtime-health.txt",
+  "ui_evidence": [
+    "30-ui-graph-guard.png",
+    "31-ui-network-graph-guard.txt",
+    "32-ui-final-url-assertion.json"
+  ],
+  "self_check_probe_dir": "D:\\worldline\\artifacts\\qa-phase4-m1-baseline-probe-20260403-074450"
+}

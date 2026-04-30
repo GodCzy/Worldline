@@ -1,0 +1,140 @@
+{
+  "graph_id": "poe-necromancer-minion-loop",
+  "theme": "poe",
+  "module": "poe",
+  "label": "死灵师召唤闭环",
+  "focus": "new_player_minion_league_start",
+  "entry_card_id": "poe-class-necromancer-overview",
+  "source_card_ids": [
+    "poe-class-necromancer-overview",
+    "poe-build-srs-necromancer",
+    "poe-progression-witch-campaign",
+    "poe-rec-low-budget-minion"
+  ],
+  "nodes": [
+    {
+      "id": "class:witch",
+      "type": "Class",
+      "label": "Witch",
+      "group": "class",
+      "card_refs": [
+        "poe-class-necromancer-overview"
+      ]
+    },
+    {
+      "id": "ascendancy:necromancer",
+      "type": "Ascendancy",
+      "label": "Necromancer",
+      "group": "ascendancy",
+      "card_refs": [
+        "poe-class-necromancer-overview",
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "id": "build:srs-necromancer",
+      "type": "Build",
+      "label": "SRS Necromancer",
+      "group": "build",
+      "card_refs": [
+        "poe-build-srs-necromancer",
+        "poe-rec-low-budget-minion"
+      ]
+    },
+    {
+      "id": "skill:summon-raging-spirit",
+      "type": "SkillGem",
+      "label": "Summon Raging Spirit",
+      "group": "skill",
+      "card_refs": [
+        "poe-class-necromancer-overview",
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "id": "mechanic:minion-scaling",
+      "type": "Mechanic",
+      "label": "Minion Scaling",
+      "group": "mechanic",
+      "card_refs": [
+        "poe-class-necromancer-overview",
+        "poe-rec-low-budget-minion"
+      ]
+    },
+    {
+      "id": "card:poe-build-srs-necromancer",
+      "type": "KnowledgeCard",
+      "label": "SRS 死灵师 Build 卡",
+      "group": "card",
+      "card_refs": [
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "id": "card:poe-progression-witch-campaign",
+      "type": "KnowledgeCard",
+      "label": "女巫成长路线卡",
+      "group": "card",
+      "card_refs": [
+        "poe-progression-witch-campaign"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "class:witch",
+      "target": "ascendancy:necromancer",
+      "relation": "ASCENDS_TO",
+      "card_refs": [
+        "poe-class-necromancer-overview"
+      ]
+    },
+    {
+      "source": "ascendancy:necromancer",
+      "target": "build:srs-necromancer",
+      "relation": "ENABLES_BUILD",
+      "card_refs": [
+        "poe-class-necromancer-overview",
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "source": "build:srs-necromancer",
+      "target": "skill:summon-raging-spirit",
+      "relation": "CORE_SKILL",
+      "card_refs": [
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "source": "build:srs-necromancer",
+      "target": "mechanic:minion-scaling",
+      "relation": "SCALES_WITH",
+      "card_refs": [
+        "poe-class-necromancer-overview",
+        "poe-rec-low-budget-minion"
+      ]
+    },
+    {
+      "source": "build:srs-necromancer",
+      "target": "card:poe-build-srs-necromancer",
+      "relation": "DOCUMENTED_BY",
+      "card_refs": [
+        "poe-build-srs-necromancer"
+      ]
+    },
+    {
+      "source": "card:poe-build-srs-necromancer",
+      "target": "card:poe-progression-witch-campaign",
+      "relation": "RECOMMENDS_NEXT",
+      "card_refs": [
+        "poe-build-srs-necromancer",
+        "poe-progression-witch-campaign"
+      ]
+    }
+  ],
+  "recommended_next_cards": [
+    "poe-progression-witch-campaign",
+    "poe-rec-low-budget-minion"
+  ]
+}

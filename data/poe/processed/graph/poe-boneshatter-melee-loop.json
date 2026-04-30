@@ -1,0 +1,138 @@
+{
+  "graph_id": "poe-boneshatter-melee-loop",
+  "theme": "poe",
+  "module": "poe",
+  "label": "碎骨近战闭环",
+  "focus": "returning_player_melee_progression",
+  "entry_card_id": "poe-build-boneshatter-juggernaut",
+  "source_card_ids": [
+    "poe-build-boneshatter-juggernaut",
+    "poe-skill-boneshatter-support",
+    "poe-mechanic-accuracy-hit",
+    "poe-faq-yellow-map-defense"
+  ],
+  "nodes": [
+    {
+      "id": "class:marauder",
+      "type": "Class",
+      "label": "Marauder",
+      "group": "class",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "id": "ascendancy:juggernaut",
+      "type": "Ascendancy",
+      "label": "Juggernaut",
+      "group": "ascendancy",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "id": "build:boneshatter-juggernaut",
+      "type": "Build",
+      "label": "Boneshatter Juggernaut",
+      "group": "build",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut",
+        "poe-skill-boneshatter-support"
+      ]
+    },
+    {
+      "id": "skill:boneshatter",
+      "type": "SkillGem",
+      "label": "Boneshatter",
+      "group": "skill",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut",
+        "poe-skill-boneshatter-support"
+      ]
+    },
+    {
+      "id": "mechanic:accuracy",
+      "type": "Mechanic",
+      "label": "Accuracy",
+      "group": "mechanic",
+      "card_refs": [
+        "poe-mechanic-accuracy-hit"
+      ]
+    },
+    {
+      "id": "card:poe-build-boneshatter-juggernaut",
+      "type": "KnowledgeCard",
+      "label": "碎骨勇士 Build 卡",
+      "group": "card",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "id": "card:poe-skill-boneshatter-support",
+      "type": "KnowledgeCard",
+      "label": "碎骨连法原则卡",
+      "group": "card",
+      "card_refs": [
+        "poe-skill-boneshatter-support"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "source": "class:marauder",
+      "target": "ascendancy:juggernaut",
+      "relation": "ASCENDS_TO",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "source": "ascendancy:juggernaut",
+      "target": "build:boneshatter-juggernaut",
+      "relation": "ENABLES_BUILD",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "source": "build:boneshatter-juggernaut",
+      "target": "skill:boneshatter",
+      "relation": "CORE_SKILL",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "source": "build:boneshatter-juggernaut",
+      "target": "mechanic:accuracy",
+      "relation": "SCALES_WITH",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut",
+        "poe-mechanic-accuracy-hit"
+      ]
+    },
+    {
+      "source": "build:boneshatter-juggernaut",
+      "target": "card:poe-build-boneshatter-juggernaut",
+      "relation": "DOCUMENTED_BY",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut"
+      ]
+    },
+    {
+      "source": "card:poe-build-boneshatter-juggernaut",
+      "target": "card:poe-skill-boneshatter-support",
+      "relation": "RECOMMENDS_NEXT",
+      "card_refs": [
+        "poe-build-boneshatter-juggernaut",
+        "poe-skill-boneshatter-support"
+      ]
+    }
+  ],
+  "recommended_next_cards": [
+    "poe-skill-boneshatter-support",
+    "poe-mechanic-accuracy-hit",
+    "poe-faq-yellow-map-defense"
+  ]
+}

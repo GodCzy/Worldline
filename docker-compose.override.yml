@@ -1,0 +1,9 @@
+services:
+  # Local-machine overrides for runtime conflicts and image quirks.
+  graph:
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:7474 >/dev/null || exit 1"]
+
+  postgres:
+    ports: !override
+      - "5433:5432"

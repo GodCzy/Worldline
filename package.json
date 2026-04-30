@@ -1,0 +1,13 @@
+{
+  "name": "worldline",
+  "scripts": {
+    "docs:dev": "vitepress dev docs --port 5174",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --port 4174",
+    "docs:host": "vitepress dev docs --host 0.0.0.0 --port 5174"
+  },
+  "dependencies": {
+    "markdown-it-task-checkbox": "^1.0.6",
+    "vitepress": "^1.6.4"
+  }
+}

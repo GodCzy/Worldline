@@ -1,0 +1,22 @@
+# UI Graph Guard Network Summary
+
+- session: 2026-04-03 fresh Playwright capture
+- actor: standard user
+- start_url: http://127.0.0.1:5173/login?redirect=/graph
+- final_url: http://127.0.0.1:5173/agent/ChatbotAgent
+- assertion: no `/api/graph/*` request was observed during login + redirect flow
+- conclusion: route guard failed closed before any admin-only graph endpoint succeeded
+
+## Observed Requests
+[GET] http://127.0.0.1:5173/api/system/info => [200] OK
+[GET] http://127.0.0.1:5173/api/system/health => [200] OK
+[GET] http://127.0.0.1:5173/api/auth/check-first-run => [200] OK
+[POST] http://127.0.0.1:5173/api/auth/token => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/agent => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/default_agent => [200] OK
+[GET] http://127.0.0.1:5173/api/knowledge/databases/accessible => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/agent/ChatbotAgent => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/agent/ChatbotAgent/configs => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/agent/ChatbotAgent/configs/1 => [200] OK
+[GET] http://127.0.0.1:5173/api/chat/threads?limit=100&offset=0 => [200] OK
+[GET] http://127.0.0.1:5173/api/knowledge/databases/accessible => [200] OK
