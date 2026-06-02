@@ -81,6 +81,12 @@ async def _ensure_database_not_dify(db_id: str, operation: str) -> None:
         raise HTTPException(status_code=400, detail=f"Dify 知识库只支持检索，不支持{operation}")
 
 
+async def _ensure_database_exists(db_id: str) -> None:
+    db_info = await knowledge_base.get_database_info(db_id)
+    if not db_info:
+        raise HTTPException(status_code=404, detail=f"知识库 {db_id} 不存在")
+
+
 # =============================================================================
 # === 知识库管理分组 ===
 # =============================================================================
@@ -909,6 +915,108 @@ async def query_test(
     except Exception as e:
         logger.error(f"测试查询失败 {e}, {traceback.format_exc()}")
         return {"message": f"测试查询失败: {e}", "status": "failed"}
+
+
+@knowledge.post("/databases/{db_id}/query-evidence")
+async def query_knowledge_base_with_evidence(
+    db_id: str,
+    query: str = Body(...),
+    meta: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """执行证据化检索，返回 answer、claims、citations 和 route_trace。"""
+    logger.debug(f"Evidence query in {db_id}: {query}")
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.evidence_service import EvidenceQueryService
+
+        return await EvidenceQueryService().query_with_evidence(db_id=db_id, query=query, meta=meta)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"证据化查询失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"证据化查询失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/evidence-anchors")
+async def list_evidence_anchors(
+    db_id: str,
+    file_id: str | None = Query(None),
+    doc_version_id: str | None = Query(None),
+    evidence_ids: str | None = Query(None, description="逗号分隔的 evidence_id 列表"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 EvidenceAnchor 摘要。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+        parsed_ids = [item.strip() for item in (evidence_ids or "").split(",") if item.strip()] or None
+        return await KnowledgeObjectRepository().list_evidence_anchors(
+            db_id,
+            file_id=file_id,
+            doc_version_id=doc_version_id,
+            evidence_ids=parsed_ids,
+            limit=limit,
+            offset=offset,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询证据锚点失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询证据锚点失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/evidence-anchors/{evidence_id}")
+async def get_evidence_anchor(
+    db_id: str,
+    evidence_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """查询单个 EvidenceAnchor 摘要。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+        anchor = await KnowledgeObjectRepository().get_evidence_anchor(db_id, evidence_id)
+        if anchor is None:
+            raise HTTPException(status_code=404, detail=f"证据 {evidence_id} 不存在")
+        return anchor
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询证据锚点失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询证据锚点失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/documents/{doc_id}/chunks")
+async def list_document_chunks(
+    db_id: str,
+    doc_id: str,
+    doc_version_id: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询文档 chunk 与 evidence_ids 绑定。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+        return await KnowledgeObjectRepository().list_chunks(
+            db_id,
+            file_id=doc_id,
+            doc_version_id=doc_version_id,
+            limit=limit,
+            offset=offset,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询文档 chunks 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询文档 chunks 失败: {e}")
 
 
 @knowledge.put("/databases/{db_id}/query-params")

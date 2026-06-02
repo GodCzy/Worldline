@@ -305,6 +305,7 @@ class MilvusKB(KnowledgeBase):
 
             # Split
             chunks = self._split_text_into_chunks(markdown_content, file_id, filename, params)
+            chunks = await self._bind_chunks_to_evidence(db_id, file_id, chunks)
             logger.info(
                 f"Split {filename} into {len(chunks)} chunks with params: "
                 f"chunk_preset_id={params.get('chunk_preset_id')}, "
@@ -419,6 +420,7 @@ class MilvusKB(KnowledgeBase):
 
                 # 重新生成 chunks
                 chunks = self._split_text_into_chunks(markdown_content, file_id, filename, resolved_params)
+                chunks = await self._bind_chunks_to_evidence(db_id, file_id, chunks)
                 logger.info(f"Split {filename} into {len(chunks)} chunks")
 
                 if chunks:
@@ -497,6 +499,7 @@ class MilvusKB(KnowledgeBase):
                 search_mode = "vector"
 
             use_reranker = bool(merged_kwargs.get("use_reranker", False))
+            include_evidence = bool(merged_kwargs.get("include_evidence", False))
             if use_reranker:
                 recall_top_k = int(merged_kwargs.get("recall_top_k", 50))
                 recall_top_k = max(recall_top_k, final_top_k)
@@ -639,7 +642,9 @@ class MilvusKB(KnowledgeBase):
                 return []
 
             if not use_reranker:
-                return retrieved_chunks[:final_top_k]
+                return await self._decorate_chunks_with_evidence(
+                    db_id, retrieved_chunks[:final_top_k], include_evidence=include_evidence
+                )
 
             # 使用重排序模型
             reranker_model = merged_kwargs.get("reranker_model")
@@ -673,11 +678,44 @@ class MilvusKB(KnowledgeBase):
                 logger.error(f"Reranking failed: {exc}, falling back to vector scores")
 
             # 统一返回结果
-            return retrieved_chunks[:final_top_k]
+            return await self._decorate_chunks_with_evidence(
+                db_id, retrieved_chunks[:final_top_k], include_evidence=include_evidence
+            )
 
         except Exception as e:
             logger.error(f"Milvus query error: {e}, {traceback.format_exc()}")
             return []
+
+    async def _bind_chunks_to_evidence(
+        self,
+        db_id: str,
+        file_id: str,
+        chunks: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        try:
+            from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+            return await KnowledgeObjectRepository().bind_chunks_to_latest_evidence(db_id, file_id, chunks)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Failed to bind chunks to evidence for {file_id}: {exc}")
+            return chunks
+
+    async def _decorate_chunks_with_evidence(
+        self,
+        db_id: str,
+        chunks: list[dict[str, Any]],
+        *,
+        include_evidence: bool,
+    ) -> list[dict[str, Any]]:
+        if not include_evidence:
+            return chunks
+        try:
+            from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+            return await KnowledgeObjectRepository().decorate_retrieval_results(db_id, chunks)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"Failed to decorate retrieval results with evidence for {db_id}: {exc}")
+            return chunks
 
     async def delete_file_chunks_only(self, db_id: str, file_id: str) -> None:
         """仅删除文件的chunks数据，保留元数据（用于更新操作）"""

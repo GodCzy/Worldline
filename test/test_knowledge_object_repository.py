@@ -13,6 +13,7 @@ from src.storage.postgres.models_knowledge import (
     DocumentNode,
     DocumentVersion,
     EvidenceAnchor,
+    KnowledgeChunk,
     KnowledgeBase,
     KnowledgeFile,
     SourceAsset,
@@ -235,3 +236,90 @@ async def test_parse_file_persists_compiler_objects_and_legacy_markdown(sqlite_p
     assert version.file_id == "file_test"
     assert node_count == 2
     assert anchor_count == 2
+
+
+@pytest.mark.asyncio
+async def test_repository_binds_chunks_to_evidence_and_lists_outputs(sqlite_pg_manager) -> None:
+    async with sqlite_pg_manager.get_async_session_context() as session:
+        session.add(KnowledgeBase(db_id="kb_test", name="Test KB", kb_type="milvus"))
+        session.add(KnowledgeFile(file_id="file_test", db_id="kb_test", filename="sample.md"))
+
+    compiled = CompiledDocument(
+        source_uri="sample.md",
+        title="sample.md",
+        asset_type="file",
+        markdown_content="# Title\n\nEvidence paragraph.",
+        parser="legacy_markdown",
+        parser_version=None,
+        status="success",
+        content_hash="hash_content",
+        ast_hash="hash_ast",
+        parse_config={"db_id": "kb_test"},
+        parser_trace=[{"parser": "legacy_markdown", "status": "success"}],
+        stats={"node_count": 2, "evidence_anchor_count": 2},
+        nodes=[
+            CompiledNode(key="n0", node_type="heading", node_order=0, text="# Title", char_start=0, char_end=7),
+            CompiledNode(
+                key="n1",
+                node_type="paragraph",
+                node_order=1,
+                text="Evidence paragraph.",
+                char_start=9,
+                char_end=28,
+            ),
+        ],
+        evidence_anchors=[
+            CompiledEvidenceAnchor(
+                node_key="n0",
+                anchor_type="text",
+                source_uri="sample.md",
+                text_excerpt="# Title",
+                confidence=1.0,
+            ),
+            CompiledEvidenceAnchor(
+                node_key="n1",
+                anchor_type="text",
+                source_uri="sample.md",
+                text_excerpt="Evidence paragraph.",
+                confidence=0.9,
+            ),
+        ],
+    )
+    await KnowledgeObjectRepository().persist_compiled_document("kb_test", "file_test", compiled)
+
+    chunks = [
+        {
+            "id": "file_test_chunk_0",
+            "chunk_id": "file_test_chunk_0",
+            "file_id": "file_test",
+            "filename": "sample.md",
+            "source": "sample.md",
+            "chunk_index": 0,
+            "content": "# Title\n\nEvidence paragraph.",
+        }
+    ]
+
+    bound_chunks = await KnowledgeObjectRepository().bind_chunks_to_latest_evidence("kb_test", "file_test", chunks)
+
+    assert bound_chunks[0]["metadata"]["doc_version_id"].startswith("docv_")
+    assert len(bound_chunks[0]["metadata"]["evidence_ids"]) == 2
+
+    listed_chunks = await KnowledgeObjectRepository().list_chunks("kb_test", file_id="file_test")
+    assert listed_chunks["items"][0]["chunk_id"] == "file_test_chunk_0"
+    assert len(listed_chunks["items"][0]["evidence_ids"]) == 2
+
+    listed_anchors = await KnowledgeObjectRepository().list_evidence_anchors("kb_test", file_id="file_test")
+    assert len(listed_anchors["items"]) == 2
+    assert listed_anchors["items"][0]["evidence_id"].startswith("ev_")
+
+    decorated = await KnowledgeObjectRepository().decorate_retrieval_results(
+        "kb_test",
+        [{"content": "Evidence paragraph.", "metadata": {"chunk_id": "file_test_chunk_0"}, "score": 0.8}],
+    )
+    assert len(decorated[0]["metadata"]["evidence_ids"]) == 2
+    assert len(decorated[0]["citations"]) == 2
+
+    async with sqlite_pg_manager.get_async_session_context() as session:
+        chunk_count = (await session.execute(select(func.count()).select_from(KnowledgeChunk))).scalar_one()
+
+    assert chunk_count == 1

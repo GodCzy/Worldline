@@ -206,6 +206,38 @@ class EvidenceAnchor(Base):
     created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
 
 
+class KnowledgeChunk(Base):
+    """检索 chunk 与证据锚点的绑定记录。"""
+
+    __tablename__ = "knowledge_chunks"
+    __table_args__ = (
+        UniqueConstraint("chunk_id", name="uq_knowledge_chunks_chunk_id"),
+        Index("idx_knowledge_chunks_db_file", "db_id", "file_id"),
+        Index("idx_knowledge_chunks_doc_version", "doc_version_id"),
+        Index("idx_knowledge_chunks_order", "db_id", "file_id", "chunk_index"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    chunk_id = Column(String(128), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    file_id = Column(String(64), ForeignKey("knowledge_files.file_id", ondelete="CASCADE"), nullable=False, index=True)
+    doc_version_id = Column(
+        String(80),
+        ForeignKey("document_versions.doc_version_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    chunk_index = Column(Integer, nullable=False, default=0)
+    text = Column(Text, nullable=False)
+    contextual_text = Column(Text)
+    evidence_ids = Column(JSON_VALUE)
+    dense_vector_ref = Column(String(256))
+    sparse_vector_ref = Column(String(256))
+    chunk_metadata = Column("metadata", JSON_VALUE)
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
 class EvaluationBenchmark(Base):
     """评估基准模型"""
 
