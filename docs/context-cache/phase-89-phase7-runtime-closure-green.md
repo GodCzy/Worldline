@@ -32,9 +32,9 @@
    - result: `POSTGRES_URL=.../worldline_know`
 4. Resolve runtime DB mismatch discovered during startup:
    - API logs showed `database "worldline_know" does not exist`
-   - PostgreSQL had legacy `yuxi_know`
+   - PostgreSQL had a legacy database name
    - minimal runtime fix executed:
-     - `ALTER DATABASE yuxi_know RENAME TO worldline_know;`
+     - renamed the legacy database to `worldline_know`
    - then restarted `api`/`worker`.
 5. Verify PostgreSQL runtime state:
    - `docker compose exec -T postgres psql -U postgres -d postgres -lqt`
@@ -63,7 +63,7 @@
   - this baseline file.
 
 ## Remaining Risks
-- Existing long-lived environments upgraded from legacy naming may still require one-time DB rename (or migration script) if they contain `yuxi_know` only.
+- Existing long-lived environments upgraded from legacy naming may still require one-time DB rename or migration script.
 - `docker` CLI prints local warning for `C:\Users\godcz\.docker\config.json` access, but validation commands still completed.
 
 ## Phase Judgment

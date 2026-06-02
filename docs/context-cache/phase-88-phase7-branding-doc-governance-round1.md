@@ -2,7 +2,7 @@
 
 ## Summary
 - 已将 Phase 7-10 重排后的总计划保存为 `docs/context-cache/phase-87-phase7-10-reordered-master-plan.md`，作为当前阶段宗旨文档。
-- Phase 7 本轮主线已落地到活跃仓库：活跃源码、配置、构建、测试、主文档中的 `YUXI / yuxi` 已退出主阅读面与活跃命名面。
+- Phase 7 本轮主线已落地到活跃仓库：活跃源码、配置、构建、测试、主文档中的 legacy brand tokens 已退出主阅读面与活跃命名面。
 - Worldline canonical naming 已冻结并落实到活跃构建面：Python package 为 `worldline`，Web package 为 `worldline-web`，Docker image 为 `worldline-api` / `worldline-web`，默认数据库为 `worldline_know`。
 - 文档体系已完成第一轮压缩：早期编号文档与旧 context-cache 已归入 `docs/archive/legacy/` 和 `docs/archive/context-cache/`；当前 `docs/context-cache/` 只保留最近基线与当前阶段计划。
 - `AGENTS.md` 保持长期稳定规则，`CODEX_WORKFLOW.md` 承担执行流程、验证门槛与 MCP/skill 触发规则，职责已分离。
@@ -11,7 +11,7 @@
 本轮实际采用了子代理分波执行：
 - 第一波只读映射：
   - `system_mapper`
-    - 盘点 `YUXI / yuxi` 活跃残留，区分源码、配置、构建、测试、文档与历史 evidence。
+    - 盘点 legacy brand token 活跃残留，区分源码、配置、构建、测试、文档与历史 evidence。
     - 明确历史证据不改写，只退出主阅读面。
   - `qa_release_auditor`
     - 给出 Phase 7 最小验收矩阵，核心包含 active-surface grep gate、docs/build、web build、system info/health 与 `/themes` `/worldline` `/agent` `/graph` 入口验证。

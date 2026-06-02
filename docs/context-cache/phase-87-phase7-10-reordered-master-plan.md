@@ -13,7 +13,7 @@
 
 ### Phase 7：全仓品牌与文档治理重构
 目标：
-- 把活跃源码、配置、构建、运行、测试、主文档中的 `YUXI / yuxi` 切换为 `Worldline`
+- 把活跃源码、配置、构建、运行、测试、主文档中的 legacy brand tokens 切换为 `Worldline`
 - 压缩 Markdown 文档体系
 - 重构 `AGENTS.md` 与 `CODEX_WORKFLOW.md`
 
@@ -28,7 +28,7 @@
   - Immutable Evidence
 
 完成标准：
-- 活跃源码 / 配置 / 构建 / 测试 / 主文档不再出现 `YUXI / yuxi`
+- 活跃源码 / 配置 / 构建 / 测试 / 主文档不再出现 legacy brand tokens
 - 主阅读面只保留 Worldline 文档
 - `AGENTS.md` 与 `CODEX_WORKFLOW.md` 去重完成
 - 构建与基础 smoke 不回退
@@ -96,9 +96,9 @@ Canonical：
 - `WORLDLINE_URL_WHITELIST`
 
 Deprecated compatibility：
-- Phase 7-8 允许读取 `YUXI_*`
+- Phase 7-8 允许读取 legacy env aliases
 - 代码必须优先读 `WORLDLINE_*`
-- 若回退读到 `YUXI_*`，必须记录 deprecation warning
+- 若回退读到 legacy env aliases，必须记录 deprecation warning
 - Phase 9 结束前删除兼容别名
 
 ### 内部常量
@@ -125,7 +125,7 @@ Canonical Docs 默认保留：
 - `artifacts/qa-*` 作为 immutable evidence 保留，不改写内容
 
 ### 历史 evidence 处理
-- 活跃源码、配置、构建、测试、主文档：彻底去 `YUXI / yuxi`
+- 活跃源码、配置、构建、测试、主文档：彻底去 legacy brand tokens
 - 历史 evidence / 旧 phase 证据：不改写内容，只退出主阅读面
 
 ## 协作规则重构目标
@@ -172,7 +172,7 @@ Canonical Docs 默认保留：
 ## 当前阶段最小验收基线
 - `pnpm --dir web build`
 - `npm run docs:build`
-- grep 检查活跃源码 / 配置 / 主文档中不再出现 `YUXI / yuxi`
+- grep 检查活跃源码 / 配置 / 主文档中不再出现 legacy brand tokens
 - 主入口不回退：
   - `/api/system/info`
   - `/api/system/health`

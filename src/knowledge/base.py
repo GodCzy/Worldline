@@ -279,27 +279,30 @@ class KnowledgeBase(ABC):
         self._add_to_processing_queue(file_id)
 
         try:
+            from src.knowledge.compiler.service import DocumentCompiler
+            from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
             # Determine processing function based on content type
             content_type = file_meta.get("processing_params", {}).get("content_type", "file")
+            params = file_meta.get("processing_params", {}) or {}
+            params["db_id"] = db_id
+            compiler = DocumentCompiler()
 
             if content_type == "url":
-                from src.knowledge.indexing import process_url_to_markdown
-
-                # Prepare params
-                params = file_meta.get("processing_params", {}) or {}
-                params["db_id"] = db_id
-
-                # Process URL to Markdown
-                markdown_content = await process_url_to_markdown(file_path, params=params)
+                compiled_document = await compiler.compile_url(file_path, params=params)
             else:
-                from src.knowledge.indexing import process_file_to_markdown
+                compiled_document = await compiler.compile_file(file_path, params=params)
 
-                # Prepare params
-                params = file_meta.get("processing_params", {}) or {}
-                params["db_id"] = db_id
+            compile_result = await KnowledgeObjectRepository().persist_compiled_document(
+                db_id=db_id,
+                file_id=file_id,
+                compiled=compiled_document,
+                owner=operator_id,
+            )
+            if compiled_document.status != "success":
+                raise ValueError(compiled_document.error_message or "Document compile failed")
 
-                # Process file to Markdown
-                markdown_content = await process_file_to_markdown(file_path, params=params)
+            markdown_content = compiled_document.markdown_content
 
             # Save Markdown to MinIO
             markdown_file_path = await self._save_markdown_to_minio(db_id, file_id, markdown_content)
@@ -307,6 +310,10 @@ class KnowledgeBase(ABC):
             # Update metadata
             self.files_meta[file_id]["status"] = FileStatus.PARSED
             self.files_meta[file_id]["markdown_file"] = markdown_file_path
+            self.files_meta[file_id]["processing_params"] = {
+                **params,
+                "document_compile": compile_result,
+            }
             self.files_meta[file_id]["updated_at"] = utc_isoformat()
             if operator_id:
                 self.files_meta[file_id]["updated_by"] = operator_id

@@ -10,15 +10,15 @@
 
 ```text
 NAME              IMAGE                                      COMMAND                  SERVICE    CREATED        STATUS                    PORTS
-api-dev           yuxi-api:0.5.dev                           "uv run --no-dev uvi…"   api        2 days ago     Up 2 minutes (healthy)    0.0.0.0:5050->5050/tcp, [::]:5050->5050/tcp
+api-dev           legacy-api:0.5.dev                         "uv run --no-dev uvi…"   api        2 days ago     Up 2 minutes (healthy)    0.0.0.0:5050->5050/tcp, [::]:5050->5050/tcp
 graph             neo4j:5.26                                 "tini -g -- /startup…"   graph      42 hours ago   Up 2 minutes (healthy)    0.0.0.0:7474->7474/tcp, [::]:7474->7474/tcp, 0.0.0.0:7687->7687/tcp, [::]:7687->7687/tcp
 milvus            milvusdb/milvus:v2.5.6                     "/tini -- milvus run…"   milvus     2 weeks ago    Up 2 minutes (healthy)    0.0.0.0:9091->9091/tcp, [::]:9091->9091/tcp, 0.0.0.0:19530->19530/tcp, [::]:19530->19530/tcp
 milvus-etcd-dev   quay.io/coreos/etcd:v3.5.5                 "etcd -advertise-cli…"   etcd       2 weeks ago    Up 2 minutes (healthy)    2379-2380/tcp
 milvus-minio      minio/minio:RELEASE.2023-03-20T20-16-18Z   "/usr/bin/docker-ent…"   minio      2 weeks ago    Up 2 minutes (healthy)    0.0.0.0:9000-9001->9000-9001/tcp, [::]:9000-9001->9000-9001/tcp
 postgres          postgres:16                                "docker-entrypoint.s…"   postgres   2 days ago     Up 2 minutes (healthy)    0.0.0.0:5432->5432/tcp, [::]:5432->5432/tcp
 redis             redis:7-alpine                             "docker-entrypoint.s…"   redis      2 weeks ago    Up 2 minutes (healthy)    6379/tcp
-web-dev           yuxi-web:0.5.dev                           "docker-entrypoint.s…"   web        2 days ago     Up 2 minutes              0.0.0.0:5173->5173/tcp, [::]:5173->5173/tcp
-worker-dev        yuxi-api:0.5.dev                           "uv run --no-dev arq…"   worker     2 days ago     Up About a minute
+web-dev           legacy-web:0.5.dev                         "docker-entrypoint.s…"   web        2 days ago     Up 2 minutes              0.0.0.0:5173->5173/tcp, [::]:5173->5173/tcp
+worker-dev        legacy-api:0.5.dev                         "uv run --no-dev arq…"   worker     2 days ago     Up About a minute
 ```
 
 ## /api/system/health

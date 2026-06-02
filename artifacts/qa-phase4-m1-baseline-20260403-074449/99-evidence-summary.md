@@ -17,7 +17,7 @@
 - [PASS] admin_token_graph_neo4j_info_positive | GET http://127.0.0.1:5050/api/graph/neo4j/info | status=200 | expected=200
 
 ## Compatibility
-- Legacy compatibility files remain available: `result.json`, `result.txt`, `run_config.json`, `mcp_next_steps.md`.
+- Legacy compatibility files remain available: `result.json`, `result.txt`, `run_config.json`.
 - This package is read-only and does not create, update, or delete business data.
 
 ## Runtime

@@ -27,7 +27,7 @@
 ## Actual Changes
 - [src/__init__.py](../../src/__init__.py)
   - 增加默认的 `graph_base = None` 和 `knowledge_base = None`。
-  - 修正 `YUXI_SKIP_APP_INIT=1` 时 `from src import graph_base` 会直接 ImportError 的问题。
+  - 修正 legacy skip-init env alias 启用时 `from src import graph_base` 会直接 ImportError 的问题。
 - [src/knowledge/__init__.py](../../src/knowledge/__init__.py)
   - 将 `UploadGraphService()` 的导入期初始化改为容错启动。
   - 当 Neo4j 不可达时，不再让整个应用在 import 阶段崩溃，而是记录 warning 并延后到运行时恢复。
