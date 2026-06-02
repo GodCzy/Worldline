@@ -161,6 +161,7 @@ class PostgresManager(metaclass=SingletonMeta):
         ]
 
         async with self.async_engine.begin() as conn:
+            await conn.run_sync(KnowledgeBase.metadata.create_all)
             for stmt in stmts:
                 await conn.execute(text(stmt))
 
