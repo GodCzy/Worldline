@@ -143,6 +143,8 @@ async def test_repository_persists_compiled_document_objects(sqlite_pg_manager) 
             select(DocumentVersion).where(DocumentVersion.doc_version_id == result["doc_version_id"])
         )
         version = version_result.scalar_one()
+        asset_result = await session.execute(select(SourceAsset).where(SourceAsset.asset_id == result["asset_id"]))
+        asset = asset_result.scalar_one()
 
     assert counts == {
         "source_assets": 1,
@@ -152,6 +154,8 @@ async def test_repository_persists_compiled_document_objects(sqlite_pg_manager) 
     }
     assert version.file_id == "file_test"
     assert version.parse_config["parser_trace"][0]["parser"] == "legacy_markdown"
+    assert asset.asset_metadata["latest_doc_version_id"] == result["doc_version_id"]
+    assert asset.asset_metadata["latest_stats"]["node_count"] == 2
 
 
 @pytest.mark.asyncio
@@ -311,6 +315,20 @@ async def test_repository_binds_chunks_to_evidence_and_lists_outputs(sqlite_pg_m
     listed_anchors = await KnowledgeObjectRepository().list_evidence_anchors("kb_test", file_id="file_test")
     assert len(listed_anchors["items"]) == 2
     assert listed_anchors["items"][0]["evidence_id"].startswith("ev_")
+
+    listed_versions = await KnowledgeObjectRepository().list_document_versions("kb_test", file_id="file_test")
+    assert len(listed_versions["items"]) == 1
+    assert listed_versions["items"][0]["doc_version_id"].startswith("docv_")
+    assert listed_versions["items"][0]["stats"]["node_count"] == 2
+
+    version_detail = await KnowledgeObjectRepository().get_document_version(
+        "kb_test",
+        listed_versions["items"][0]["doc_version_id"],
+    )
+    assert version_detail is not None
+    assert len(version_detail["nodes"]) == 2
+    assert len(version_detail["evidence_anchors"]) == 2
+    assert version_detail["parse_config"]["parser_trace"][0]["parser"] == "legacy_markdown"
 
     decorated = await KnowledgeObjectRepository().decorate_retrieval_results(
         "kb_test",

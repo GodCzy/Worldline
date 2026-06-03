@@ -79,6 +79,18 @@ class KnowledgeObjectRepository:
             session.add(document_version)
             await session.flush()
 
+            source_asset.asset_metadata = {
+                **(source_asset.asset_metadata or {}),
+                "file_id": file_id,
+                "parser": compiled.parser,
+                "parser_version": compiled.parser_version,
+                "parser_trace": compiled.parser_trace,
+                "latest_doc_version_id": doc_version_id,
+                "latest_version_index": version_index,
+                "latest_status": compiled.status,
+                "latest_stats": compiled.stats,
+            }
+
             node_ids: dict[str, str] = {}
             for node in compiled.nodes:
                 node_ids[node.key] = self._node_id(doc_version_id, node.key, node.node_order)
@@ -140,6 +152,85 @@ class KnowledgeObjectRepository:
             "ast_hash": compiled.ast_hash,
             "content_hash": compiled.content_hash,
         }
+
+    async def list_document_versions(
+        self,
+        db_id: str,
+        *,
+        file_id: str | None = None,
+        asset_id: str | None = None,
+        status: str | None = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        """List compiled document versions for Phase 2 traceability."""
+
+        limit = max(1, min(int(limit or 50), 200))
+        offset = max(0, int(offset or 0))
+
+        async with pg_manager.get_async_session_context() as session:
+            stmt = (
+                select(DocumentVersion, SourceAsset)
+                .join(SourceAsset, DocumentVersion.asset_id == SourceAsset.asset_id)
+                .where(SourceAsset.db_id == db_id)
+                .order_by(desc(DocumentVersion.created_at), desc(DocumentVersion.version_index), desc(DocumentVersion.id))
+                .offset(offset)
+                .limit(limit + 1)
+            )
+            if file_id:
+                stmt = stmt.where(DocumentVersion.file_id == file_id)
+            if asset_id:
+                stmt = stmt.where(DocumentVersion.asset_id == asset_id)
+            if status:
+                stmt = stmt.where(DocumentVersion.status == status)
+
+            rows = (await session.execute(stmt)).all()
+
+        has_more = len(rows) > limit
+        items = [
+            self._serialize_document_version(version, asset, include_payload=False)
+            for version, asset in rows[:limit]
+        ]
+        return {
+            "items": items,
+            "limit": limit,
+            "offset": offset,
+            "has_more": has_more,
+        }
+
+    async def get_document_version(self, db_id: str, doc_version_id: str) -> dict[str, Any] | None:
+        """Return one compiled document version with AST nodes and evidence anchors."""
+
+        async with pg_manager.get_async_session_context() as session:
+            version_result = await session.execute(
+                select(DocumentVersion, SourceAsset)
+                .join(SourceAsset, DocumentVersion.asset_id == SourceAsset.asset_id)
+                .where(SourceAsset.db_id == db_id, DocumentVersion.doc_version_id == doc_version_id)
+            )
+            row = version_result.one_or_none()
+            if row is None:
+                return None
+            version, asset = row
+
+            node_rows = (
+                await session.execute(
+                    select(DocumentNode)
+                    .where(DocumentNode.doc_version_id == doc_version_id)
+                    .order_by(DocumentNode.node_order, DocumentNode.id)
+                )
+            ).scalars().all()
+            anchor_rows = (
+                await session.execute(
+                    select(EvidenceAnchor)
+                    .where(EvidenceAnchor.doc_version_id == doc_version_id)
+                    .order_by(EvidenceAnchor.page, EvidenceAnchor.line_start, EvidenceAnchor.char_start, EvidenceAnchor.id)
+                )
+            ).scalars().all()
+
+        payload = self._serialize_document_version(version, asset, include_payload=True)
+        payload["nodes"] = [self._serialize_node(node) for node in node_rows]
+        payload["evidence_anchors"] = [self._serialize_anchor(anchor) for anchor in anchor_rows]
+        return payload
 
     async def bind_chunks_to_latest_evidence(
         self,
@@ -459,6 +550,81 @@ class KnowledgeObjectRepository:
             "evidence_ids": chunk.evidence_ids or [],
             "metadata": chunk.chunk_metadata or {},
         }
+
+    def _serialize_document_version(
+        self,
+        version: DocumentVersion,
+        asset: SourceAsset,
+        *,
+        include_payload: bool,
+    ) -> dict[str, Any]:
+        payload = {
+            "doc_version_id": version.doc_version_id,
+            "asset_id": version.asset_id,
+            "file_id": version.file_id,
+            "source_uri": asset.uri,
+            "source_title": asset.title,
+            "asset_type": asset.asset_type,
+            "parser": version.parser,
+            "parser_version": version.parser_version,
+            "status": version.status,
+            "ast_hash": version.ast_hash,
+            "content_hash": version.content_hash,
+            "version_index": version.version_index,
+            "stats": version.stats or {},
+            "error_message": version.error_message,
+            "created_at": self._serialize_datetime(version.created_at),
+            "updated_at": self._serialize_datetime(version.updated_at),
+        }
+        if include_payload:
+            payload["parse_config"] = version.parse_config or {}
+            payload["source_metadata"] = asset.asset_metadata or {}
+        return payload
+
+    def _serialize_node(self, node: DocumentNode) -> dict[str, Any]:
+        return {
+            "node_id": node.node_id,
+            "doc_version_id": node.doc_version_id,
+            "parent_id": node.parent_id,
+            "node_type": node.node_type,
+            "node_order": node.node_order,
+            "text": self._trim_text(node.text, 1000),
+            "table_json": node.table_json,
+            "image_ref": node.image_ref,
+            "page_start": node.page_start,
+            "page_end": node.page_end,
+            "bbox": node.bbox,
+            "char_start": node.char_start,
+            "char_end": node.char_end,
+            "metadata": node.node_metadata or {},
+        }
+
+    def _serialize_anchor(self, anchor: EvidenceAnchor) -> dict[str, Any]:
+        return {
+            "evidence_id": anchor.evidence_id,
+            "doc_version_id": anchor.doc_version_id,
+            "node_id": anchor.node_id,
+            "anchor_type": anchor.anchor_type,
+            "source_uri": anchor.source_uri,
+            "page": anchor.page,
+            "line_start": anchor.line_start,
+            "line_end": anchor.line_end,
+            "bbox": anchor.bbox,
+            "char_start": anchor.char_start,
+            "char_end": anchor.char_end,
+            "text_span": anchor.text_span,
+            "text_excerpt": self._trim_text(anchor.text_excerpt, 500),
+            "confidence": anchor.confidence,
+            "metadata": anchor.evidence_metadata or {},
+        }
+
+    def _serialize_datetime(self, value: Any) -> str | None:
+        if value is None:
+            return None
+        serializer = getattr(value, "isoformat", None)
+        if callable(serializer):
+            return serializer()
+        return str(value)
 
     def _trim_text(self, value: str | None, limit: int) -> str | None:
         if value is None:

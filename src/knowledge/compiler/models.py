@@ -18,6 +18,8 @@ class CompiledNode:
     page_start: int | None = None
     page_end: int | None = None
     bbox: Any | None = None
+    line_start: int | None = None
+    line_end: int | None = None
     char_start: int | None = None
     char_end: int | None = None
     metadata: dict[str, Any] = field(default_factory=dict)

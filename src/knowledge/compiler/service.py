@@ -5,6 +5,7 @@ import hashlib
 import os
 import tempfile
 import time
+from collections import Counter
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -314,14 +315,14 @@ class DocumentCompiler:
         normalized_nodes = self._normalize_nodes(nodes)
         anchors = self._anchors_from_nodes(normalized_nodes, source_uri)
         ast_hash = self._ast_hash(normalized_nodes)
-        stats = {
-            "node_count": len(normalized_nodes),
-            "evidence_anchor_count": len(anchors),
-            "character_count": len(markdown_content),
-            "table_count": sum(1 for node in normalized_nodes if node.table_json is not None),
-            "image_count": sum(1 for node in normalized_nodes if node.image_ref),
-            "duration_ms": int((time.time() - started) * 1000),
-        }
+        stats = self._build_stats(
+            markdown_content=markdown_content,
+            nodes=normalized_nodes,
+            anchors=anchors,
+            parser=parser,
+            parser_trace=parser_trace,
+            started=started,
+        )
         return CompiledDocument(
             source_uri=source_uri,
             title=title,
@@ -360,7 +361,16 @@ class DocumentCompiler:
             status="failed",
             parse_config=parse_config,
             parser_trace=parser_trace,
-            stats={"duration_ms": int((time.time() - started) * 1000), "node_count": 0, "evidence_anchor_count": 0},
+            stats={
+                "duration_ms": int((time.time() - started) * 1000),
+                "node_count": 0,
+                "evidence_anchor_count": 0,
+                "parser": parser,
+                "parser_trace_count": len(parser_trace),
+                "parser_success_count": sum(1 for item in parser_trace if item.get("status") == "success"),
+                "parser_failure_count": sum(1 for item in parser_trace if item.get("status") == "failed"),
+                "fallback_used": self._fallback_used(parser_trace),
+            },
             error_message=str(error),
         )
 
@@ -371,60 +381,49 @@ class DocumentCompiler:
         nodes: list[CompiledNode] = []
         cursor = 0
 
-        for item in self._iter_items(getattr(doc, "texts", None)):
-            text = self._extract_text(item)
-            if not text:
+        for item_kind, item in self._docling_ordered_items(doc):
+            if item_kind == "table":
+                text = self._extract_markdown(item) or self._extract_text(item)
+                table_json = self._to_jsonable(getattr(item, "data", None) or getattr(item, "table", None))
+                image_ref = None
+            elif item_kind == "image":
+                image_ref = self._extract_image_ref(item)
+                text = self._extract_text(item) or image_ref
+                table_json = None
+            else:
+                text = self._extract_text(item)
+                table_json = None
+                image_ref = None
+
+            if not text and table_json is None and not image_ref:
                 continue
-            char_start = markdown.find(text, cursor)
-            if char_start < 0:
-                char_start = cursor
-            char_end = char_start + len(text)
-            cursor = max(cursor, char_end)
+
+            span_text = image_ref if item_kind == "image" and image_ref else (text or image_ref)
+            char_start, char_end, cursor = self._find_text_span(markdown, span_text, cursor)
+            line_start, line_end = self._line_range_for_span(markdown, char_start, char_end)
+            page_start, page_end = self._extract_page_range(item)
             nodes.append(
                 CompiledNode(
                     key=f"n{len(nodes)}",
-                    node_type=str(getattr(item, "label", None) or "text").lower(),
+                    node_type=self._node_type_from_docling(item, item_kind),
                     node_order=len(nodes),
                     text=text,
-                    page_start=self._extract_page(item),
-                    page_end=self._extract_page(item),
+                    table_json=table_json,
+                    image_ref=image_ref,
+                    page_start=page_start,
+                    page_end=page_end,
                     bbox=self._extract_bbox(item),
+                    line_start=line_start,
+                    line_end=line_end,
                     char_start=char_start,
                     char_end=char_end,
-                    metadata={"source": "docling.text"},
-                )
-            )
-
-        for item in self._iter_items(getattr(doc, "tables", None)):
-            table_markdown = self._extract_markdown(item)
-            nodes.append(
-                CompiledNode(
-                    key=f"n{len(nodes)}",
-                    node_type="table",
-                    node_order=len(nodes),
-                    text=table_markdown,
-                    table_json=self._to_jsonable(getattr(item, "data", None) or getattr(item, "table", None)),
-                    page_start=self._extract_page(item),
-                    page_end=self._extract_page(item),
-                    bbox=self._extract_bbox(item),
-                    metadata={"source": "docling.table"},
-                )
-            )
-
-        for item in self._iter_items(getattr(doc, "pictures", None)):
-            image_ref = self._extract_image_ref(item)
-            caption = self._extract_text(item) or image_ref
-            nodes.append(
-                CompiledNode(
-                    key=f"n{len(nodes)}",
-                    node_type="image",
-                    node_order=len(nodes),
-                    text=caption,
-                    image_ref=image_ref,
-                    page_start=self._extract_page(item),
-                    page_end=self._extract_page(item),
-                    bbox=self._extract_bbox(item),
-                    metadata={"source": "docling.picture"},
+                    metadata={
+                        "source": f"docling.{item_kind}",
+                        "docling_label": str(getattr(item, "label", "") or item_kind),
+                        "line_start": line_start,
+                        "line_end": line_end,
+                        "provenance": self._to_jsonable(getattr(item, "prov", None)),
+                    },
                 )
             )
 
@@ -439,6 +438,7 @@ class DocumentCompiler:
             if char_start < 0:
                 char_start = cursor
             char_end = char_start + len(block)
+            line_start, line_end = self._line_range_for_span(markdown, char_start, char_end)
             cursor = max(cursor, char_end)
             node_type = self._classify_markdown_block(block)
             nodes.append(
@@ -449,9 +449,11 @@ class DocumentCompiler:
                     text=block,
                     table_json=self._markdown_table_to_json(block) if node_type == "table" else None,
                     image_ref=self._markdown_image_ref(block) if node_type == "image" else None,
+                    line_start=line_start,
+                    line_end=line_end,
                     char_start=char_start,
                     char_end=char_end,
-                    metadata={"source": "markdown"},
+                    metadata={"source": "markdown", "line_start": line_start, "line_end": line_end},
                 )
             )
         return nodes
@@ -479,6 +481,8 @@ class DocumentCompiler:
                     anchor_type="table" if node.table_json is not None else ("image" if node.image_ref else "text"),
                     source_uri=source_uri,
                     page=node.page_start,
+                    line_start=node.line_start,
+                    line_end=node.line_end,
                     bbox=node.bbox,
                     char_start=node.char_start,
                     char_end=node.char_end,
@@ -545,6 +549,50 @@ class DocumentCompiler:
             return list(value.values())
         return list(value)
 
+    def _docling_ordered_items(self, doc: Any) -> list[tuple[str, Any]]:
+        iterator = getattr(doc, "iterate_items", None)
+        if callable(iterator):
+            ordered: list[tuple[str, Any]] = []
+            try:
+                for entry in iterator():
+                    item = entry[0] if isinstance(entry, tuple) else entry
+                    item_kind = self._docling_item_kind(item)
+                    if item_kind:
+                        ordered.append((item_kind, item))
+            except Exception:  # noqa: BLE001
+                ordered = []
+            if ordered:
+                return ordered
+
+        items: list[tuple[str, Any]] = []
+        items.extend(("text", item) for item in self._iter_items(getattr(doc, "texts", None)))
+        items.extend(("table", item) for item in self._iter_items(getattr(doc, "tables", None)))
+        items.extend(("image", item) for item in self._iter_items(getattr(doc, "pictures", None)))
+        return items
+
+    def _docling_item_kind(self, item: Any) -> str | None:
+        type_name = type(item).__name__.lower()
+        label = str(getattr(item, "label", "") or "").lower()
+        if "table" in type_name or "table" in label or hasattr(item, "table"):
+            return "table"
+        if "picture" in type_name or "image" in type_name or hasattr(item, "image"):
+            return "image"
+        if self._extract_text(item):
+            return "text"
+        if hasattr(item, "data") and callable(getattr(item, "export_to_markdown", None)):
+            return "table"
+        return None
+
+    def _node_type_from_docling(self, item: Any, item_kind: str) -> str:
+        if item_kind in {"table", "image"}:
+            return item_kind
+        label = str(getattr(item, "label", None) or "text").lower()
+        if "heading" in label or "title" in label:
+            return "heading"
+        if label in {"paragraph", "section_header", "list_item", "text"}:
+            return label
+        return "text"
+
     def _extract_text(self, item: Any) -> str | None:
         for attr in ("text", "content", "caption", "name"):
             value = getattr(item, attr, None)
@@ -577,6 +625,26 @@ class DocumentCompiler:
                 return value
         return None
 
+    def _extract_page_range(self, item: Any) -> tuple[int | None, int | None]:
+        pages = self._extract_pages(item)
+        if not pages:
+            return None, None
+        return min(pages), max(pages)
+
+    def _extract_pages(self, item: Any) -> list[int]:
+        pages: list[int] = []
+        prov = getattr(item, "prov", None)
+        sources = list(prov) if isinstance(prov, (list, tuple)) else ([prov] if prov else [])
+        sources.append(item)
+        for source in sources:
+            if source is None:
+                continue
+            for attr in ("page_no", "page", "page_index"):
+                value = getattr(source, attr, None)
+                if isinstance(value, int):
+                    pages.append(value)
+        return pages
+
     def _extract_bbox(self, item: Any) -> Any | None:
         prov = getattr(item, "prov", None)
         source = prov[0] if prov and isinstance(prov, (list, tuple)) else (prov or item)
@@ -593,6 +661,29 @@ class DocumentCompiler:
                 if value:
                     return str(value)
         return None
+
+    def _find_text_span(self, markdown: str, text: str | None, cursor: int) -> tuple[int | None, int | None, int]:
+        if not text:
+            return None, None, cursor
+        char_start = markdown.find(text, cursor)
+        if char_start < 0:
+            char_start = markdown.find(text)
+        if char_start < 0:
+            return None, None, cursor
+        char_end = char_start + len(text)
+        return char_start, char_end, max(cursor, char_end)
+
+    def _line_range_for_span(
+        self,
+        markdown: str,
+        char_start: int | None,
+        char_end: int | None,
+    ) -> tuple[int | None, int | None]:
+        if char_start is None or char_end is None:
+            return None, None
+        line_start = markdown[:char_start].count("\n") + 1
+        line_end = markdown[:char_end].count("\n") + 1
+        return line_start, line_end
 
     def _to_jsonable(self, value: Any) -> Any | None:
         if value is None:
@@ -620,12 +711,68 @@ class DocumentCompiler:
                 "page_start": node.page_start,
                 "page_end": node.page_end,
                 "bbox": node.bbox,
+                "line_start": node.line_start,
+                "line_end": node.line_end,
                 "char_start": node.char_start,
                 "char_end": node.char_end,
             }
             for node in nodes
         ]
         return hashstr(json.dumps(payload, ensure_ascii=False, sort_keys=True))
+
+    def _build_stats(
+        self,
+        *,
+        markdown_content: str,
+        nodes: list[CompiledNode],
+        anchors: list[CompiledEvidenceAnchor],
+        parser: str,
+        parser_trace: list[dict[str, Any]],
+        started: float,
+    ) -> dict[str, Any]:
+        node_type_counts = Counter(node.node_type for node in nodes)
+        pages = sorted(
+            {
+                page
+                for node in nodes
+                for page in (node.page_start, node.page_end)
+                if isinstance(page, int)
+            }
+        )
+        parser_status_counts = Counter(str(item.get("status") or "unknown") for item in parser_trace)
+        structured_node_count = sum(
+            1 for node in nodes if str((node.metadata or {}).get("source", "")).startswith("docling.")
+        )
+        return {
+            "node_count": len(nodes),
+            "evidence_anchor_count": len(anchors),
+            "character_count": len(markdown_content),
+            "table_count": sum(1 for node in nodes if node.table_json is not None),
+            "image_count": sum(1 for node in nodes if node.image_ref),
+            "node_type_counts": dict(node_type_counts),
+            "page_count": len(pages),
+            "page_start": pages[0] if pages else None,
+            "page_end": pages[-1] if pages else None,
+            "parser": parser,
+            "parser_trace_count": len(parser_trace),
+            "parser_success_count": parser_status_counts.get("success", 0),
+            "parser_failure_count": parser_status_counts.get("failed", 0),
+            "fallback_used": self._fallback_used(parser_trace),
+            "structured_node_count": structured_node_count,
+            "has_docling_structure": structured_node_count > 0,
+            "duration_ms": int((time.time() - started) * 1000),
+        }
+
+    def _fallback_used(self, parser_trace: list[dict[str, Any]]) -> bool:
+        if len(parser_trace) <= 1:
+            return False
+        last_success_index = next(
+            (idx for idx in range(len(parser_trace) - 1, -1, -1) if parser_trace[idx].get("status") == "success"),
+            None,
+        )
+        if last_success_index is None:
+            return any(item.get("status") == "failed" for item in parser_trace)
+        return any(item.get("status") == "failed" for item in parser_trace[:last_success_index])
 
     def _content_hash(self, content: str) -> str:
         return hashlib.sha256(content.encode("utf-8")).hexdigest()

@@ -991,6 +991,58 @@ async def get_evidence_anchor(
         raise HTTPException(status_code=500, detail=f"查询证据锚点失败: {e}")
 
 
+@knowledge.get("/databases/{db_id}/document-versions")
+async def list_document_versions(
+    db_id: str,
+    file_id: str | None = Query(None),
+    asset_id: str | None = Query(None),
+    status: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 Phase 2 文档编译版本。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+        return await KnowledgeObjectRepository().list_document_versions(
+            db_id,
+            file_id=file_id,
+            asset_id=asset_id,
+            status=status,
+            limit=limit,
+            offset=offset,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询文档编译版本失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询文档编译版本失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/document-versions/{doc_version_id}")
+async def get_document_version(
+    db_id: str,
+    doc_version_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """查询单个文档编译版本、AST 节点和 EvidenceAnchor。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
+
+        version = await KnowledgeObjectRepository().get_document_version(db_id, doc_version_id)
+        if version is None:
+            raise HTTPException(status_code=404, detail=f"文档编译版本 {doc_version_id} 不存在")
+        return version
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询文档编译版本失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询文档编译版本失败: {e}")
+
+
 @knowledge.get("/databases/{db_id}/documents/{doc_id}/chunks")
 async def list_document_chunks(
     db_id: str,
