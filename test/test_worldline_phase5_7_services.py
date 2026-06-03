@@ -166,6 +166,14 @@ async def test_phase6_worldline_manifest_and_workflow_plan(sqlite_pg_manager) ->
     assert manifest["audit"]["enabled"] is True
     assert manifest["audit"]["table"] == "worldline_mcp_audit_logs"
     assert manifest["security"]["external_agents_direct_db_write"] is False
+    assert manifest["subagents"]["single_writer_policy"] is True
+    assert manifest["subagents"]["parallel_writes_to_same_files"] is False
+    assert {lane["lane"] for lane in manifest["subagents"]["lanes"]} == {
+        "research_reviewer",
+        "knowledge_operator",
+        "frontend_qa",
+        "release_auditor",
+    }
     assert all(tool["requires_admin"] for tool in manifest["tools"] if tool["write_scope"] != "none")
 
     plan = await service.plan_workflow(

@@ -24,3 +24,22 @@ Worldline 的评估不是只跑 benchmark，而是持续检查知识编译、Wik
 - Browser/Playwright 截图。
 - Quality gate run payload。
 - `.ai/tasks/<date-task>/EVIDENCE.md` 命令摘要。
+
+## Phase 7 Release Gate
+
+Phase 7 adds a static project release gate in `WorldlineReleaseGateService`.
+
+The gate checks:
+
+- Required docs are present.
+- Required phase task directories and `EVIDENCE.md` files are present.
+- Local Codex Worldline skills are installed.
+- Application MCP defaults pass the Worldline governance report.
+- The controlled Worldline manifest keeps audit logs, service-boundary writes, and subagent lanes.
+- Phase 5 screenshot QA has no failures and covers hub, workbench, and graph pages across desktop and mobile viewports.
+
+The command is:
+
+```powershell
+python scripts\worldline_phase6_7_release_gate.py
+```

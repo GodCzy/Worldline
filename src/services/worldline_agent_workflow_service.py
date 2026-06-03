@@ -11,7 +11,39 @@ class WorldlineAgentWorkflowService:
     """Controlled tool manifest and LangGraph-shaped workflow planner."""
 
     SERVER_NAME = "worldline"
-    SERVER_VERSION = "0.1.0"
+    SERVER_VERSION = "0.2.0"
+    SUBAGENT_LANES: tuple[dict[str, Any], ...] = (
+        {
+            "lane": "research_reviewer",
+            "purpose": "Research, compare options, and review evidence without writing project data.",
+            "write_scope": "none",
+            "allowed_tools": ["GitHub", "Browser/Playwright"],
+            "requires_handoff": True,
+        },
+        {
+            "lane": "knowledge_operator",
+            "purpose": "Trigger controlled wiki, graph, timeline, and quality-gate workflows.",
+            "write_scope": "worldline_service_boundary",
+            "allowed_tools": ["worldline"],
+            "requires_admin": True,
+            "requires_handoff": True,
+        },
+        {
+            "lane": "frontend_qa",
+            "purpose": "Run local browser screenshot QA for Worldline workbench pages.",
+            "write_scope": "artifacts_only",
+            "allowed_tools": ["Browser/Playwright"],
+            "allowed_targets": ["localhost", "127.0.0.1"],
+            "requires_handoff": False,
+        },
+        {
+            "lane": "release_auditor",
+            "purpose": "Run deterministic release gates and record validation evidence.",
+            "write_scope": "task_evidence",
+            "allowed_tools": ["worldline_release_gate", "pytest", "vite", "docker compose config"],
+            "requires_handoff": False,
+        },
+    )
 
     TOOL_DEFINITIONS: tuple[dict[str, Any], ...] = (
         {
@@ -119,6 +151,11 @@ class WorldlineAgentWorkflowService:
                 "table": "worldline_mcp_audit_logs",
                 "records_tool_name_actor_status_and_summaries": True,
             },
+            "subagents": {
+                "single_writer_policy": True,
+                "parallel_writes_to_same_files": False,
+                "lanes": list(self.SUBAGENT_LANES),
+            },
             "tools": list(self.TOOL_DEFINITIONS),
         }
 
@@ -166,6 +203,10 @@ class WorldlineAgentWorkflowService:
             "dispatch_backend": "arq",
             "edges": edges,
             "policy": "single writer service boundary",
+            "subagent_policy": {
+                "single_writer": True,
+                "handoff_required_for_write_lanes": True,
+            },
         }
         await self.repository.insert_workflow_run(
             {

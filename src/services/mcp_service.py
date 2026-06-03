@@ -10,6 +10,7 @@ Responsibilities:
 import asyncio
 import re
 import traceback
+from copy import deepcopy
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -36,6 +37,22 @@ _mcp_tools_stats: dict[str, dict[str, int]] = {}
 # MCP Server configurations (Runtime cache, loaded from DB)
 MCP_SERVERS: dict[str, dict[str, Any]] = {}
 _UNSET = object()
+WORLDLINE_DEFAULT_ENABLED_MCP_SERVERS = {"worldline"}
+WORLDLINE_CONDITIONAL_MCP_SERVERS = {"sequentialthinking", "mcp-server-chart"}
+WORLDLINE_FORBIDDEN_DEFAULT_MARKERS = {
+    "postgres",
+    "neo4j",
+    "milvus",
+    "redis",
+    "filesystem",
+    "shell",
+    "docker",
+    "kubernetes",
+    "slack",
+    "email",
+    "calendar",
+}
+WORLDLINE_SECRET_KEY_MARKERS = ("key", "token", "secret", "password", "credential")
 
 # Default MCP Server configurations (Imported to DB on first run)
 _DEFAULT_MCP_SERVERS = {
@@ -64,6 +81,135 @@ _DEFAULT_MCP_SERVERS = {
         "tags": ["内置", "图表"],
     },
 }
+
+_DEFAULT_MCP_SERVERS["worldline"]["enabled"] = 1
+_DEFAULT_MCP_SERVERS["sequentialthinking"]["enabled"] = 0
+_DEFAULT_MCP_SERVERS["sequentialthinking"]["tags"] = ["conditional", "ai"]
+_DEFAULT_MCP_SERVERS["mcp-server-chart"]["enabled"] = 0
+_DEFAULT_MCP_SERVERS["mcp-server-chart"]["tags"] = ["conditional", "chart"]
+
+
+def get_default_mcp_server_configs() -> dict[str, dict[str, Any]]:
+    """Return a defensive copy of the built-in MCP server defaults."""
+
+    return deepcopy(_DEFAULT_MCP_SERVERS)
+
+
+def _config_enabled(config: dict[str, Any]) -> bool:
+    return bool(config.get("enabled", 1))
+
+
+def _contains_forbidden_default_marker(name: str, config: dict[str, Any]) -> str | None:
+    haystack = " ".join(
+        [
+            name,
+            str(config.get("command") or ""),
+            str(config.get("url") or ""),
+            " ".join(str(arg) for arg in config.get("args") or []),
+            " ".join(str(tag) for tag in config.get("tags") or []),
+        ]
+    ).lower()
+    for marker in WORLDLINE_FORBIDDEN_DEFAULT_MARKERS:
+        if marker in haystack and name != "worldline":
+            return marker
+    return None
+
+
+def _secret_env_keys(config: dict[str, Any]) -> list[str]:
+    env = config.get("env") or {}
+    if not isinstance(env, dict):
+        return []
+    return [
+        str(key)
+        for key, value in env.items()
+        if value and any(marker in str(key).lower() for marker in WORLDLINE_SECRET_KEY_MARKERS)
+    ]
+
+
+def get_mcp_governance_report(server_configs: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
+    """Return a deterministic Phase 6 governance report for MCP defaults."""
+
+    configs = deepcopy(server_configs or _DEFAULT_MCP_SERVERS)
+    enabled_by_default = sorted(name for name, config in configs.items() if _config_enabled(config))
+    disabled_by_default = sorted(name for name, config in configs.items() if not _config_enabled(config))
+    violations: list[dict[str, Any]] = []
+    warnings: list[dict[str, Any]] = []
+
+    if "worldline" not in enabled_by_default:
+        violations.append(
+            {
+                "check": "worldline_enabled",
+                "message": "The controlled worldline MCP server must be enabled by default.",
+            }
+        )
+
+    unexpected_enabled = [name for name in enabled_by_default if name not in WORLDLINE_DEFAULT_ENABLED_MCP_SERVERS]
+    if unexpected_enabled:
+        violations.append(
+            {
+                "check": "default_enabled_allowlist",
+                "message": "Only the controlled worldline MCP server may be enabled by default.",
+                "servers": unexpected_enabled,
+            }
+        )
+
+    conditional_enabled = [name for name in WORLDLINE_CONDITIONAL_MCP_SERVERS if name in enabled_by_default]
+    if conditional_enabled:
+        violations.append(
+            {
+                "check": "conditional_default_disabled",
+                "message": "Conditional MCP servers must stay disabled until reviewed for a task.",
+                "servers": sorted(conditional_enabled),
+            }
+        )
+
+    for name, config in configs.items():
+        marker = _contains_forbidden_default_marker(name, config)
+        if marker and _config_enabled(config):
+            violations.append(
+                {
+                    "check": "forbidden_default_marker",
+                    "message": "High-risk MCP categories cannot be enabled by default.",
+                    "server": name,
+                    "marker": marker,
+                }
+            )
+        secret_keys = _secret_env_keys(config)
+        if secret_keys:
+            violations.append(
+                {
+                    "check": "secrets_in_default_env",
+                    "message": "Default MCP configs must not embed secrets.",
+                    "server": name,
+                    "keys": secret_keys,
+                }
+            )
+        elif config.get("env"):
+            warnings.append(
+                {
+                    "check": "env_present",
+                    "server": name,
+                    "message": "Environment values are present; verified no secret-like key names are embedded.",
+                }
+            )
+
+    return {
+        "status": "passed" if not violations else "failed",
+        "policy": {
+            "default_enabled_allowlist": sorted(WORLDLINE_DEFAULT_ENABLED_MCP_SERVERS),
+            "conditional_servers": sorted(WORLDLINE_CONDITIONAL_MCP_SERVERS),
+            "forbidden_default_markers": sorted(WORLDLINE_FORBIDDEN_DEFAULT_MARKERS),
+            "external_agent_write_boundary": "worldline_service_boundary",
+            "external_codex_tools": ["GitHub", "Browser/Playwright"],
+        },
+        "servers": {
+            "total": len(configs),
+            "enabled_by_default": enabled_by_default,
+            "disabled_by_default": disabled_by_default,
+        },
+        "violations": violations,
+        "warnings": warnings,
+    }
 
 # =============================================================================
 # === Core Logic (Moved from agents/common/mcp.py) ===
@@ -178,8 +324,17 @@ async def init_mcp_servers() -> None:
                         )
                         session.add(server)
                         logger.info(f"Added built-in MCP server '{name}' to database")
+                    elif existing.created_by == "system" and existing.updated_by == "system":
+                        desired_enabled = int(config.get("enabled", 1))
+                        if int(existing.enabled) != desired_enabled:
+                            existing.enabled = desired_enabled
+                            existing.tags = config.get("tags")
+                            logger.info(
+                                f"Aligned built-in MCP server '{name}' enabled={bool(desired_enabled)} "
+                                "with Worldline governance defaults"
+                            )
                 # Commit if any new servers were added (check session state)
-                if session.new:
+                if session.new or session.dirty:
                     await session.commit()
 
         # Load configurations from database to cache
