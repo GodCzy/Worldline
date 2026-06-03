@@ -11,6 +11,7 @@ from src.services.auto_wiki_service import AutoWikiService
 from src.services.knowledge_graph_service import KnowledgeGraphService
 from src.services.worldline_agent_workflow_service import WorldlineAgentWorkflowService
 from src.services.worldline_quality_gate_service import WorldlineQualityGateService
+from src.services.worldline_workbench_service import WorldlineWorkbenchService
 from src.storage.postgres.manager import pg_manager
 from src.storage.postgres.models_knowledge import KnowledgeBase, KnowledgeFile
 
@@ -188,3 +189,35 @@ async def test_phase7_quality_gate_builds_golden_set_and_replay(sqlite_pg_manage
 
     stored = await KnowledgeGraphRepository().get_quality_gate_run("kb_phase5", gate["gate_id"])
     assert stored is not None
+
+
+@pytest.mark.asyncio
+async def test_workbench_overview_and_generate(sqlite_pg_manager) -> None:
+    await _seed_phase5_chunks()
+    await AutoWikiService().rebuild_wiki("kb_phase5", max_topics=5)
+    await KnowledgeGraphService().rebuild_graph("kb_phase5", max_entities=8)
+    await WorldlineQualityGateService().run_gate("kb_phase5")
+
+    service = WorldlineWorkbenchService()
+    overview = await service.build_overview("kb_phase5")
+
+    assert overview["status"] == "ready"
+    assert overview["counts"]["evidence_anchors"] >= 2
+    assert overview["counts"]["wiki_pages"] >= 1
+    assert overview["counts"]["entities"] >= 1
+    assert overview["mcp"]["manifest"]["server"]["name"] == "worldline"
+    assert overview["quality_gate"]["latest"]["status"] == "passed"
+
+    result = await service.generate_worldline(
+        "kb_phase5",
+        theme_id="knowledge-ops",
+        question="How should recovery validation proceed?",
+    )
+
+    assert result["status"] == "ready"
+    assert result["themeId"] == "knowledge-ops"
+    assert result["knowledgeDbId"] == "kb_phase5"
+    assert result["branches"]
+    assert result["tree"]["nodes"]
+    assert result["branches"][0]["evidenceRefs"]
+    assert result["routeTrace"]["deterministic_baseline"] is True

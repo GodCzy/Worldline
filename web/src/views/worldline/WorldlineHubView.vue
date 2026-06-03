@@ -29,7 +29,7 @@
               <p class="eyebrow">模块选择</p>
               <h2>先选模块，再生成基础世界线</h2>
             </div>
-            <span class="panel-badge">{{ themes.length }} 个模块</span>
+            <span class="panel-badge">{{ moduleBadgeText }}</span>
           </div>
 
           <div v-if="hasAvailableThemes" class="module-strip" role="tablist" aria-label="世界线模块">
@@ -47,7 +47,12 @@
           </div>
 
           <div v-else class="empty-state">
-            当前没有已接入世界线适配器的模块。
+            <strong>当前没有启用的主题模块。</strong>
+            <p>旧主题与演示模块已移出默认运行面。请先接入真实知识库或在系统配置中声明新的 Worldline 模块。</p>
+            <div class="empty-actions">
+              <router-link class="secondary-button" to="/themes">查看模块页</router-link>
+              <router-link class="secondary-button" to="/database">查看知识库</router-link>
+            </div>
           </div>
 
           <div class="question-panel">
@@ -126,7 +131,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInfoStore } from '@/stores/info'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
-import { getWorldlineDefaultQuestion, hasWorldlineAdapter } from '@/data/worldline'
+import { getWorldlineDefaultQuestion } from '@/data/worldline'
+import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId } from '@/apis/worldline_api'
 
 const router = useRouter()
 const infoStore = useInfoStore()
@@ -137,13 +143,16 @@ const selectedThemeId = ref('')
 const fallbackQuestion =
   '请描述你的目标、偏好和限制，让世界线先展开几条未来分支。'
 
-const themes = computed(() => (infoStore.themes || []).filter((theme) => hasWorldlineAdapter(theme.id)))
+const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme)
+const configuredThemes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
+const themes = computed(() => configuredThemes.value)
 const docsUrl = computed(() => infoStore.docsUrl || '')
 const hasAvailableThemes = computed(() => themes.value.length > 0)
+const moduleBadgeText = computed(() => (themes.value.length ? `${themes.value.length} 个模块` : '等待接入'))
 const activeTheme = computed(
   () => themes.value.find((theme) => theme.id === selectedThemeId.value) || themes.value[0] || null
 )
-const activeThemeSupported = computed(() => Boolean(activeTheme.value?.id))
+const activeThemeSupported = computed(() => Boolean(activeTheme.value?.id && hasWorldlineLiveBridge(activeTheme.value)))
 const compactThemeDescription = computed(() => {
   const description = (activeTheme.value?.description || '').trim()
   if (!description) return '围绕当前模块，先生成基础分支再继续推进。'
@@ -175,7 +184,8 @@ const ensureSelectedTheme = () => {
       ? worldlineStore.themeId
       : ''
   const primaryThemeId =
-    infoStore.primaryTheme?.id && hasWorldlineAdapter(infoStore.primaryTheme.id)
+    infoStore.primaryTheme?.id &&
+    themes.value.some((theme) => theme.id === infoStore.primaryTheme.id)
       ? infoStore.primaryTheme.id
       : ''
 
@@ -208,7 +218,12 @@ const buildWorkbenchLocation = () => {
 
   return {
     path: targetThemeId ? `/worldline/${targetThemeId}` : '/worldline',
-    query: questionDraft.value.trim() ? { question: questionDraft.value.trim() } : {}
+    query: {
+      ...(questionDraft.value.trim() ? { question: questionDraft.value.trim() } : {}),
+      ...(resolveThemeKnowledgeDbId(activeTheme.value)
+        ? { knowledge_db_id: resolveThemeKnowledgeDbId(activeTheme.value) }
+        : {})
+    }
   }
 }
 
@@ -404,6 +419,18 @@ onMounted(async () => {
   border-radius: 20px;
   border: 1px dashed color-mix(in srgb, var(--gray-150) 90%, transparent);
   color: var(--gray-600);
+}
+
+.empty-state p {
+  margin: 8px 0 0;
+  line-height: 1.7;
+}
+
+.empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .question-panel {

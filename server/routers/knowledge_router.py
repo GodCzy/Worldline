@@ -1210,6 +1210,51 @@ async def get_worldline_mcp_manifest(
         raise HTTPException(status_code=500, detail=f"查询 Worldline MCP manifest 失败: {e}")
 
 
+@knowledge.get("/databases/{db_id}/worldline/overview")
+async def get_worldline_overview(
+    db_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """获取真实 Worldline 工作台摘要，用于前端 live workbench。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_workbench_service import WorldlineWorkbenchService
+
+        return await WorldlineWorkbenchService().build_overview(db_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline overview 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline overview 失败: {e}")
+
+
+@knowledge.post("/databases/{db_id}/worldline/generate")
+async def generate_worldline_workbench(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """生成可被前端 worldlineStore.hydrate 消费的真实 Worldline payload。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_workbench_service import WorldlineWorkbenchService
+
+        payload = payload or {}
+        return await WorldlineWorkbenchService().generate_worldline(
+            db_id,
+            theme_id=payload.get("theme_id") or payload.get("themeId") or "worldline",
+            question=payload.get("question") or "",
+            mode=payload.get("mode") or "base",
+            focus_branch_id=payload.get("focus_branch_id") or payload.get("focusBranchId"),
+            context=payload.get("context") or {},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"生成 Worldline workbench 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"生成 Worldline workbench 失败: {e}")
+
+
 @knowledge.get("/databases/{db_id}/worldline-mcp/audit-logs")
 async def list_worldline_mcp_audit_logs(
     db_id: str,

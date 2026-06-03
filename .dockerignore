@@ -1,23 +1,45 @@
 # 忽略 Git 相关的文件夹
 .git
 .gitignore
+.gitattributes
 
 # 忽略 Python 的缓存文件
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
 
 # 忽略虚拟环境目录
 venv/
 env/
+.venv/
 
-# 忽略 node_modules 文件夹（前端项目）
+# 忽略 node_modules 文件夹
+node_modules/
 web/node_modules/
+docs/node_modules/
 
 # 忽略日志和临时文件
 *.log
 *.tmp
+tmp/
+temp/
 
-# 忽略 Docker 本身的文件
-Dockerfile
-docker-compose.yml
+# 忽略前端与文档构建产物
+dist/
+web/dist/
+docs/.vitepress/dist/
+
+# 忽略本地运行产物和大体积缓存
+artifacts/
+save_dir/
+data/*/processed/
+data/*/raw/
+
+# 忽略本地环境文件，保留模板
+.env
+.env.*
+!.env.template
+!test/.env.test.example

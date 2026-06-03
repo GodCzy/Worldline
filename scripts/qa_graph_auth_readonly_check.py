@@ -21,9 +21,9 @@ from pathlib import Path
 from typing import Iterable
 from urllib import error, request
 
-PACKAGE_PREFIX = "qa-phase4-m1-baseline"
+PACKAGE_PREFIX = "qa-graph-auth-readonly"
 LEGACY_PREFIX = "qa-readonly-graph-auth"
-CONTRACT_VERSION = "phase4-m1"
+CONTRACT_VERSION = "graph-auth-readonly-v1"
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 2
 

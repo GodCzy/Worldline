@@ -30,7 +30,7 @@
         <div class="unsupported-card">
           <p class="eyebrow">NO THEME SELECTED</p>
           <h2>请先选择一个主题模块</h2>
-          <p class="unsupported-description">工作台不再默认 PoE。请先从 Hub 选择模块。</p>
+          <p class="unsupported-description">工作台不再绑定默认演示主题。请先从 Hub 选择已接入真实知识库的模块。</p>
           <div class="unsupported-actions">
             <router-link class="header-link" to="/worldline">返回世界线 Hub</router-link>
             <router-link class="header-link" to="/themes">去主题分区</router-link>
@@ -41,7 +41,13 @@
       <template v-else-if="isThemeSupported">
         <section class="stage-column">
           <section class="stage-panel">
+            <div v-if="!worldlineStore.hasBranches" class="live-empty-state">
+              <p class="eyebrow">NO LIVE BRANCHES</p>
+              <h2>{{ workbenchEmptyTitle }}</h2>
+              <p>{{ workbenchEmptyDescription }}</p>
+            </div>
             <WorldlineBranchCanvas
+              v-else
               class="canvas-panel"
               :tree="worldlineStore.tree"
               :active-branch-id="worldlineStore.activeBranchId"
@@ -51,6 +57,8 @@
               @select-node="handleNodeSelection"
             />
           </section>
+
+          <WorldlineEvidenceRail :evidence-refs="worldlineStore.evidenceRefs" />
 
           <section class="selection-brief" v-if="worldlineStore.activeBranch">
             <p class="brief-tag">当前选中</p>
@@ -109,8 +117,13 @@ import { useUserStore } from '@/stores/user'
 import { useAgentStore } from '@/stores/agent'
 import { useThemeContextStore } from '@/stores/themeContext'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
-import { getWorldlineDefaultQuestion, hasWorldlineAdapter, resolveWorldlineAdapter } from '@/data/worldline'
+import {
+  getWorldlineDefaultQuestion,
+  resolveWorldlineAdapter
+} from '@/data/worldline'
+import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId, worldlineApi } from '@/apis/worldline_api'
 import WorldlineBranchCanvas from '@/components/worldline/WorldlineBranchCanvas.vue'
+import WorldlineEvidenceRail from '@/components/worldline/WorldlineEvidenceRail.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,17 +136,41 @@ const WORLDLINE_HANDOFF_KEY = 'worldline_agent_handoff'
 
 const questionDraft = ref('')
 const isGenerating = ref(false)
+const liveStatus = ref({ state: 'idle', message: '' })
 
 const currentThemeId = computed(() => String(route.params.themeId || '').trim().toLowerCase())
 const hasThemeId = computed(() => Boolean(currentThemeId.value))
 const currentThemeAdapter = computed(() => resolveWorldlineAdapter(currentThemeId.value))
-const isThemeSupported = computed(() => Boolean(currentThemeAdapter.value))
-const availableThemes = computed(() => (infoStore.themes || []).filter((theme) => hasWorldlineAdapter(theme.id)))
+const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme)
+const configuredThemes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
+const availableThemes = computed(() => configuredThemes.value)
+const currentTheme = computed(
+  () => availableThemes.value.find((theme) => theme.id === currentThemeId.value) || null
+)
+const routeKnowledgeDbId = computed(() => {
+  const fromQuery = route.query.knowledge_db_id || route.query.db_id
+  return typeof fromQuery === 'string' ? fromQuery.trim() : ''
+})
+const currentKnowledgeDbId = computed(
+  () => routeKnowledgeDbId.value || resolveThemeKnowledgeDbId(currentTheme.value)
+)
+const isLiveSupported = computed(() => Boolean(currentKnowledgeDbId.value))
+const isThemeSupported = computed(() => Boolean(currentThemeAdapter.value || isLiveSupported.value))
 const incomingQuestion = computed(() => (typeof route.query.question === 'string' ? route.query.question.trim() : ''))
 const unsupportedTitle = computed(() =>
-  hasThemeId.value ? `主题 ${currentThemeId.value} 尚未接入世界线适配器` : '当前未指定主题'
+  hasThemeId.value ? `主题 ${currentThemeId.value} 尚未接入世界线工作台` : '当前未指定主题'
 )
-const unsupportedDescription = computed(() => '当前主题未接入，页面已 fail-closed。请先返回选择可用主题。')
+const unsupportedDescription = computed(() => '当前主题没有 live bridge。请先返回选择已接入真实知识库的模块。')
+const workbenchEmptyTitle = computed(() =>
+  isLiveSupported.value && !userStore.isAdmin ? '需要管理员权限读取真实知识库' : '当前知识库还没有可生成的世界线'
+)
+const workbenchEmptyDescription = computed(() => {
+  if (liveStatus.value.message) return liveStatus.value.message
+  if (isLiveSupported.value) {
+    return '后端 live facade 没有返回可用分支。请先导入文档、重建 Wiki/Graph，或检查知识库映射。'
+  }
+  return '当前主题没有 live bridge，无法生成世界线分支。'
+})
 
 const branchBrief = computed(() => {
   const branch = worldlineStore.activeBranch
@@ -169,24 +206,107 @@ const syncThemeContextFromBranch = (branch) => {
 const applyWorldlineResult = (result, source) => {
   worldlineStore.hydrate(result)
   worldlineStore.rememberGenerationSource(source)
-  questionDraft.value = result.rootQuestion
+  questionDraft.value = result.rootQuestion || questionDraft.value
   syncThemeContextFromBranch(worldlineStore.activeBranch)
 }
 
+const hasHydratableBranches = (result) =>
+  result && Array.isArray(result.branches) && result.branches.length > 0 && result.tree
+
+const buildEmptyWorldlineResult = (message = '') => ({
+  themeId: currentThemeId.value,
+  moduleId: currentThemeId.value,
+  rootQuestion: questionDraft.value,
+  questionDraft: questionDraft.value,
+  status: message ? 'blocked' : 'empty',
+  error: message,
+  branches: [],
+  tree: { width: 1080, height: 560, nodes: [], edges: [] },
+  displayMeta: {
+    stageLabel: '等待数据',
+    stageTitle: workbenchEmptyTitle.value,
+    stageSubtitle: workbenchEmptyDescription.value,
+    themeName: currentTheme.value?.name || currentThemeId.value,
+    generationLabel: '生成世界线',
+    generationMode: 'base',
+    workspaceHint: '请先补齐 live bridge、知识库数据或静态 adapter。'
+  }
+})
+
+const tryGenerateLiveWorldline = async () => {
+  if (!currentKnowledgeDbId.value) {
+    liveStatus.value = { state: 'idle', message: '' }
+    return null
+  }
+
+  if (!userStore.isAdmin) {
+    liveStatus.value = {
+      state: 'blocked',
+      message: '该主题已配置 live bridge，但后端 Worldline 契约保持 admin-only。请使用管理员账号进入。'
+    }
+    return null
+  }
+
+  try {
+    liveStatus.value = { state: 'loading', message: '正在读取后端 Worldline facade。' }
+    const result = await worldlineApi.generate({
+      dbId: currentKnowledgeDbId.value,
+      themeId: currentThemeId.value,
+      question: questionDraft.value,
+      mode: 'base',
+      context: {
+        theme: currentThemeId.value,
+        module: currentThemeId.value,
+        knowledge_db_id: currentKnowledgeDbId.value
+      }
+    })
+    if (hasHydratableBranches(result)) {
+      liveStatus.value = { state: 'ready', message: '已使用后端 Worldline facade 生成。' }
+      return result
+    }
+    liveStatus.value = {
+      state: 'empty',
+      message: '后端 live facade 暂无可用分支。'
+    }
+    return null
+  } catch (error) {
+    console.warn('Worldline live generate failed:', error)
+    liveStatus.value = {
+      state: 'failed',
+      message: error?.message || '后端 Worldline facade 调用失败。'
+    }
+    return null
+  }
+}
+
 const generateBaseWorldline = async () => {
-  if (!isThemeSupported.value || !currentThemeAdapter.value) {
+  if (!isThemeSupported.value) {
     worldlineStore.reset()
     return
   }
 
   isGenerating.value = true
   worldlineStore.clearHandoff()
-  const result = currentThemeAdapter.value.buildWorldline(questionDraft.value, {
-    theme: currentThemeId.value,
-    module: currentThemeId.value
-  })
-  applyWorldlineResult(result, 'base-generate')
-  isGenerating.value = false
+  try {
+    const liveResult = await tryGenerateLiveWorldline()
+    if (liveResult) {
+      applyWorldlineResult(liveResult, 'live-generate')
+      return
+    }
+
+    if (currentThemeAdapter.value) {
+      const result = currentThemeAdapter.value.buildWorldline(questionDraft.value, {
+        theme: currentThemeId.value,
+        module: currentThemeId.value
+      })
+      applyWorldlineResult(result, 'base-generate')
+      return
+    }
+
+    applyWorldlineResult(buildEmptyWorldlineResult(liveStatus.value.message), 'empty-live-generate')
+  } finally {
+    isGenerating.value = false
+  }
 }
 
 const handleNodeSelection = (nodeId) => {
@@ -235,14 +355,15 @@ const goToThemeChat = async () => {
 }
 
 const switchTheme = async (themeId) => {
-  if (!hasWorldlineAdapter(themeId)) return
+  const targetTheme = availableThemes.value.find((theme) => theme.id === themeId)
+  if (!targetTheme || !isWorldlineEntry(targetTheme)) return
   await router.push({ path: `/worldline/${themeId}` })
 }
 
 const ensureWorkbenchData = async () => {
   await infoStore.loadInfoConfig()
 
-  if (!hasThemeId.value || !isThemeSupported.value || !currentThemeAdapter.value) {
+  if (!hasThemeId.value || !isThemeSupported.value) {
     worldlineStore.reset()
     questionDraft.value = getWorldlineDefaultQuestion(currentThemeId.value)
     return
@@ -378,6 +499,30 @@ onMounted(async () => {
     radial-gradient(circle at top left, color-mix(in srgb, var(--main-100) 14%, transparent), transparent 36%),
     linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 94%, transparent), var(--main-10));
   box-shadow: 0 18px 38px color-mix(in srgb, var(--gray-1000) 7%, transparent);
+}
+
+.live-empty-state {
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px;
+  border-radius: 16px;
+  border: 1px dashed color-mix(in srgb, var(--gray-180) 80%, transparent);
+  background: color-mix(in srgb, var(--gray-0) 88%, transparent);
+}
+
+.live-empty-state h2 {
+  margin: 0;
+  color: var(--gray-1000);
+  font-size: 1.2rem;
+}
+
+.live-empty-state p:last-child {
+  max-width: 680px;
+  margin: 10px 0 0;
+  color: var(--gray-600);
+  line-height: 1.7;
 }
 
 .selection-brief {

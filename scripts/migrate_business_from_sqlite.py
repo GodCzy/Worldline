@@ -40,7 +40,7 @@ def _set_skip_app_init_env() -> None:
     if legacy_value is not None:
         warnings.warn(
             (
-                "Legacy skip-app-init environment variable is deprecated and will be removed after Phase 8. "
+                "Legacy skip-app-init environment variable is deprecated and will be removed in a future cleanup. "
                 f"Use '{primary_key}' instead."
             ),
             DeprecationWarning,

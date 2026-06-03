@@ -5,7 +5,6 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const appDir = fileURLToPath(new URL('./', import.meta.url))
-  const poeDataDir = fileURLToPath(new URL('../data', import.meta.url))
 
   const manualChunks = (id) => {
     if (!id.includes('node_modules')) {
@@ -84,13 +83,12 @@ export default defineConfig(({ mode }) => {
     plugins: [vue()],
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@poe-data': poeDataDir
+        '@': fileURLToPath(new URL('./src', import.meta.url))
       }
     },
     server: {
       fs: {
-        allow: [appDir, poeDataDir]
+        allow: [appDir]
       },
       proxy: {
         '^/api': {

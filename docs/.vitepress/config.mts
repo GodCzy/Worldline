@@ -3,12 +3,10 @@ import markdownItTaskCheckbox from 'markdown-it-task-checkbox'
 
 export default defineConfig({
   lang: 'zh-CN',
-  title: 'Worldline',
-  description: 'Worldline 文档中心：面向企业级知识平台的前后端结构、模块扩展、运维验证与历史归档。',
+  title: 'Worldline Docs',
+  description: 'Worldline reset baseline and current project facts.',
   base: '/',
   srcDir: './',
-  srcExclude: ['context-cache/**', 'archive/context-cache/**'],
-  ignoreDeadLinks: [/localhost/],
   markdown: {
     config: (md) => {
       md.use(markdownItTaskCheckbox)
@@ -18,27 +16,29 @@ export default defineConfig({
     logo: '/favicon.svg',
     nav: [
       { text: '首页', link: '/' },
-      { text: '平台架构', link: '/platform-architecture' },
-      { text: '前端结构', link: '/frontend-architecture' },
-      { text: '后端结构', link: '/backend-architecture' },
-      { text: '模块扩展', link: '/module-extension' },
-      { text: '运维与验证', link: '/operations-and-validation' }
+      { text: '项目书', link: '/product/worldline-project-book' },
+      { text: '架构', link: '/architecture/knowledge-compiler' }
     ],
     sidebar: [
       {
-        text: '当前产品文档',
+        text: 'Worldline',
         items: [
-          { text: '首页', link: '/' },
-          { text: '平台架构', link: '/platform-architecture' },
-          { text: '前端结构', link: '/frontend-architecture' },
-          { text: '后端结构', link: '/backend-architecture' },
-          { text: '模块扩展', link: '/module-extension' },
-          { text: '运维与验证', link: '/operations-and-validation' }
+          { text: '当前事实源', link: '/' },
+          { text: '项目书', link: '/product/worldline-project-book' }
+        ]
+      },
+      {
+        text: 'Architecture',
+        items: [
+          { text: 'Knowledge Compiler', link: '/architecture/knowledge-compiler' },
+          { text: 'Worldline UI', link: '/architecture/worldline-ui' },
+          { text: 'MCP And Skill Governance', link: '/architecture/mcp-skill-governance' },
+          { text: 'Evaluation Gates', link: '/architecture/evaluation-gates' }
         ]
       }
     ],
     footer: {
-      message: 'Worldline 文档站服务于当前产品结构、工程实施、运行验证与历史审计。',
+      message: 'Worldline reset baseline.',
       copyright: 'Copyright 2026 Worldline'
     },
     lastUpdated: {

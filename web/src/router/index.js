@@ -80,7 +80,7 @@ const router = createRouter({
             requiresAuth: false,
             themeContext: {
               scene: 'overview',
-              version: 'phase2'
+              version: 'worldline-context-v1'
             }
           }
         },

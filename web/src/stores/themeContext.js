@@ -11,7 +11,7 @@ const normalizeContext = (value = {}) => {
 
   const moduleId = normalizePart(value.module) || theme
   const scene = normalizePart(value.scene) || 'overview'
-  const version = normalizePart(value.version) || 'phase2'
+  const version = normalizePart(value.version) || 'worldline-context-v1'
   const focus = normalizePart(value.focus)
   const candidate = normalizePart(value.candidate)
   const graph = normalizePart(value.graph)

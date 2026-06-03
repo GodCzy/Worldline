@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 4b M2 unified replay entry.
+Unified graph/auth replay entry.
 
 This script hardens process orchestration only:
 - L0 runtime checks
@@ -31,7 +31,7 @@ EXIT_UI_FAILED = 4
 EXIT_SUMMARY_FAILED = 5
 EXIT_PRECONDITION_FAILED = 6
 
-DEFAULT_PREFIX = "qa-phase4-m2-harden"
+DEFAULT_PREFIX = "qa-graph-auth-replay"
 BLOCKER_RULE = "first failing item in order: precondition -> L0-runtime -> L1-api-matrix -> L2-ui-guard -> summary"
 SECRET_FILE_RETRY_ATTEMPTS = 1
 SECRET_FILE_RETRY_DELAY_SECONDS = 1.0
@@ -568,7 +568,7 @@ def _build_runtime_report(api_base: str, timeout: int) -> tuple[bool, str]:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Unified Phase 4b M2 replay entry.")
+    parser = argparse.ArgumentParser(description="Unified graph/auth replay entry.")
     parser.add_argument("--api-base", default=None)
     parser.add_argument("--frontend-base", default=None)
     parser.add_argument("--out-dir", default=None)
@@ -610,7 +610,7 @@ def main() -> int:
     run_dir.mkdir(parents=True, exist_ok=True)
 
     metadata: dict[str, object] = {
-        "contract_version": "phase4-m2",
+        "contract_version": "graph-auth-replay-v1",
         "run_id": run_dir.name,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "exit_codes": {

@@ -2,166 +2,128 @@
   <div class="home-container wl-shell">
     <div v-if="isLoading" class="loading-container">
       <a-spin size="large" />
-      <p class="loading-text">正在连接服务...</p>
-    </div>
-
-    <div v-else-if="error" class="error-container">
-      <a-result status="error" :title="error.title" :sub-title="error.message">
-        <template #extra>
-          <a-button type="primary" @click="retryLoad">重试</a-button>
-        </template>
-      </a-result>
+      <p class="loading-text">正在加载 Worldline...</p>
     </div>
 
     <template v-else>
-      <div class="hero-section">
-        <div class="glass-header wl-shell-topbar">
-          <div class="logo wl-brand">
-            <img
-              :src="infoStore.organization.logo"
-              :alt="infoStore.organization.name"
-              class="logo-img wl-brand-logo"
-            />
-            <span class="logo-text wl-brand-text">{{ infoStore.organization.name }}</span>
-          </div>
-          <nav class="nav-links wl-nav-pills">
-            <router-link to="/themes" class="nav-link wl-nav-pill">
-              <span>主题分区</span>
-            </router-link>
-            <a
-              v-if="docsUrl"
-              class="nav-link wl-nav-pill"
-              :href="docsUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <span>项目文档</span>
-            </a>
-            <router-link
-              v-if="userStore.isLoggedIn && userStore.isAdmin"
-              to="/agent"
-              class="nav-link wl-nav-pill"
-            >
-              <span>智能体</span>
-            </router-link>
-            <router-link
-              v-if="userStore.isLoggedIn && userStore.isAdmin"
-              to="/graph"
-              class="nav-link wl-nav-pill"
-            >
-              <span>知识图谱</span>
-            </router-link>
-            <router-link
-              v-if="userStore.isLoggedIn && userStore.isAdmin"
-              to="/database"
-              class="nav-link wl-nav-pill"
-            >
-              <span>知识库</span>
-            </router-link>
-          </nav>
-          <div class="header-actions">
-            <div v-if="githubUrl" class="github-link">
-              <a :href="githubUrl" target="_blank" rel="noopener noreferrer">
-                <svg height="20" width="20" viewBox="0 0 16 16" version="1.1">
-                  <path
-                    fill-rule="evenodd"
-                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
-                  ></path>
-                </svg>
-              </a>
-            </div>
-            <UserInfoComponent :show-button="true" />
-          </div>
+      <header class="topbar wl-shell-topbar">
+        <router-link to="/" class="brand-link wl-brand">
+          <img
+            v-if="infoStore.organization.logo"
+            :src="infoStore.organization.logo"
+            :alt="infoStore.organization.name"
+            class="brand-logo wl-brand-logo"
+            @error="logoFailed = true"
+          />
+          <span v-if="logoFailed || !infoStore.organization.logo" class="brand-mark">W</span>
+          <span class="brand-name wl-brand-text">{{ infoStore.organization.name || 'Worldline' }}</span>
+        </router-link>
+
+        <nav class="nav-links wl-nav-pills" aria-label="Primary">
+          <router-link to="/worldline" class="nav-link wl-nav-pill">世界线</router-link>
+          <router-link to="/themes" class="nav-link wl-nav-pill">模块</router-link>
+          <router-link v-if="userStore.isLoggedIn" to="/agent" class="nav-link wl-nav-pill">智能体</router-link>
+          <router-link v-if="userStore.isAdmin" to="/graph" class="nav-link wl-nav-pill">图谱</router-link>
+          <router-link v-if="userStore.isAdmin" to="/database" class="nav-link wl-nav-pill">知识库</router-link>
+        </nav>
+
+        <div class="header-actions">
+          <a
+            v-if="githubUrl"
+            class="icon-link"
+            :href="githubUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Repository"
+          >
+            <Github :size="20" />
+          </a>
+          <UserInfoComponent :show-button="true" />
+        </div>
+      </header>
+
+      <main class="home-main">
+        <div v-if="backendStatus.state !== 'ready'" class="status-banner" role="status">
+          <AlertTriangle :size="18" />
+          <span>{{ backendStatus.message }}</span>
+          <button type="button" @click="retryLoad">重试连接</button>
         </div>
 
-        <div class="hero-layout">
-          <div class="hero-content">
-            <p class="hero-eyebrow">Worldline 平台</p>
-            <h1 class="title">{{ infoStore.branding.title }}</h1>
+        <section class="hero-section">
+          <div class="hero-copy">
+            <p class="eyebrow">LIVING KNOWLEDGE OS</p>
+            <h1>{{ infoStore.branding.title || 'Worldline' }}</h1>
             <p class="subtitle">{{ infoStore.branding.subtitle }}</p>
             <p v-if="brandingDescription" class="description">{{ brandingDescription }}</p>
 
             <div class="hero-actions">
-              <button class="button-base primary" @click="goToFeaturedTheme">
-                {{ featuredTheme ? `进入 ${featuredTheme.name}` : '查看主题分区' }}
+              <button class="primary-button" type="button" @click="openWorldline">
+                <Network :size="18" />
+                进入世界线
               </button>
-              <button class="button-base secondary" @click="goToChat">进入智能体</button>
+              <button class="secondary-button" type="button" @click="openKnowledge">
+                <Database :size="18" />
+                知识库
+              </button>
+              <a
+                v-if="docsUrl"
+                class="secondary-button"
+                :href="docsUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <BookOpen :size="18" />
+                文档
+              </a>
             </div>
-
-            <p v-if="featuredTheme" class="featured-chip">
-              首期主题 · {{ featuredTheme.name }} / {{ featuredTheme.subtitle }}
-            </p>
           </div>
 
-          <div class="insight-panel" v-if="featureCards.length">
-            <div class="stat-card" v-for="card in featureCards" :key="card.label">
-              <div class="stat-headline">
-                <span class="stat-icon" v-if="card.icon">
-                  <component :is="card.icon" />
-                </span>
-                <p class="stat-value">{{ card.value }}</p>
+          <div class="signal-panel" aria-label="System surfaces">
+            <div v-for="card in featureCards" :key="card.label" class="signal-item">
+              <div class="signal-icon">
+                <component :is="card.icon" :size="22" />
               </div>
-              <p class="stat-label">{{ card.label }}</p>
-              <p class="stat-description">{{ card.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <section v-if="themes.length" class="section theme-section">
-        <div class="section-header">
-          <h2>主题分区</h2>
-          <p>平台层统一入口，模块层承载主题知识结构与后续问答、图谱和推荐能力。</p>
-        </div>
-
-        <div class="theme-grid">
-          <article v-for="theme in themes" :key="theme.id" class="theme-card">
-            <div class="theme-card-head">
               <div>
-                <p class="theme-status">{{ theme.status }}</p>
-                <h3>{{ theme.name }}</h3>
-                <p class="theme-subtitle">{{ theme.subtitle }}</p>
+                <p class="signal-value">{{ card.value }}</p>
+                <h2>{{ card.label }}</h2>
+                <p>{{ card.description }}</p>
               </div>
-              <button class="theme-entry" @click="openTheme(theme)">进入主题</button>
             </div>
+          </div>
+        </section>
 
-            <p class="theme-description">{{ theme.description }}</p>
-
-            <div v-if="theme.tags.length" class="theme-tags">
-              <span v-for="tag in theme.tags" :key="tag">{{ tag }}</span>
+        <section class="module-section">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">MODULES</p>
+              <h2>当前模块</h2>
             </div>
+            <span class="module-count">{{ themes.length ? `${themes.length} 个模块` : '等待接入' }}</span>
+          </div>
 
-            <ul v-if="theme.highlights.length" class="theme-highlights">
-              <li v-for="item in theme.highlights" :key="item">{{ item }}</li>
-            </ul>
-          </article>
-        </div>
-      </section>
+          <div v-if="themes.length" class="theme-grid">
+            <article v-for="theme in themes" :key="theme.id" class="theme-card">
+              <p class="theme-status">{{ theme.status || 'active' }}</p>
+              <h3>{{ theme.name }}</h3>
+              <p>{{ theme.description || theme.subtitle }}</p>
+              <button type="button" @click="openTheme(theme)">进入模块</button>
+            </article>
+          </div>
 
-      <div class="section action-section" v-if="actionLinks.length">
-        <div class="action-grid">
-          <a
-            v-for="action in actionLinks"
-            :key="action.name"
-            class="action-card"
-            :href="action.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span class="action-icon" v-if="action.icon">
-              <component :is="action.icon" />
-            </span>
-            <div class="action-meta">
-              <p class="action-title">{{ action.name }}</p>
-              <p class="action-url">{{ action.url }}</p>
+          <div v-else class="empty-module">
+            <h3>主题模块已清空</h3>
+            <p>旧主题和演示模块已不再作为默认入口。下一步应接入真实知识库、证据、Wiki、图谱和工作流。</p>
+            <div class="empty-actions">
+              <button type="button" class="secondary-button" @click="openWorldline">查看世界线入口</button>
+              <button type="button" class="secondary-button" @click="openKnowledge">查看知识库</button>
             </div>
-          </a>
-        </div>
-      </div>
+          </div>
+        </section>
+      </main>
 
       <footer class="footer wl-shell-footer">
         <div class="footer-content wl-shell-footer-inner">
-          <p class="copyright">{{ infoStore.footer?.copyright || '© 2025 All rights reserved' }}</p>
+          <span>{{ infoStore.footer?.copyright || 'Worldline 2026' }}</span>
         </div>
       </footer>
     </template>
@@ -176,15 +138,15 @@ import { useInfoStore } from '@/stores/info'
 import { healthApi } from '@/apis/system_api'
 import UserInfoComponent from '@/components/UserInfoComponent.vue'
 import {
-  BookText,
-  Bug,
-  Video,
-  Route,
+  AlertTriangle,
+  BookOpen,
+  Database,
+  FileText,
   Github,
-  Star,
-  CheckCircle2,
-  GitCommit,
-  ShieldCheck
+  Network,
+  Route,
+  ShieldCheck,
+  Sparkles
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -192,51 +154,77 @@ const userStore = useUserStore()
 const infoStore = useInfoStore()
 
 const isLoading = ref(true)
-const error = ref(null)
+const logoFailed = ref(false)
+const backendStatus = ref({
+  state: 'checking',
+  message: '正在检查后端服务状态...'
+})
+
+const iconKey = (value) => (typeof value === 'string' ? value.toLowerCase() : '')
+
+const featureIconMap = {
+  docs: FileText,
+  document: FileText,
+  route: Route,
+  graph: Network,
+  shield: ShieldCheck,
+  default: Sparkles
+}
+
+const withTimeout = (promise, timeoutMs, timeoutMessage) =>
+  Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(timeoutMessage)), timeoutMs)
+    })
+  ])
 
 const checkHealth = async () => {
   try {
-    const response = await healthApi.checkHealth()
+    const response = await withTimeout(
+      healthApi.checkHealth(),
+      3500,
+      'Backend health check timed out.'
+    )
     if (response.status !== 'ok') {
-      throw new Error('服务不可用')
+      throw new Error('Backend health response is not ok.')
     }
-  } catch (err) {
-    error.value = {
-      title: '服务连接失败',
-      message: '后端服务无法响应，请检查服务是否正常运行'
+    backendStatus.value = {
+      state: 'ready',
+      message: '后端服务已连接。'
     }
-    throw err
+  } catch (error) {
+    backendStatus.value = {
+      state: 'offline',
+      message: '后端暂不可用，当前使用本地配置渲染首页。'
+    }
+    console.warn('Backend health check failed; homepage remains available.', error)
   }
 }
 
-const loadData = async () => {
-  isLoading.value = true
-  error.value = null
+const refreshRuntimeStatus = async () => {
+  await Promise.allSettled([checkHealth(), infoStore.loadInfoConfig(true)])
+}
 
-  try {
-    await checkHealth()
-    await infoStore.loadInfoConfig()
-  } catch (err) {
-    console.error('加载失败:', err)
-  } finally {
-    isLoading.value = false
+const loadData = () => {
+  isLoading.value = false
+  backendStatus.value = {
+    state: 'checking',
+    message: '正在检查后端服务状态...'
   }
+  refreshRuntimeStatus()
 }
 
 const retryLoad = () => {
   loadData()
 }
 
-const goToChat = async () => {
-  await router.push('/agent')
+const openWorldline = () => {
+  router.push('/worldline')
 }
 
-const goToFeaturedTheme = () => {
-  if (featuredTheme.value?.entry_route) {
-    router.push(featuredTheme.value.entry_route)
-    return
-  }
-  router.push('/themes')
+const openKnowledge = () => {
+  router.push(userStore.isAdmin ? '/database' : '/login')
 }
 
 const openTheme = (theme) => {
@@ -246,31 +234,6 @@ const openTheme = (theme) => {
 onMounted(() => {
   loadData()
 })
-
-const iconKey = (value) => (typeof value === 'string' ? value.toLowerCase() : '')
-
-const featureIconMap = {
-  stars: Star,
-  issues: CheckCircle2,
-  resolved: CheckCircle2,
-  commits: GitCommit,
-  license: ShieldCheck,
-  default: Star
-}
-
-const actionIconMap = {
-  doc: BookText,
-  docs: BookText,
-  document: BookText,
-  issue: Bug,
-  bug: Bug,
-  roadmap: Route,
-  plan: Route,
-  demo: Video,
-  video: Video,
-  github: Github,
-  default: Github
-}
 
 const featureCards = computed(() => {
   const list = Array.isArray(infoStore.features) ? infoStore.features : []
@@ -296,28 +259,9 @@ const featureCards = computed(() => {
     .filter((item) => item.label || item.value || item.description)
 })
 
-const actionLinks = computed(() => {
-  const actions = infoStore.actions
-  if (!Array.isArray(actions)) {
-    return []
-  }
-
-  return actions
-    .map((item) => {
-      const key = iconKey(item?.icon || item?.type)
-      return {
-        name: item?.name || item?.label || '',
-        url: item?.url || item?.link || '',
-        icon: actionIconMap[key] || actionIconMap.default
-      }
-    })
-    .filter((item) => item.name && item.url)
-})
-
 const githubUrl = computed(() => infoStore.projectRepoUrl || '')
 const docsUrl = computed(() => infoStore.docsUrl || '')
 const themes = computed(() => infoStore.themes || [])
-const featuredTheme = computed(() => infoStore.primaryTheme)
 const brandingDescription = computed(() => infoStore.branding?.description || '')
 </script>
 
@@ -326,535 +270,392 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: var(--main-900);
-  background: radial-gradient(circle at top right, var(--main-50), transparent 60%), var(--main-5);
-  position: relative;
-  overflow-x: hidden;
+  color: var(--gray-1000);
+  background: linear-gradient(180deg, var(--gray-0), var(--main-10));
 }
 
 .loading-container {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  gap: 1rem;
-
-  .loading-text {
-    color: var(--gray-600);
-    font-size: 0.95rem;
-  }
+  gap: 14px;
 }
 
-.error-container {
-  display: flex;
+.loading-text {
+  color: var(--gray-600);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--gray-100);
+  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+.brand-link,
+.nav-link,
+.icon-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+}
+
+.brand-logo,
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+}
+
+.brand-logo {
+  object-fit: contain;
+}
+
+.brand-mark {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 2rem;
+  border-radius: 8px;
+  background: var(--main-700);
+  color: var(--gray-0);
 }
 
-.glass-header {
+.brand-name {
+  white-space: nowrap;
+}
+
+.nav-links,
+.header-actions,
+.hero-actions,
+.empty-actions {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 0.75rem 2.5rem;
-  background-color: var(--color-trans-light);
-  backdrop-filter: blur(20px);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  box-shadow: 0 6px 25px rgba(3, 80, 101, 0.02);
+  gap: 10px;
 }
 
 .nav-links {
-  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nav-link,
+.icon-link {
+  min-height: 38px;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--gray-700);
+  font-weight: 600;
 }
 
 .nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1rem;
-  text-decoration: none;
-  color: var(--gray-800);
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: color 0.2s ease;
-  position: relative;
-  overflow: hidden;
-
-  &:hover {
-    color: var(--gray-900);
-  }
-
-  &.router-link-active {
-    background: linear-gradient(135deg, var(--main-600), var(--main-500));
-    color: var(--gray-0);
-    border-radius: 1.5rem;
-  }
-
-  span {
-    white-space: nowrap;
-  }
+  padding: 0 13px;
 }
 
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+.icon-link {
+  width: 38px;
 }
 
-.logo {
+.nav-link:hover,
+.icon-link:hover {
+  color: var(--main-700);
+  background: var(--main-20);
+}
+
+.home-main {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 28px 0 56px;
+}
+
+.status-banner {
   display: flex;
   align-items: center;
-  font-size: 1.4rem;
-  font-weight: bold;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--main-120);
+  border-radius: 8px;
+  background: var(--main-20);
   color: var(--main-800);
-
-  .logo-img {
-    height: 2rem;
-    margin-right: 0.6rem;
-  }
 }
 
-.logo-text {
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
-.github-link a {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: var(--gray-600);
-  padding: 0.6rem 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
-  font-weight: 500;
-
-  &:hover {
-    color: var(--gray-700);
-
-    svg {
-      transform: scale(1.1);
-    }
-  }
-
-  svg {
-    transition: transform 0.3s ease;
-    fill: currentColor;
-  }
+.status-banner button {
+  margin-left: auto;
+  border: 1px solid var(--main-200);
+  background: var(--gray-0);
+  color: var(--main-800);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
 }
 
 .hero-section {
-  flex: 1;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 5rem 2rem 2rem;
-}
-
-.hero-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2.5rem;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  gap: 28px;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-top: 4rem;
+  min-height: 520px;
 }
 
-.hero-content {
+.hero-copy {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 18px;
 }
 
-.hero-eyebrow {
-  color: var(--main-600);
-  text-transform: uppercase;
-  letter-spacing: 0.2em;
-  font-size: 0.85rem;
+.eyebrow {
   margin: 0;
-}
-
-.title {
-  font-size: clamp(2.5rem, 4vw, 4rem);
+  color: var(--main-700);
+  font-size: 12px;
   font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.hero-copy h1 {
   margin: 0;
-  background: linear-gradient(135deg, var(--main-900), var(--main-600));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  color: var(--gray-1000);
+  font-size: clamp(3rem, 6vw, 5rem);
+  line-height: 0.98;
+  letter-spacing: 0;
 }
 
 .subtitle {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-700);
-  line-height: 1.4;
   margin: 0;
+  color: var(--gray-800);
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .description {
+  max-width: 700px;
+  margin: 0;
   color: var(--gray-600);
   line-height: 1.7;
-  margin: 0;
-  max-width: 620px;
 }
 
-.hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  align-items: center;
-}
-
-.button-base {
+.primary-button,
+.secondary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.5rem 2.25rem;
-  border-radius: 999px;
-  font-size: 1.05rem;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid transparent;
-  text-decoration: none;
-  transition: all 0.25s ease;
-  min-height: 52px;
-}
-
-.button-base.primary {
-  background: linear-gradient(135deg, var(--main-600), var(--main-500));
-  color: var(--gray-0);
-  border-color: transparent;
-
-  &:hover {
-    background: linear-gradient(135deg, var(--main-700), var(--main-600));
-  }
-}
-
-.button-base.secondary {
-  background: rgba(2, 57, 68, 0.06);
-  color: var(--main-700);
-  border-color: var(--gray-100);
-
-  &:hover {
-    border-color: var(--main-200);
-    background: var(--gray-50);
-  }
-}
-
-.featured-chip {
-  margin: 0;
-  color: var(--main-700);
-  font-weight: 600;
-}
-
-.insight-panel {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  background: var(--main-0);
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  border: 1px solid var(--main-40);
-  box-shadow: 0 15px 35px rgba(3, 80, 101, 0.08);
-}
-
-.stat-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.stat-headline {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--gray-25);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  :deep(svg) {
-    width: 24px;
-    height: 24px;
-    color: var(--main-700);
-  }
-}
-
-.stat-value {
-  font-size: 2rem;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
   font-weight: 700;
-  color: var(--main-800);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.primary-button {
+  border: 1px solid var(--main-700);
+  background: var(--main-700);
+  color: var(--gray-0);
+}
+
+.secondary-button {
+  border: 1px solid var(--gray-160);
+  background: var(--gray-0);
+  color: var(--gray-800);
+}
+
+.signal-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.signal-item {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--gray-120);
+  border-radius: 8px;
+  background: var(--gray-0);
+  box-shadow: 0 14px 32px rgba(20, 32, 44, 0.06);
+}
+
+.signal-icon {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--main-20);
+  color: var(--main-700);
+}
+
+.signal-item h2,
+.signal-item p {
   margin: 0;
 }
 
-.stat-label {
-  margin: 0;
-  color: var(--gray-700);
-  font-weight: 600;
+.signal-value {
+  color: var(--main-700);
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.stat-description {
-  margin: 0;
+.signal-item h2 {
+  margin-top: 3px;
+  color: var(--gray-1000);
+  font-size: 1.05rem;
+}
+
+.signal-item p:last-child {
+  margin-top: 6px;
   color: var(--gray-600);
-  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
-.section {
-  width: 100%;
-  max-width: 1200px;
-  margin: 48px auto 0;
-  padding: 0 0 2rem;
+.module-section {
+  margin-top: 18px;
+  padding-top: 24px;
+  border-top: 1px solid var(--gray-100);
 }
 
 .section-header {
-  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
 
-  h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.8rem;
-    color: var(--main-800);
-  }
+.section-header h2 {
+  margin: 6px 0 0;
+  color: var(--gray-1000);
+}
 
-  p {
-    margin: 0;
-    color: var(--gray-600);
-    line-height: 1.7;
-  }
+.module-count {
+  border: 1px solid var(--gray-160);
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: var(--gray-700);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .theme-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
+  gap: 14px;
 }
 
-.theme-card {
-  padding: 1.4rem;
-  border-radius: 1.2rem;
+.theme-card,
+.empty-module {
+  border: 1px solid var(--gray-120);
+  border-radius: 8px;
   background: var(--gray-0);
-  border: 1px solid var(--gray-100);
-  box-shadow: 0 12px 30px rgba(3, 80, 101, 0.06);
+  padding: 18px;
 }
 
-.theme-card-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
+.theme-card h3,
+.empty-module h3 {
+  margin: 0;
+  color: var(--gray-1000);
+}
+
+.theme-card p,
+.empty-module p {
+  color: var(--gray-600);
+  line-height: 1.7;
 }
 
 .theme-status {
-  margin: 0 0 0.5rem;
-  color: var(--main-600);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.theme-card h3 {
-  margin: 0;
-  color: var(--main-900);
-  font-size: 1.3rem;
-}
-
-.theme-subtitle {
-  margin: 0.45rem 0 0;
-  color: var(--gray-600);
-}
-
-.theme-description {
-  margin: 1rem 0 0;
-  color: var(--gray-700);
-  line-height: 1.7;
-}
-
-.theme-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1rem;
-
-  span {
-    padding: 0.35rem 0.7rem;
-    border-radius: 999px;
-    background: var(--main-20);
-    color: var(--main-700);
-    font-size: 0.75rem;
-    font-weight: 600;
-  }
-}
-
-.theme-highlights {
-  margin: 1rem 0 0;
-  padding-left: 1.2rem;
-  color: var(--gray-600);
-  line-height: 1.7;
-}
-
-.theme-entry {
-  border: none;
-  border-radius: 999px;
-  background: var(--gray-25);
+  margin: 0 0 8px;
   color: var(--main-700);
-  padding: 0.7rem 1rem;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.theme-card button {
+  border: 1px solid var(--main-700);
+  border-radius: 8px;
+  background: var(--main-700);
+  color: var(--gray-0);
+  min-height: 38px;
+  padding: 0 12px;
   cursor: pointer;
 }
 
-.action-section {
-  padding-bottom: 3rem;
-}
-
-.action-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1rem;
-}
-
-.action-card {
+.empty-module {
   display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  padding: 1rem 1.25rem;
-  border-radius: 1rem;
-  text-decoration: none;
-  color: inherit;
-  border: 1px solid var(--gray-50);
-  background: var(--gray-0);
-  transition:
-    transform 0.2s ease,
-    background 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-}
-
-.action-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--gray-50);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-
-  :deep(svg) {
-    width: 22px;
-    height: 22px;
-    color: var(--main-700);
-  }
-}
-
-.action-meta {
-  flex: 1;
-  overflow: hidden;
-}
-
-.action-title {
-  margin: 0;
-  font-weight: 600;
-  color: var(--main-800);
-}
-
-.action-url {
-  margin: 0.25rem 0 0;
-  font-size: 0.9rem;
-  color: var(--gray-600);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .footer {
   margin-top: auto;
-  background: var(--main-0);
-  border-top: 1px solid var(--main-20);
+  border-top: 1px solid var(--gray-100);
+  background: var(--gray-0);
 }
 
 .footer-content {
-  text-align: center;
-  padding: 2rem;
-  max-width: 1200px;
+  width: min(1180px, calc(100% - 32px));
   margin: 0 auto;
+  padding: 18px 0;
+  color: var(--gray-600);
 }
 
-.copyright {
-  color: var(--main-700);
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin: 0;
-  opacity: 0.8;
-}
-
-@media (max-width: 768px) {
-  .glass-header {
-    padding: 0.8rem 1.25rem;
-    flex-wrap: wrap;
-    gap: 1rem;
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 1fr auto;
   }
 
   .nav-links {
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 0.5rem;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 
-  .nav-link {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.85rem;
+  .hero-section {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 36px 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 12px 16px;
   }
 
-  .logo {
-    font-size: 1.1rem;
+  .home-main {
+    width: min(100% - 24px, 1180px);
   }
 
-  .title {
-    font-size: 2.4rem;
-  }
-
-  .subtitle {
-    font-size: 1.2rem;
-  }
-
-  .button-base,
-  .theme-entry {
-    width: 100%;
-  }
-
-  .hero-layout,
-  .section {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .theme-card-head {
+  .hero-actions,
+  .empty-actions,
+  .status-banner {
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .primary-button,
+  .secondary-button {
+    width: 100%;
+  }
+
+  .status-banner button {
+    margin-left: 0;
   }
 }
 </style>

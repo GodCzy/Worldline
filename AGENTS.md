@@ -1,104 +1,73 @@
-# AGENTS.md
+# Worldline Agent Instructions
 
-## Project Identity
+更新时间：2026-06-03
 
-Worldline is an enterprise-grade knowledge platform.
-It productizes complex domain knowledge into a system for ingestion, retrieval, graph reasoning, agent workflows, and operations.
+## 项目身份
 
-- Treat this repository as a long-term platform, not a single-module project.
-- The current most mature module is Path of Exile (PoE), but PoE is a module, not the platform identity.
-- Active identity is `Worldline`; historical evidence may contain legacy naming and must remain auditable.
+Worldline 是 Joy 重新开发中的 Evidence-backed LLM Wiki + Temporal Knowledge Graph OS 项目，目标是把文档、网页、代码、证据、Wiki、图谱、时间变化、MCP 工具、Agent 工作流和评估回放编译为可浏览、可验证、可推理、可被外部 Agent 调用的知识工作台。
 
-## Product and Architecture Rules
+本项目不是普通 RAG 聊天页，也不是旧 PoE 演示项目的延续。
 
-- Priority order:
-  1. Keep runtime stability.
-  2. Improve enterprise readiness before broad feature expansion.
-  3. Preserve platform-layer vs module-layer separation.
-  4. Prefer minimal, local, defensible changes.
-  5. Increase observability, operability, and maintainability.
-- Platform layer owns branding, routing, shared navigation/layout, permissions, context switching, and operational tooling.
-- Module layer owns taxonomy, metadata schema, answer templates, graph schema, recommendation logic, and domain assets.
-- Do not hardcode PoE assumptions into shared global modules unless no safer option exists.
-- Keep current runtime directories usable until an explicit refactor is approved.
-- Do not describe active work as a graduation project or upstream-fork identity in product-facing outputs.
-- Canonical active naming is frozen as:
-  - Product: `Worldline`
-  - Python package: `worldline`
-  - Web package: `worldline-web`
-  - Docker images: `worldline-api`, `worldline-web`
-  - Default database: `worldline_know`
+RAG 只作为证据回查、长尾召回和候选上下文补充层；LLM Wiki、Evidence Graph、时间事实和质量门禁是主产品形态。
 
-## Execution Model
+## 活跃路径
 
-- Work sequence is mandatory: map first, design second, implement third.
-- Use true subagents by default for substantial or cross-cutting tasks.
-- Controller responsibilities: task understanding, decomposition, parallelization, consolidation, context-cache updates, and final delivery.
-- Default substantial-task wave:
-  1. Read-only wave: `system_mapper`, `product_architect`, `qa_release_auditor`
-  2. Write wave: `frontend_worker`, `backend_worker`, `knowledge_rag_engineer`, `graph_engineer`, `agent_architect`
-- Substantial tasks should usually involve at least two real subagents.
-- Trivial tasks may be handled locally without subagents.
-- Do not claim a role concluded something unless that subagent actually ran, or clearly mark it as controller synthesis.
-- Prefer disjoint write scopes; do not revert others' unrelated edits.
-- When stable conclusions emerge, update `docs/context-cache/`.
-- If files changed and a stable stop point is reached, run feasible validation and create a git commit unless the user explicitly disables commit.
+- 活跃工程根目录：`D:\dev\Worldline`
+- 旧设计目录：`D:\document\Worldline`，只作为指针，不作为当前事实源。
+- 总结输出目录：`D:\document\OutputMD`
 
-## Skill and MCP Policy
+## 当前事实源
 
-- MCP and skills are core capabilities, not optional decoration.
-- At the start of each substantial phase, judge whether current MCP/skill setup removes recurring friction.
-- Priority judgment rules:
-  - Long dialogs, cross-phase planning, or handoff compression:
-    - Prefer `context-compression` first.
-    - Prefer `filesystem-context` first for on-demand file loading and context hygiene.
-  - Frontend discovery chain, real-page smoke, route-level verification:
-    - Prefer `playwright` skill + Playwright MCP first.
-  - CI checks, PR review, release coordination:
-    - Prefer GitHub MCP first.
-  - Database connection/schema/data inspection and migration verification:
-    - Prefer PostgreSQL MCP first.
-  - External references, dependency docs, source extraction:
-    - Prefer Fetch MCP first.
-- Supporting MCPs already available in environment (Notion, Linear, Figma) may be reused when directly useful.
-- Add or enable MCPs only for concrete phase value, not novelty.
+- `README.md`：启动、验证、目录边界。
+- `AGENTS.md`：项目级 Agent 规则。
+- `docs/index.md`：当前最小文档站。
+- `.ai/tasks/2026-06-03-worldline-reset/`：本次重启任务、证据和决策。
+- `.ai/tasks/2026-06-03-worldline-frontier-stack/`：前沿技术栈、项目书和重构路线证据。
+- `docs/product/worldline-project-book.md`：当前项目书。
+- `docs/architecture/`：知识编译链、UI、MCP/Skill 治理和评估门禁。
 
-## Delivery Contract
+旧 `.ai/tasks`、`docs/archive`、`docs/context-cache`、`PROJECT_BOOK.md`、`WORLDLINE_PROJECT_PLAN.md`、`CODEX_WORKFLOW.md`、旧 artifacts 和旧主题 demo 数据均不再作为事实源。
 
-Every substantial task must end with:
+## 工程边界
 
-1. changed files
-2. why changed
-3. how to run/validate
-4. remaining risks
+- 清理阶段不改变后端 API、数据库 schema、MCP tool contract 或前端路由 contract。
+- 保留 `server/`、`src/`、`web/`、`test/`、`docker/`、`scripts/` 的现有工程边界。
+- 不把大型依赖、`node_modules`、Python venv、模型权重、Milvus/Neo4j/Postgres 数据目录放入仓库或 `D:\document\Worldline`。
+- 不把密钥、Token、账号、付费信息或个人凭据写入仓库、Markdown 或 Agent 指令文件。
 
-Additional mandatory requirements:
+## 重构规则
 
-- Use Chinese for user-facing progress and summary unless user explicitly requests another language.
-- Final response must explicitly include a Chinese section explaining `做出了什么改变`.
-- The change explanation must state:
-  - which files changed
-  - what behavior/text changed
-  - what was validated or checked
-  - if no file changed, what was inspected/judged and why no change was made
-- Provide exactly one suggested next-turn prompt using:
-  - `先读：`
-  - `当前基线：`
-  - `本轮优先任务：`
-  - `主控最后汇总：`
-  - `要求：`
-- For substantial subagent-mode tasks, summarize actual subagent decomposition in final delivery.
-- Do not rewrite historical evidence content; isolate it from active reading surface instead.
+- 先读现有代码和测试，再修改。
+- 优先沿用 FastAPI、ARQ、Redis、Postgres、MinIO、Milvus、Neo4j、Vue 3、Vite、Pinia、Ant Design Vue、LangGraph 和 MCP 的现有方向。
+- 不整体迁移到 RAGFlow、KAG、Graphiti、DeepWiki、Dify、Qdrant 或 pgvector，除非后续有明确评估收益。
+- STORM、Graphiti、GraphRAG、KAG、HippoRAG、Cognee、mem0、Letta 等项目只按当前文档中的保留/借鉴/实验/暂缓边界使用。
+- 第一阶段 Worldline UI 先用 Vue + SVG/Canvas + G6 做黑底青金发光世界线，不默认引入 Three.js/TresJS/Cosmograph。
+- 多 Agent 协作时，一个主控 Agent 决策和改文件，其他 Agent 只做研究、审查或测试报告。
 
-## Phase Judgment Rule
+## 验证要求
 
-- At the end of every substantial task, always report:
-  - current phase
-  - readiness for next phase
-  - main remaining gap before advancing
-- Judge phase progression proactively; do not wait for user prompt.
-- Current reordered progression baseline is:
-  - Phase 7: branding and documentation governance refactor
-  - Phase 8: multi-module verification and module operational closure
-  - Phase 9: backend service-layer refactor and algorithm/runtime optimization
-  - Phase 10: database and knowledge data-chain standardization
+清理或重构后至少运行：
+
+```powershell
+rg --files -g '*.md' D:\dev\Worldline
+rg --files -g '*.md' D:\document\Worldline
+docker compose config
+pnpm --dir web build
+npm run docs:build
+```
+
+涉及后端或模型契约时补充：
+
+```powershell
+uv run --group test pytest test\test_knowledge_object_models.py test\test_worldline_phase5_7_services.py test\test_evidence_service.py
+```
+
+## 汇报要求
+
+任务结束时说明：
+
+- 实际删除或重建了什么。
+- 修改/创建了哪些关键文件。
+- 做过哪些验证。
+- 仍有什么风险或后续需要 Joy 手动处理。
+- `D:\document\OutputMD\...` 总结路径。

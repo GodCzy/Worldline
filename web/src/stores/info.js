@@ -2,6 +2,57 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { brandApi } from '@/apis/system_api'
 
+export const DEFAULT_INFO_CONFIG = {
+  organization: {
+    name: 'Worldline',
+    logo: '/favicon.svg',
+    avatar: '/avatar.jpg'
+  },
+  branding: {
+    name: 'Worldline',
+    title: 'Worldline',
+    subtitle: 'Living Knowledge OS',
+    description:
+      'A local-first knowledge workbench for documents, evidence, wiki pages, graphs, timelines, MCP tools, and repeatable quality gates.'
+  },
+  features: [
+    {
+      label: 'Knowledge Workbench',
+      value: 'Docs + Evidence',
+      description: 'Ingest documents, preserve evidence anchors, and keep source-backed knowledge visible.',
+      icon: 'docs'
+    },
+    {
+      label: 'Reasoning Surfaces',
+      value: 'Wiki + Graph',
+      description: 'Rebuild wiki pages, entity graphs, temporal views, and traceable overview data.',
+      icon: 'route'
+    },
+    {
+      label: 'Agent Boundary',
+      value: 'MCP + Workflow',
+      description: 'Expose controlled tools through admin-only workflows, audit logs, and quality gates.',
+      icon: 'shield'
+    }
+  ],
+  themes: [],
+  actions: [
+    {
+      name: 'Docs',
+      icon: 'docs',
+      url: 'http://localhost:5174/'
+    },
+    {
+      name: 'Repository',
+      icon: 'github',
+      url: 'https://github.com/GodCzy/Worldline'
+    }
+  ],
+  footer: {
+    copyright: 'Worldline 2026'
+  }
+}
+
 const normalizeActionText = (value) => (typeof value === 'string' ? value.trim().toLowerCase() : '')
 
 const normalizeTheme = (item) => {
@@ -28,40 +79,42 @@ const normalizeTheme = (item) => {
       theme: context.theme || themeId,
       module: context.module || themeId,
       scene: context.scene || 'overview',
-      version: context.version || 'phase2'
+      version: context.version || 'worldline-context-v1'
     }
   }
 }
 
+const mergeInfoConfig = (value = {}) => ({
+  ...DEFAULT_INFO_CONFIG,
+  ...value,
+  organization: {
+    ...DEFAULT_INFO_CONFIG.organization,
+    ...(value.organization || {})
+  },
+  branding: {
+    ...DEFAULT_INFO_CONFIG.branding,
+    ...(value.branding || {})
+  },
+  features: Array.isArray(value.features) ? value.features : DEFAULT_INFO_CONFIG.features,
+  themes: Array.isArray(value.themes) ? value.themes : DEFAULT_INFO_CONFIG.themes,
+  actions: Array.isArray(value.actions) ? value.actions : DEFAULT_INFO_CONFIG.actions,
+  footer: {
+    ...DEFAULT_INFO_CONFIG.footer,
+    ...(value.footer || {})
+  }
+})
+
 export const useInfoStore = defineStore('info', () => {
-  const infoConfig = ref({})
+  const infoConfig = ref(mergeInfoConfig())
   const isLoading = ref(false)
   const isLoaded = ref(false)
   const debugMode = ref(false)
   const error = ref(null)
   let pendingInfoConfigRequest = null
 
-  const organization = computed(
-    () =>
-      infoConfig.value.organization || {
-        name: '',
-        logo: '',
-        avatar: ''
-      }
-  )
-
-  const branding = computed(
-    () =>
-      infoConfig.value.branding || {
-        name: '',
-        title: '',
-        subtitle: '',
-        description: ''
-      }
-  )
-
+  const organization = computed(() => infoConfig.value.organization || DEFAULT_INFO_CONFIG.organization)
+  const branding = computed(() => infoConfig.value.branding || DEFAULT_INFO_CONFIG.branding)
   const features = computed(() => infoConfig.value.features || [])
-
   const actions = computed(() => infoConfig.value.actions || [])
 
   const themes = computed(() => {
@@ -91,16 +144,14 @@ export const useInfoStore = defineStore('info', () => {
 
   const docsUrl = computed(() => {
     const action = findAction(
-      ({ key, name }) =>
-        key === 'docs' || key === 'doc' || name.includes('文档') || name.includes('docs')
+      ({ key, name }) => key === 'docs' || key === 'doc' || name.includes('document') || name.includes('docs')
     )
     return action?.url || action?.link || ''
   })
 
   const projectRepoUrl = computed(() => {
     const action = findAction(
-      ({ key, name }) =>
-        key === 'github' || name.includes('github') || name.includes('repo') || name.includes('仓库')
+      ({ key, name }) => key === 'github' || name.includes('github') || name.includes('repo')
     )
     return action?.url || action?.link || ''
   })
@@ -122,8 +173,16 @@ export const useInfoStore = defineStore('info', () => {
   }
 
   function setInfoConfig(newConfig) {
-    infoConfig.value = newConfig
+    infoConfig.value = mergeInfoConfig(newConfig || {})
     isLoaded.value = true
+  }
+
+  function useFallbackConfig(requestError = null) {
+    if (requestError) {
+      error.value = requestError
+    }
+    setInfoConfig(DEFAULT_INFO_CONFIG)
+    return infoConfig.value
   }
 
   function setDebugMode(enabled) {
@@ -146,15 +205,14 @@ export const useInfoStore = defineStore('info', () => {
       .then((response) => {
         if (response.success && response.data) {
           setInfoConfig(response.data)
-          return response.data
+          return infoConfig.value
         }
 
-        return null
+        return useFallbackConfig(new Error('System info response did not include a usable config.'))
       })
       .catch((requestError) => {
-        error.value = requestError
-        console.error('加载信息配置时发生错误:', requestError)
-        return null
+        console.warn('System info config is unavailable, using local fallback.', requestError)
+        return useFallbackConfig(requestError)
       })
       .finally(() => {
         pendingInfoConfigRequest = null
@@ -169,25 +227,11 @@ export const useInfoStore = defineStore('info', () => {
       return infoConfig.value
     }
 
-    const config = await runInfoConfigRequest(() => brandApi.getInfoConfig())
-    if (config) {
-      console.debug('信息配置加载成功:', config)
-      return config
-    }
-
-    console.warn('信息配置加载失败，使用默认配置')
-    return null
+    return runInfoConfigRequest(() => brandApi.getInfoConfig())
   }
 
   async function reloadInfoConfig() {
-    const config = await runInfoConfigRequest(() => brandApi.reloadInfoConfig())
-    if (config) {
-      console.debug('信息配置重新加载成功:', config)
-      return config
-    }
-
-    console.warn('信息配置重新加载失败')
-    return null
+    return runInfoConfigRequest(() => brandApi.reloadInfoConfig())
   }
 
   function getThemeById(themeId) {

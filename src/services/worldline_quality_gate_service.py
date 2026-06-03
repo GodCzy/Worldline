@@ -161,7 +161,7 @@ class WorldlineQualityGateService:
             "failure_replay": self._failure_replay(db_id, failures),
             "tracing": {
                 "trace_id": f"trace_{hashstr(gate_id, length=16)}",
-                "phase": "phase7_evaluation_production",
+                "phase": "worldline_quality_gate_v1",
                 "service": "WorldlineQualityGateService",
                 "deterministic": True,
             },

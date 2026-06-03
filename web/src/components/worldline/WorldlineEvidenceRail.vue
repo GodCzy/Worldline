@@ -19,6 +19,20 @@
           <small>{{ item.typeLabel || item.type }}</small>
         </div>
         <p>{{ item.summary || '这条证据解释了为什么当前世界线值得继续推进。' }}</p>
+        <dl v-if="item.evidenceId || item.sourceUri || item.page || item.lineStart" class="evidence-meta">
+          <div v-if="item.evidenceId">
+            <dt>ID</dt>
+            <dd>{{ item.evidenceId }}</dd>
+          </div>
+          <div v-if="item.sourceUri">
+            <dt>来源</dt>
+            <dd>{{ item.sourceUri }}</dd>
+          </div>
+          <div v-if="item.page || item.lineStart">
+            <dt>位置</dt>
+            <dd>{{ formatLocation(item) }}</dd>
+          </div>
+        </dl>
       </article>
     </div>
 
@@ -33,6 +47,14 @@ defineProps({
     default: () => []
   }
 })
+
+const formatLocation = (item = {}) => {
+  const parts = []
+  if (item.page) parts.push(`page ${item.page}`)
+  if (item.lineStart && item.lineEnd) parts.push(`line ${item.lineStart}-${item.lineEnd}`)
+  else if (item.lineStart) parts.push(`line ${item.lineStart}`)
+  return parts.join(' / ')
+}
 </script>
 
 <style scoped lang="less">
@@ -117,5 +139,30 @@ defineProps({
   margin: 8px 0 0;
   color: var(--gray-600);
   line-height: 1.75;
+}
+
+.evidence-meta {
+  display: grid;
+  gap: 6px;
+  margin: 10px 0 0;
+  color: var(--gray-600);
+  font-size: 12px;
+}
+
+.evidence-meta div {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 8px;
+}
+
+.evidence-meta dt {
+  color: var(--gray-500);
+  font-weight: 700;
+}
+
+.evidence-meta dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 </style>

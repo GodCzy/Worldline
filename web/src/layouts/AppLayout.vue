@@ -241,7 +241,8 @@ provide('settingsModal', {
     >
       <div class="logo circle">
         <router-link to="/">
-          <img :src="infoStore.organization.avatar" />
+          <img v-if="infoStore.organization.avatar" :src="infoStore.organization.avatar" alt="Worldline" />
+          <Waypoints v-else class="logo-fallback-icon" size="22" aria-hidden="true" />
         </router-link>
       </div>
       <div class="nav">
@@ -371,6 +372,7 @@ div.header,
 
 #app-router-view {
   flex: 1 1 auto;
+  min-width: 0;
   overflow-y: auto;
 }
 
@@ -414,6 +416,10 @@ div.header,
       width: 100%;
       height: 100%;
       border-radius: 8px;
+    }
+
+    .logo-fallback-icon {
+      color: var(--main-color);
     }
 
     & > a {
@@ -726,6 +732,38 @@ div.header,
           color: var(--main-color);
         }
       }
+    }
+  }
+}
+
+@media (max-width: 720px) {
+  .app-layout {
+    min-width: 0;
+  }
+
+  .header.is-expanded {
+    flex-basis: @header-width-collapsed;
+    width: @header-width-collapsed;
+    align-items: center;
+
+    .logo {
+      margin: 8px 0 18px;
+    }
+
+    .nav-item {
+      justify-content: center;
+
+      .nav-item-inner {
+        justify-content: center;
+      }
+
+      .nav-label {
+        display: none;
+      }
+    }
+
+    .github.nav-item .github-link {
+      justify-content: center;
     }
   }
 }
