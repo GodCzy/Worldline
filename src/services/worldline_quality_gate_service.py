@@ -25,6 +25,9 @@ class WorldlineQualityGateService:
 
     DEFAULT_THRESHOLDS = {
         "evidence_accuracy_min": 0.95,
+        "faithfulness_min": 0.90,
+        "context_recall_min": 0.85,
+        "context_precision_min": 0.80,
         "golden_items_min": 1,
         "stale_pages_max": 0,
         "permission_checks_required": True,
@@ -125,11 +128,15 @@ class WorldlineQualityGateService:
         stale_report = await self.graph_service.detect_stale_pages(db_id)
         counts = await self._collect_counts(db_id)
         evidence_accuracy = await self._calculate_evidence_accuracy(db_id, counts)
+        context_scores = self._calculate_context_scores(golden_items, evidence_accuracy)
         permission_checks = self._permission_checks()
         coverage_map = self._coverage_map(counts, stale_report, golden_items)
 
         metrics = {
             "evidence_accuracy": evidence_accuracy,
+            "faithfulness": context_scores["faithfulness"],
+            "context_recall": context_scores["context_recall"],
+            "context_precision": context_scores["context_precision"],
             "golden_item_count": len(golden_items),
             "entity_count": counts["entities"],
             "relationship_count": counts["relationships"],
@@ -226,6 +233,29 @@ class WorldlineQualityGateService:
         evidence_bound = sum(1 for row in rows if list(row[0] or []))
         return round(evidence_bound / denominator, 6)
 
+    def _calculate_context_scores(
+        self,
+        golden_items: list[GoldenSetItem],
+        evidence_accuracy: float,
+    ) -> dict[str, float]:
+        if not golden_items:
+            return {"faithfulness": 0.0, "context_recall": 0.0, "context_precision": 0.0}
+
+        evidence_backed_items = sum(1 for item in golden_items if list(item.expected_evidence_ids or []))
+        entity_backed_items = sum(
+            1
+            for item in golden_items
+            if list(item.expected_entity_ids or []) or "wiki" in list(item.coverage_tags or [])
+        )
+        context_recall = evidence_backed_items / len(golden_items)
+        context_precision = entity_backed_items / len(golden_items)
+        faithfulness = min(evidence_accuracy, context_recall, context_precision)
+        return {
+            "faithfulness": round(faithfulness, 6),
+            "context_recall": round(context_recall, 6),
+            "context_precision": round(context_precision, 6),
+        }
+
     def _permission_checks(self) -> dict[str, Any]:
         manifest = self.workflow_service.tool_manifest()
         write_tools = [tool for tool in manifest["tools"] if tool["write_scope"] != "none"]
@@ -289,6 +319,30 @@ class WorldlineQualityGateService:
                     "check": "evidence_accuracy",
                     "observed": metrics["evidence_accuracy"],
                     "expected": f">= {thresholds['evidence_accuracy_min']}",
+                }
+            )
+        if metrics["faithfulness"] < float(thresholds["faithfulness_min"]):
+            failures.append(
+                {
+                    "check": "faithfulness",
+                    "observed": metrics["faithfulness"],
+                    "expected": f">= {thresholds['faithfulness_min']}",
+                }
+            )
+        if metrics["context_recall"] < float(thresholds["context_recall_min"]):
+            failures.append(
+                {
+                    "check": "context_recall",
+                    "observed": metrics["context_recall"],
+                    "expected": f">= {thresholds['context_recall_min']}",
+                }
+            )
+        if metrics["context_precision"] < float(thresholds["context_precision_min"]):
+            failures.append(
+                {
+                    "check": "context_precision",
+                    "observed": metrics["context_precision"],
+                    "expected": f">= {thresholds['context_precision_min']}",
                 }
             )
         if metrics["golden_item_count"] < int(thresholds["golden_items_min"]):

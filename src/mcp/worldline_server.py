@@ -28,22 +28,46 @@ def create_server():
     @server.tool()
     async def worldline_plan_workflow(db_id: str, workflow_type: str = "knowledge_refresh") -> dict[str, Any]:
         """Plan a LangGraph-shaped workflow with ARQ dispatch metadata."""
-        return await WorldlineAgentWorkflowService().plan_workflow(db_id, workflow_type=workflow_type)
+        return await WorldlineAgentWorkflowService().plan_workflow(db_id, workflow_type=workflow_type, created_by="mcp")
 
     @server.tool()
     async def worldline_rebuild_wiki(db_id: str, file_id: str | None = None, max_topics: int = 8) -> dict[str, Any]:
         """Rebuild Auto-Wiki pages through the controlled service boundary."""
-        return await AutoWikiService().rebuild_wiki(db_id, file_id=file_id, max_topics=max_topics)
+        result = await AutoWikiService().rebuild_wiki(db_id, file_id=file_id, max_topics=max_topics)
+        await WorldlineAgentWorkflowService().audit_tool_call(
+            db_id,
+            tool_name="worldline.rebuild_wiki",
+            actor="mcp",
+            request_summary={"file_id": file_id, "max_topics": max_topics},
+            result_summary={"status": result.get("status"), "page_counts": result.get("page_counts")},
+        )
+        return result
 
     @server.tool()
     async def worldline_update_graph(db_id: str, max_entities: int = 40) -> dict[str, Any]:
         """Extract evidence-bound graph and temporal artifacts."""
-        return await KnowledgeGraphService().rebuild_graph(db_id, max_entities=max_entities)
+        result = await KnowledgeGraphService().rebuild_graph(db_id, max_entities=max_entities)
+        await WorldlineAgentWorkflowService().audit_tool_call(
+            db_id,
+            tool_name="worldline.update_graph",
+            actor="mcp",
+            request_summary={"max_entities": max_entities},
+            result_summary={"status": result.get("status"), "counts": result.get("counts")},
+        )
+        return result
 
     @server.tool()
     async def worldline_run_quality_gate(db_id: str, thresholds: dict[str, Any] | None = None) -> dict[str, Any]:
         """Run the deterministic Worldline quality gate."""
-        return await WorldlineQualityGateService().run_gate(db_id, thresholds=thresholds or {})
+        result = await WorldlineQualityGateService().run_gate(db_id, thresholds=thresholds or {}, created_by="mcp")
+        await WorldlineAgentWorkflowService().audit_tool_call(
+            db_id,
+            tool_name="worldline.run_quality_gate",
+            actor="mcp",
+            request_summary={"thresholds": thresholds or {}},
+            result_summary={"status": result.get("status"), "gate_id": result.get("gate_id")},
+        )
+        return result
 
     return server
 

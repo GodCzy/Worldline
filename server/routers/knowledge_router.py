@@ -1210,6 +1210,32 @@ async def get_worldline_mcp_manifest(
         raise HTTPException(status_code=500, detail=f"查询 Worldline MCP manifest 失败: {e}")
 
 
+@knowledge.get("/databases/{db_id}/worldline-mcp/audit-logs")
+async def list_worldline_mcp_audit_logs(
+    db_id: str,
+    tool_name: str | None = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """查询受控 Worldline MCP 工具审计日志。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_agent_workflow_service import WorldlineAgentWorkflowService
+
+        return await WorldlineAgentWorkflowService().list_audit_logs(
+            db_id,
+            tool_name=tool_name,
+            limit=limit,
+            offset=offset,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline MCP audit logs 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline MCP audit logs 失败: {e}")
+
+
 @knowledge.post("/databases/{db_id}/worldline-workflows/plan")
 async def plan_worldline_workflow(
     db_id: str,

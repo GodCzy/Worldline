@@ -423,6 +423,29 @@ class WorldlineWorkflowRun(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
 
 
+class WorldlineMcpAuditLog(Base):
+    """Audit log for controlled Worldline MCP tool calls."""
+
+    __tablename__ = "worldline_mcp_audit_logs"
+    __table_args__ = (
+        UniqueConstraint("log_id", name="uq_worldline_mcp_audit_logs_log_id"),
+        Index("idx_worldline_mcp_audit_db_tool", "db_id", "tool_name"),
+        Index("idx_worldline_mcp_audit_status", "db_id", "status"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    log_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    tool_name = Column(String(128), nullable=False, index=True)
+    actor = Column(String(128))
+    status = Column(String(32), nullable=False, default="success", index=True)
+    request_summary = Column(JSON_VALUE)
+    result_summary = Column(JSON_VALUE)
+    audit_metadata = Column("metadata", JSON_VALUE)
+    started_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    completed_at = Column(DateTime(timezone=True), default=utc_now_naive)
+
+
 class EvaluationBenchmark(Base):
     """评估基准模型"""
 

@@ -139,6 +139,8 @@ async def test_phase6_worldline_manifest_and_workflow_plan(sqlite_pg_manager) ->
     assert manifest["server"]["name"] == "worldline"
     assert manifest["runtime"]["orchestrator"] == "langgraph"
     assert manifest["runtime"]["async_dispatch"] == "arq"
+    assert manifest["audit"]["enabled"] is True
+    assert manifest["audit"]["table"] == "worldline_mcp_audit_logs"
     assert manifest["security"]["external_agents_direct_db_write"] is False
     assert all(tool["requires_admin"] for tool in manifest["tools"] if tool["write_scope"] != "none")
 
@@ -151,6 +153,11 @@ async def test_phase6_worldline_manifest_and_workflow_plan(sqlite_pg_manager) ->
     assert plan["dispatch_backend"] == "arq"
     assert [node["tool"] for node in plan["nodes"]] == ["worldline.rebuild_wiki", "worldline.update_graph"]
     assert plan["edges"] == [{"from": "n0_rebuild_wiki", "to": "n1_update_graph", "condition": "success"}]
+
+    audit_logs = await service.list_audit_logs("kb_phase5", tool_name="worldline.plan_workflow")
+    assert len(audit_logs["items"]) == 1
+    assert audit_logs["items"][0]["status"] == "success"
+    assert audit_logs["items"][0]["result_summary"]["tool_count"] == 2
 
 
 @pytest.mark.asyncio
@@ -166,6 +173,9 @@ async def test_phase7_quality_gate_builds_golden_set_and_replay(sqlite_pg_manage
     assert golden["item_count"] >= 1
     assert gate["status"] == "passed"
     assert gate["metrics"]["evidence_accuracy"] >= 0.95
+    assert gate["metrics"]["faithfulness"] >= 0.90
+    assert gate["metrics"]["context_recall"] >= 0.85
+    assert gate["metrics"]["context_precision"] >= 0.80
     assert gate["metrics"]["golden_item_count"] >= 1
     assert gate["metrics"]["stale_page_count"] == 0
     assert gate["coverage_map"]["graph"]["covered"] is True

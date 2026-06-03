@@ -5,12 +5,14 @@ Updated: 2026-06-03
 ## Implemented
 
 - `WorldlineWorkflowRun`
+- `WorldlineMcpAuditLog`
 - `WorldlineAgentWorkflowService`
 - `src.mcp.worldline_server`
 - Built-in MCP candidate config for `worldline`
 - Admin endpoints:
-  - `GET /knowledge/databases/{db_id}/worldline-mcp/manifest`
-  - `POST /knowledge/databases/{db_id}/worldline-workflows/plan`
+- `GET /knowledge/databases/{db_id}/worldline-mcp/manifest`
+- `GET /knowledge/databases/{db_id}/worldline-mcp/audit-logs`
+- `POST /knowledge/databases/{db_id}/worldline-workflows/plan`
 
 ## Tool Boundary
 
@@ -23,6 +25,8 @@ Worldline MCP tools are controlled tools:
 - `worldline.inspect_timeline`
 
 Write tools require admin and route through service boundaries. External agents do not get direct DB writes.
+
+Every controlled workflow/tool call can write an audit row with tool name, actor, status, request summary, result summary, and metadata.
 
 ## Runtime Contract
 

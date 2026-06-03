@@ -14,6 +14,7 @@ from src.storage.postgres.models_knowledge import (
     SourceAsset,
     TemporalFact,
     WikiPage,
+    WorldlineMcpAuditLog,
     WorldlineWorkflowRun,
 )
 
@@ -31,6 +32,7 @@ def test_phase1_knowledge_object_tables_are_registered() -> None:
         "quality_gate_runs",
         "temporal_facts",
         "wiki_pages",
+        "worldline_mcp_audit_logs",
         "worldline_workflow_runs",
     }
 
@@ -260,6 +262,25 @@ def test_workflow_and_quality_gate_contract_supports_phase6_and_phase7() -> None
     }.issubset(index_names)
 
 
+def test_worldline_mcp_audit_log_contract_supports_tool_auditing() -> None:
+    table = WorldlineMcpAuditLog.__table__
+
+    assert table.columns["log_id"].unique is True
+    assert table.columns["db_id"].nullable is False
+    assert table.columns["tool_name"].nullable is False
+    assert table.columns["status"].nullable is False
+    assert WorldlineMcpAuditLog.audit_metadata.property.columns[0].name == "metadata"
+
+    fk_targets = {fk.target_fullname for fk in table.foreign_keys}
+    assert "knowledge_bases.db_id" in fk_targets
+
+    index_names = {index.name for index in table.indexes}
+    assert {
+        "idx_worldline_mcp_audit_db_tool",
+        "idx_worldline_mcp_audit_status",
+    }.issubset(index_names)
+
+
 def test_phase1_tables_compile_to_postgresql_ddl() -> None:
     dialect = postgresql.dialect()
 
@@ -276,6 +297,7 @@ def test_phase1_tables_compile_to_postgresql_ddl() -> None:
         GoldenSetItem,
         QualityGateRun,
         WorldlineWorkflowRun,
+        WorldlineMcpAuditLog,
     ):
         ddl = str(CreateTable(model.__table__).compile(dialect=dialect))
         assert f"CREATE TABLE {model.__tablename__}" in ddl

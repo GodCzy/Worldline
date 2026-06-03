@@ -69,6 +69,7 @@ Result summary:
   "counts": {
     "entities": 8,
     "golden_items": 16,
+    "mcp_audit_logs": 1,
     "quality_gate_runs": 1,
     "relationships": 28,
     "temporal_facts": 1,
@@ -76,8 +77,11 @@ Result summary:
     "workflow_runs": 1
   },
   "gate": {
+    "context_precision": 1.0,
+    "context_recall": 1.0,
     "evidence_accuracy": 1.0,
     "failure_replay_count": 0,
+    "faithfulness": 1.0,
     "permission_checks_passed": true,
     "stale_page_count": 0,
     "status": "passed"

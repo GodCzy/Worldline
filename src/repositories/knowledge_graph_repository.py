@@ -14,6 +14,7 @@ from src.storage.postgres.models_knowledge import (
     QualityGateRun,
     TemporalFact,
     WikiPage,
+    WorldlineMcpAuditLog,
     WorldlineWorkflowRun,
 )
 
@@ -177,6 +178,40 @@ class KnowledgeGraphRepository:
             session.add(run)
         return run
 
+    async def insert_mcp_audit_log(self, data: dict[str, Any]) -> WorldlineMcpAuditLog:
+        log = WorldlineMcpAuditLog(**data)
+        async with pg_manager.get_async_session_context() as session:
+            session.add(log)
+        return log
+
+    async def list_mcp_audit_logs(
+        self,
+        db_id: str,
+        *,
+        tool_name: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        limit = max(1, min(int(limit or 100), 500))
+        offset = max(0, int(offset or 0))
+        async with pg_manager.get_async_session_context() as session:
+            stmt = (
+                select(WorldlineMcpAuditLog)
+                .where(WorldlineMcpAuditLog.db_id == db_id)
+                .order_by(WorldlineMcpAuditLog.started_at.desc(), WorldlineMcpAuditLog.log_id)
+                .offset(offset)
+                .limit(limit + 1)
+            )
+            if tool_name:
+                stmt = stmt.where(WorldlineMcpAuditLog.tool_name == tool_name)
+            rows = (await session.execute(stmt)).scalars().all()
+        return {
+            "items": [self.serialize_mcp_audit_log(row) for row in rows[:limit]],
+            "limit": limit,
+            "offset": offset,
+            "has_more": len(rows) > limit,
+        }
+
     def serialize_entity(self, entity: KnowledgeEntity) -> dict[str, Any]:
         return {
             "entity_id": entity.entity_id,
@@ -240,4 +275,18 @@ class KnowledgeGraphRepository:
             "created_by": run.created_by,
             "created_at": run.created_at.isoformat() if run.created_at else None,
             "completed_at": run.completed_at.isoformat() if run.completed_at else None,
+        }
+
+    def serialize_mcp_audit_log(self, log: WorldlineMcpAuditLog) -> dict[str, Any]:
+        return {
+            "log_id": log.log_id,
+            "db_id": log.db_id,
+            "tool_name": log.tool_name,
+            "actor": log.actor,
+            "status": log.status,
+            "request_summary": log.request_summary or {},
+            "result_summary": log.result_summary or {},
+            "metadata": log.audit_metadata or {},
+            "started_at": log.started_at.isoformat() if log.started_at else None,
+            "completed_at": log.completed_at.isoformat() if log.completed_at else None,
         }

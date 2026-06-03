@@ -24,6 +24,13 @@ The gate persists:
 - latency stats
 - permission checks
 
+Default local gate thresholds:
+
+- evidence accuracy >= 0.95
+- faithfulness >= 0.90
+- context recall >= 0.85
+- context precision >= 0.80
+
 ## Boundary
 
 The gate is deterministic and local. It does not call LLMs and does not install or configure CI infrastructure yet.

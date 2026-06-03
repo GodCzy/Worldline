@@ -4,6 +4,7 @@ from typing import Any
 
 from src.repositories.knowledge_graph_repository import KnowledgeGraphRepository
 from src.utils import hashstr
+from src.utils.datetime_utils import utc_now_naive
 
 
 class WorldlineAgentWorkflowService:
@@ -113,6 +114,11 @@ class WorldlineAgentWorkflowService:
                 "async_dispatch": "arq",
                 "controlled_service_boundary": True,
             },
+            "audit": {
+                "enabled": True,
+                "table": "worldline_mcp_audit_logs",
+                "records_tool_name_actor_status_and_summaries": True,
+            },
             "tools": list(self.TOOL_DEFINITIONS),
         }
 
@@ -174,6 +180,14 @@ class WorldlineAgentWorkflowService:
                 "created_by": created_by,
             }
         )
+        await self.audit_tool_call(
+            db_id,
+            tool_name="worldline.plan_workflow",
+            actor=created_by,
+            status="success",
+            request_summary={"workflow_type": workflow_type, "requested_steps": selected},
+            result_summary={"workflow_id": workflow_id, "tool_count": len(nodes)},
+        )
 
         return {
             "workflow_id": workflow_id,
@@ -187,6 +201,44 @@ class WorldlineAgentWorkflowService:
             "tool_count": len(nodes),
         }
 
+    async def audit_tool_call(
+        self,
+        db_id: str,
+        *,
+        tool_name: str,
+        actor: str | None = None,
+        status: str = "success",
+        request_summary: dict[str, Any] | None = None,
+        result_summary: dict[str, Any] | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        log_id = self._audit_log_id(db_id, tool_name, request_summary or {}, result_summary or {})
+        log = await self.repository.insert_mcp_audit_log(
+            {
+                "log_id": log_id,
+                "db_id": db_id,
+                "tool_name": tool_name,
+                "actor": actor,
+                "status": status,
+                "request_summary": request_summary or {},
+                "result_summary": result_summary or {},
+                "audit_metadata": metadata or {"source": "WorldlineAgentWorkflowService"},
+                "started_at": utc_now_naive(),
+                "completed_at": utc_now_naive(),
+            }
+        )
+        return self.repository.serialize_mcp_audit_log(log)
+
+    async def list_audit_logs(
+        self,
+        db_id: str,
+        *,
+        tool_name: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
+        return await self.repository.list_mcp_audit_logs(db_id, tool_name=tool_name, limit=limit, offset=offset)
+
     def _workflow_id(self, db_id: str, workflow_type: str, steps: list[str]) -> str:
         step_key = ":/".join(steps)
         return f"wfr_{hashstr(f'{db_id}:{workflow_type}:{step_key}', length=32)}"
@@ -195,3 +247,13 @@ class WorldlineAgentWorkflowService:
         if tool_name == "worldline.inspect_timeline":
             return None
         return tool_name.replace("worldline.", "worldline:")
+
+    def _audit_log_id(
+        self,
+        db_id: str,
+        tool_name: str,
+        request_summary: dict[str, Any],
+        result_summary: dict[str, Any],
+    ) -> str:
+        payload = f"{db_id}:{tool_name}:{request_summary}:{result_summary}:{utc_now_naive().isoformat()}"
+        return f"wl_audit_{hashstr(payload, length=32)}"
