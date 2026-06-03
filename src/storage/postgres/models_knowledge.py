@@ -238,6 +238,34 @@ class KnowledgeChunk(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
 
 
+class WikiPage(Base):
+    """Auto-Wiki 派生页面。"""
+
+    __tablename__ = "wiki_pages"
+    __table_args__ = (
+        UniqueConstraint("page_id", name="uq_wiki_pages_page_id"),
+        Index("idx_wiki_pages_db_type", "db_id", "page_type"),
+        Index("idx_wiki_pages_db_slug", "db_id", "slug"),
+        Index("idx_wiki_pages_source", "db_id", "source_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    page_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    page_type = Column(String(32), nullable=False, index=True)
+    slug = Column(String(256), nullable=False, index=True)
+    title = Column(String(512), nullable=False)
+    source_id = Column(String(128), index=True)
+    markdown = Column(Text, nullable=False)
+    backlinks = Column(JSON_VALUE)
+    evidence_ids = Column(JSON_VALUE)
+    freshness = Column(JSON_VALUE)
+    status = Column(String(32), nullable=False, default="active", index=True)
+    page_metadata = Column("metadata", JSON_VALUE)
+    generated_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
 class EvaluationBenchmark(Base):
     """评估基准模型"""
 

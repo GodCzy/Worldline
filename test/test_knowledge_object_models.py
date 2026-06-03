@@ -8,6 +8,7 @@ from src.storage.postgres.models_knowledge import (
     EvidenceAnchor,
     KnowledgeChunk,
     SourceAsset,
+    WikiPage,
 )
 
 
@@ -18,6 +19,7 @@ def test_phase1_knowledge_object_tables_are_registered() -> None:
         "document_nodes",
         "evidence_anchors",
         "knowledge_chunks",
+        "wiki_pages",
     }
 
     assert expected_tables.issubset(Base.metadata.tables.keys())
@@ -133,10 +135,32 @@ def test_knowledge_chunk_contract_binds_chunks_to_evidence() -> None:
     }.issubset(index_names)
 
 
+def test_wiki_page_contract_supports_auto_wiki_outputs() -> None:
+    table = WikiPage.__table__
+
+    assert table.columns["page_id"].unique is True
+    assert table.columns["db_id"].nullable is False
+    assert table.columns["page_type"].nullable is False
+    assert table.columns["slug"].nullable is False
+    assert table.columns["title"].nullable is False
+    assert table.columns["markdown"].nullable is False
+    assert WikiPage.page_metadata.property.columns[0].name == "metadata"
+
+    fk_targets = {fk.target_fullname for fk in table.foreign_keys}
+    assert "knowledge_bases.db_id" in fk_targets
+
+    index_names = {index.name for index in table.indexes}
+    assert {
+        "idx_wiki_pages_db_type",
+        "idx_wiki_pages_db_slug",
+        "idx_wiki_pages_source",
+    }.issubset(index_names)
+
+
 def test_phase1_tables_compile_to_postgresql_ddl() -> None:
     dialect = postgresql.dialect()
 
-    for model in (SourceAsset, DocumentVersion, DocumentNode, EvidenceAnchor, KnowledgeChunk):
+    for model in (SourceAsset, DocumentVersion, DocumentNode, EvidenceAnchor, KnowledgeChunk, WikiPage):
         ddl = str(CreateTable(model.__table__).compile(dialect=dialect))
         assert f"CREATE TABLE {model.__tablename__}" in ddl
         assert "JSONB" in ddl

@@ -1019,6 +1019,80 @@ async def list_document_chunks(
         raise HTTPException(status_code=500, detail=f"查询文档 chunks 失败: {e}")
 
 
+@knowledge.post("/databases/{db_id}/wiki/rebuild")
+async def rebuild_auto_wiki(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """重建 Auto-Wiki 页面，支持全库或单文件局部重建。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.auto_wiki_service import AutoWikiService
+
+        payload = payload or {}
+        return await AutoWikiService().rebuild_wiki(
+            db_id,
+            file_id=payload.get("file_id"),
+            max_topics=payload.get("max_topics", 8),
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"重建 Auto-Wiki 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"重建 Auto-Wiki 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/wiki/pages")
+async def list_wiki_pages(
+    db_id: str,
+    page_type: str | None = Query(None),
+    source_id: str | None = Query(None),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 Auto-Wiki 页面摘要。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.wiki_repository import WikiRepository
+
+        return await WikiRepository().list_pages(
+            db_id,
+            page_type=page_type,
+            source_id=source_id,
+            limit=limit,
+            offset=offset,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Auto-Wiki 页面失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Auto-Wiki 页面失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/wiki/pages/{page_id}")
+async def get_wiki_page(
+    db_id: str,
+    page_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """查询单个 Auto-Wiki 页面。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.repositories.wiki_repository import WikiRepository
+
+        page = await WikiRepository().get_page(db_id, page_id)
+        if page is None:
+            raise HTTPException(status_code=404, detail=f"Wiki 页面 {page_id} 不存在")
+        return page
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Auto-Wiki 页面失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Auto-Wiki 页面失败: {e}")
+
+
 @knowledge.put("/databases/{db_id}/query-params")
 async def update_knowledge_base_query_params(
     db_id: str, params: dict = Body(...), current_user: User = Depends(get_admin_user)
