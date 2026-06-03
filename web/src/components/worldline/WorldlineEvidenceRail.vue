@@ -128,10 +128,10 @@ const formatBBox = (item = {}) => {
 .evidence-rail {
   min-height: 0;
   padding: 16px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.88);
-  box-shadow: inset 0 0 28px rgba(124, 246, 255, 0.04);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: inset 0 0 28px rgba(var(--wl-cyan-rgb), 0.04);
 }
 
 .panel-header {
@@ -143,7 +143,7 @@ const formatBBox = (item = {}) => {
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -152,7 +152,7 @@ const formatBBox = (item = {}) => {
 
 .panel-header h3 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 16px;
   font-weight: 800;
 }
@@ -163,8 +163,8 @@ const formatBBox = (item = {}) => {
   min-height: 26px;
   padding: 0 9px;
   border-radius: 999px;
-  background: rgba(255, 211, 111, 0.11);
-  color: #ffe2a6;
+  background: rgba(var(--wl-gold-rgb), 0.11);
+  color: var(--wl-gold-soft);
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
@@ -180,10 +180,10 @@ const formatBBox = (item = {}) => {
 .rail-tab {
   min-width: 0;
   min-height: 34px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
+  border: 1px solid var(--wl-border);
   border-radius: 6px;
-  background: rgba(124, 246, 255, 0.05);
-  color: rgba(216, 251, 255, 0.72);
+  background: rgba(var(--wl-cyan-rgb), 0.05);
+  color: var(--wl-muted);
   cursor: pointer;
   font-size: 12px;
   font-weight: 700;
@@ -191,13 +191,13 @@ const formatBBox = (item = {}) => {
 
 .rail-tab span {
   margin-left: 4px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-weight: 800;
 }
 
 .rail-tab.active {
-  border-color: rgba(255, 211, 111, 0.5);
-  background: rgba(255, 211, 111, 0.12);
+  border-color: rgba(var(--wl-gold-rgb), 0.5);
+  background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
 }
 
@@ -213,8 +213,8 @@ const formatBBox = (item = {}) => {
 
 .rail-item {
   padding: 12px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 7px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
   background: rgba(255, 255, 255, 0.035);
 }
 
@@ -226,7 +226,7 @@ const formatBBox = (item = {}) => {
 }
 
 .rail-item-top strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 800;
   line-height: 1.5;
 }
@@ -241,7 +241,7 @@ const formatBBox = (item = {}) => {
 .rail-item p,
 .empty-copy {
   margin: 8px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   line-height: 1.65;
   font-size: 13px;
 }
@@ -250,7 +250,7 @@ const formatBBox = (item = {}) => {
   display: grid;
   gap: 6px;
   margin: 10px 0 0;
-  color: rgba(216, 251, 255, 0.62);
+  color: var(--wl-muted-soft);
   font-size: 12px;
 }
 
@@ -261,7 +261,7 @@ const formatBBox = (item = {}) => {
 }
 
 .evidence-meta dt {
-  color: rgba(255, 211, 111, 0.78);
+  color: rgba(var(--wl-gold-rgb), 0.78);
   font-weight: 800;
 }
 

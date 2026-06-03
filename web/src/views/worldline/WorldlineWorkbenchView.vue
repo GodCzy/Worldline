@@ -414,11 +414,11 @@ onMounted(async () => {
 .worldline-workbench {
   min-height: 100vh;
   padding: 18px 20px 30px;
-  color: #f6fbff;
+  color: var(--wl-text);
   background:
-    radial-gradient(circle at 4% 48%, rgba(255, 211, 111, 0.16), transparent 25%),
-    radial-gradient(circle at 94% 50%, rgba(124, 246, 255, 0.16), transparent 27%),
-    linear-gradient(180deg, #05080d, #02050a 72%, #060a10);
+    radial-gradient(circle at 4% 48%, rgba(var(--wl-gold-rgb), 0.14), transparent 25%),
+    radial-gradient(circle at 94% 50%, rgba(var(--wl-cyan-rgb), 0.14), transparent 27%),
+    linear-gradient(180deg, var(--wl-bg-1), var(--wl-bg-0) 72%, #060a10);
 }
 
 .workbench-header {
@@ -432,7 +432,7 @@ onMounted(async () => {
 
 .header-copy h1 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: clamp(1.8rem, 3vw, 2.7rem);
   font-weight: 900;
   line-height: 1.12;
@@ -441,13 +441,13 @@ onMounted(async () => {
 .header-copy p:last-child {
   max-width: 860px;
   margin: 8px 0 0;
-  color: rgba(216, 251, 255, 0.66);
+  color: var(--wl-muted);
   line-height: 1.6;
 }
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -470,10 +470,10 @@ onMounted(async () => {
   justify-content: center;
   min-height: 36px;
   padding: 0 12px;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  border-radius: 7px;
-  background: rgba(124, 246, 255, 0.06);
-  color: #d8fbff;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
   cursor: pointer;
   text-decoration: none;
   font-weight: 800;
@@ -489,13 +489,13 @@ onMounted(async () => {
 }
 
 .module-pill small {
-  color: rgba(216, 251, 255, 0.55);
+  color: var(--wl-muted-soft);
   font-weight: 800;
 }
 
 .module-pill.active {
-  border-color: rgba(255, 211, 111, 0.56);
-  background: rgba(255, 211, 111, 0.12);
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
 }
 
@@ -511,15 +511,15 @@ onMounted(async () => {
   align-items: end;
   margin-bottom: 10px;
   padding: 12px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.86);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
 }
 
 .question-box label {
   display: block;
   margin-bottom: 6px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 12px;
   font-weight: 900;
 }
@@ -528,21 +528,22 @@ onMounted(async () => {
   width: 100%;
   min-height: 38px;
   padding: 0 12px;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  border-radius: 7px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
   background: rgba(2, 5, 10, 0.72);
-  color: #f6fbff;
+  color: var(--wl-text);
 }
 
 .question-box input:focus {
   outline: none;
-  border-color: rgba(255, 211, 111, 0.64);
+  border-color: var(--wl-border-gold);
+  box-shadow: var(--wl-focus-ring);
 }
 
 .generate-button {
-  border-color: rgba(255, 211, 111, 0.56);
-  background: linear-gradient(135deg, rgba(255, 211, 111, 0.92), rgba(124, 246, 255, 0.7));
-  color: #061018;
+  border-color: var(--wl-border-gold);
+  background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7));
+  color: var(--wl-ink);
 }
 
 .generate-button:disabled,
@@ -558,10 +559,10 @@ onMounted(async () => {
   align-items: center;
   margin-bottom: 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 8px;
-  background: rgba(124, 246, 255, 0.05);
-  color: rgba(216, 251, 255, 0.68);
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius);
+  background: rgba(var(--wl-cyan-rgb), 0.05);
+  color: var(--wl-muted);
   font-size: 12px;
 }
 
@@ -595,19 +596,19 @@ onMounted(async () => {
 .unsupported-card {
   width: min(620px, 100%);
   padding: 20px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.9);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
 }
 
 .unsupported-card h2 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 900;
 }
 
 .unsupported-card p {
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   line-height: 1.7;
 }
 

@@ -109,12 +109,17 @@ const filteredEdgeProperties = computed(() => {
   pointer-events: auto; // 确保可以交互
 
   .info-card {
-    background: var(--color-bg-container);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 4px 12px var(--shadow-3);
-    border-radius: 4px;
-    border: 1px solid var(--gray-200);
+    background: var(--wl-panel);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--wl-shadow-soft);
+    border-radius: var(--wl-radius);
+    border: 1px solid var(--wl-border);
+
+    :deep(.ant-card-head) {
+      border-bottom-color: var(--wl-border);
+      color: var(--wl-text);
+    }
 
     :deep(.ant-card-body) {
       padding: 12px;
@@ -124,6 +129,17 @@ const filteredEdgeProperties = computed(() => {
     :deep(.ant-descriptions-item-content) {
       font-size: 12px;
       padding: 4px 8px !important;
+      border-color: var(--wl-border) !important;
+      background: rgba(2, 5, 10, 0.42) !important;
+      color: var(--wl-muted);
+    }
+
+    :deep(.ant-descriptions-item-content) {
+      color: var(--wl-text-soft);
+    }
+
+    :deep(.ant-descriptions-view) {
+      border-color: var(--wl-border) !important;
     }
   }
 
@@ -133,14 +149,15 @@ const filteredEdgeProperties = computed(() => {
     align-items: center;
     font-size: 13px;
     font-weight: 600;
+    color: var(--wl-text);
 
     .close-icon {
       cursor: pointer;
-      color: var(--gray-500);
+      color: var(--wl-muted);
       transition: color 0.2s;
 
       &:hover {
-        color: var(--gray-800);
+        color: var(--wl-gold);
       }
     }
   }

@@ -146,6 +146,15 @@ function initGraph() {
     graphInstance = null
   }
 
+  const graphPalette = [
+    getCSSVariable('--wl-graph-node-1') || '#7cf6ff',
+    getCSSVariable('--wl-graph-node-2') || '#ffd36f',
+    getCSSVariable('--wl-graph-node-3') || '#70f0bb',
+    getCSSVariable('--wl-graph-node-4') || '#9db8ff',
+    getCSSVariable('--wl-graph-node-5') || '#ffb38f',
+    getCSSVariable('--wl-graph-node-6') || '#d8fbff'
+  ]
+
   graphInstance = new Graph({
     container: container.value,
     width,
@@ -157,7 +166,7 @@ function initGraph() {
       type: 'circle',
       style: {
         labelText: (d) => d.data.label,
-        labelFill: getCSSVariable('--gray-700'),
+        labelFill: getCSSVariable('--wl-text-soft') || '#d8fbff',
         labelWordWrap: true, // enable label ellipsis
         labelMaxWidth: '300%',
         size: (d) => {
@@ -166,36 +175,25 @@ function initGraph() {
           return Math.min(15 + deg * 5, 50)
         },
         opacity: 0.9,
-        stroke: getCSSVariable('--color-bg-container'),
+        stroke: getCSSVariable('--wl-bg-2') || '#07101a',
         lineWidth: 1.5,
-        shadowColor: getCSSVariable('--gray-400'),
-        shadowBlur: 4,
+        shadowColor: getCSSVariable('--wl-cyan') || '#7cf6ff',
+        shadowBlur: 8,
         ...(props.nodeStyleOptions.style || {})
       },
       palette: props.nodeStyleOptions.palette || {
         field: 'label',
-        color: [
-          '#60a5fa',
-          '#34d399',
-          '#f59e0b',
-          '#f472b6',
-          '#22d3ee',
-          '#a78bfa',
-          '#f97316',
-          '#4ade80',
-          '#f43f5e',
-          '#2dd4bf'
-        ]
+        color: graphPalette
       }
     },
     edge: {
       type: 'quadratic',
       style: {
         labelText: (d) => d.data.label,
-        labelFill: getCSSVariable('--gray-800'),
+        labelFill: getCSSVariable('--wl-muted') || 'rgba(216, 251, 255, 0.68)',
         labelBackground: true,
-        labelBackgroundFill: getCSSVariable('--gray-100'),
-        stroke: getCSSVariable('--gray-400'),
+        labelBackgroundFill: getCSSVariable('--wl-panel-solid') || '#07111b',
+        stroke: getCSSVariable('--wl-graph-edge') || 'rgba(124, 246, 255, 0.42)',
         opacity: 0.8,
         lineWidth: 1.2,
         endArrow: true,
@@ -475,7 +473,10 @@ defineExpose({
   position: relative;
   width: 100%;
   height: 100%;
-  // background-color: var(--gray-0);
+  background:
+    radial-gradient(circle at 18% 30%, rgba(var(--wl-gold-rgb), 0.1), transparent 24%),
+    radial-gradient(circle at 82% 48%, rgba(var(--wl-cyan-rgb), 0.12), transparent 30%),
+    var(--wl-bg-0);
 
   .graph-canvas {
     width: 100%;
@@ -490,10 +491,10 @@ defineExpose({
     align-items: center;
     gap: 16px;
     padding: 6px 12px;
-    background: var(--color-trans-light);
-    border: 1px solid var(--color-border-secondary);
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--wl-panel);
+    border: 1px solid var(--wl-border);
+    border-radius: var(--wl-radius-sm);
+    box-shadow: var(--wl-shadow-soft);
     pointer-events: auto;
     z-index: 10;
     font-size: 13px;
@@ -505,17 +506,17 @@ defineExpose({
       gap: 4px;
 
       .stat-label {
-        color: var(--color-text-secondary);
+        color: var(--wl-muted);
         font-weight: 500;
       }
 
       .stat-value {
-        color: var(--color-text);
+        color: var(--wl-text);
         font-weight: 600;
       }
 
       .stat-total {
-        color: var(--color-text-quaternary);
+        color: var(--wl-muted-soft);
         font-size: 11px;
       }
     }
@@ -564,7 +565,7 @@ defineExpose({
     filter: brightness(1);
   }
   50% {
-    filter: brightness(1.3) drop-shadow(0 0 8px rgba(255, 0, 0, 0.8));
+    filter: brightness(1.25) drop-shadow(0 0 10px rgba(var(--wl-gold-rgb), 0.72));
   }
   100% {
     filter: brightness(1);

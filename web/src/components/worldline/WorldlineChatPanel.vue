@@ -49,12 +49,12 @@ defineEmits(['toggle', 'open-login'])
 
 <style scoped lang="less">
 .worldline-chat-panel {
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--main-200) 50%, transparent);
+  border-radius: var(--wl-radius);
+  border: 1px solid var(--wl-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--main-100) 18%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 92%, transparent), var(--main-10));
-  box-shadow: 0 14px 30px color-mix(in srgb, var(--gray-1000) 8%, transparent);
+    radial-gradient(circle at top right, rgba(var(--wl-cyan-rgb), 0.12), transparent 34%),
+    var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
   overflow: hidden;
 }
 
@@ -68,13 +68,13 @@ defineEmits(['toggle', 'open-login'])
 
 .panel-copy strong {
   display: block;
-  color: var(--gray-1000);
+  color: var(--wl-text);
   font-size: 14px;
 }
 
 .eyebrow {
   margin: 0 0 6px;
-  color: var(--main-600);
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -82,9 +82,9 @@ defineEmits(['toggle', 'open-login'])
 }
 
 .panel-toggle {
-  border: 1px solid color-mix(in srgb, var(--gray-150) 70%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 88%, transparent);
-  color: var(--gray-700);
+  border: 1px solid var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
@@ -93,8 +93,8 @@ defineEmits(['toggle', 'open-login'])
 }
 
 .panel-toggle:hover {
-  color: var(--main-700);
-  border-color: color-mix(in srgb, var(--main-300) 70%, transparent);
+  color: var(--wl-text);
+  border-color: var(--wl-border-strong);
 }
 
 .panel-body {
@@ -104,18 +104,18 @@ defineEmits(['toggle', 'open-login'])
 .panel-empty,
 .panel-loading {
   padding: 12px 10px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--gray-0) 86%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gray-150) 70%, transparent);
-  color: var(--gray-700);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(2, 5, 10, 0.56);
+  border: 1px solid var(--wl-border);
+  color: var(--wl-muted);
   font-size: 13px;
 }
 
 .panel-action {
   margin-top: 10px;
-  border: 1px solid color-mix(in srgb, var(--main-300) 70%, transparent);
-  background: color-mix(in srgb, var(--main-20) 76%, var(--gray-0));
-  color: var(--main-800);
+  border: 1px solid var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
+  color: var(--wl-gold-soft);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
@@ -127,8 +127,8 @@ defineEmits(['toggle', 'open-login'])
   width: 100%;
   height: 360px;
   border: none;
-  border-radius: 16px;
-  background: var(--gray-0);
+  border-radius: var(--wl-radius);
+  background: var(--wl-bg-0);
 }
 
 @media (max-width: 960px) {

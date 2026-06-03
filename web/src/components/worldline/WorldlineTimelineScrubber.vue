@@ -77,9 +77,9 @@ const activeSnapshot = computed(
 <style scoped lang="less">
 .timeline-scrubber {
   padding: 14px 16px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.88);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
 }
 
 .scrubber-head {
@@ -91,7 +91,7 @@ const activeSnapshot = computed(
 
 .eyebrow {
   margin: 0 0 4px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -100,13 +100,13 @@ const activeSnapshot = computed(
 
 .scrubber-head h3 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 15px;
   font-weight: 800;
 }
 
 .scrubber-head > span {
-  color: rgba(216, 251, 255, 0.62);
+  color: var(--wl-muted-soft);
   font-size: 12px;
   font-weight: 800;
 }
@@ -122,17 +122,17 @@ const activeSnapshot = computed(
   min-width: 0;
   min-height: 58px;
   padding: 9px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 7px;
-  background: rgba(124, 246, 255, 0.05);
-  color: rgba(216, 251, 255, 0.7);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.05);
+  color: var(--wl-muted);
   cursor: pointer;
   text-align: left;
 }
 
 .snapshot-step.active {
-  border-color: rgba(255, 211, 111, 0.56);
-  background: rgba(255, 211, 111, 0.12);
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
 }
 
@@ -142,13 +142,13 @@ const activeSnapshot = computed(
   height: 8px;
   margin-bottom: 8px;
   border-radius: 999px;
-  background: #7cf6ff;
-  box-shadow: 0 0 10px rgba(124, 246, 255, 0.68);
+  background: var(--wl-cyan);
+  box-shadow: 0 0 10px rgba(var(--wl-cyan-rgb), 0.68);
 }
 
 .snapshot-step.active .step-dot {
-  background: #ffd36f;
-  box-shadow: 0 0 12px rgba(255, 211, 111, 0.82);
+  background: var(--wl-gold);
+  box-shadow: 0 0 12px rgba(var(--wl-gold-rgb), 0.82);
 }
 
 .snapshot-step strong,
@@ -165,14 +165,14 @@ const activeSnapshot = computed(
 }
 
 .snapshot-step small {
-  color: rgba(216, 251, 255, 0.58);
+  color: var(--wl-muted-soft);
   font-size: 11px;
   font-weight: 800;
 }
 
 .snapshot-summary {
   margin: 12px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -190,12 +190,12 @@ const activeSnapshot = computed(
   padding: 8px 10px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.035);
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   font-size: 12px;
 }
 
 .temporal-item strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 800;
 }
 

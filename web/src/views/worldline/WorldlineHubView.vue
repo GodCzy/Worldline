@@ -262,11 +262,8 @@ onMounted(async () => {
 <style scoped lang="less">
 .worldline-hub-view {
   min-height: 100vh;
-  color: #f6fbff;
-  background:
-    radial-gradient(circle at 8% 18%, rgba(255, 211, 111, 0.16), transparent 26%),
-    radial-gradient(circle at 88% 16%, rgba(124, 246, 255, 0.16), transparent 28%),
-    linear-gradient(180deg, #05080d, #02050a 70%, #060a10);
+  color: var(--wl-text);
+  background: var(--wl-page-bg);
 }
 
 .hub-shell {
@@ -286,7 +283,7 @@ onMounted(async () => {
 .header-copy h1 {
   max-width: 760px;
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: clamp(2rem, 4vw, 3.5rem);
   font-weight: 900;
   line-height: 1.08;
@@ -295,13 +292,13 @@ onMounted(async () => {
 .subtitle {
   max-width: 760px;
   margin: 12px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   line-height: 1.75;
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -324,8 +321,8 @@ onMounted(async () => {
   min-height: 40px;
   padding: 0 14px;
   border-radius: 7px;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  color: #d8fbff;
+  border: 1px solid var(--wl-border);
+  color: var(--wl-text-soft);
   text-decoration: none;
   font-weight: 800;
   cursor: pointer;
@@ -333,13 +330,13 @@ onMounted(async () => {
 
 .ghost-link,
 .secondary-button {
-  background: rgba(124, 246, 255, 0.06);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
 }
 
 .primary-button {
-  border-color: rgba(255, 211, 111, 0.56);
-  background: linear-gradient(135deg, rgba(255, 211, 111, 0.92), rgba(124, 246, 255, 0.7));
-  color: #061018;
+  border-color: var(--wl-border-gold);
+  background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7));
+  color: var(--wl-ink);
 }
 
 .primary-button:disabled {
@@ -355,10 +352,10 @@ onMounted(async () => {
 
 .launch-panel,
 .status-panel {
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.86);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow);
 }
 
 .launch-panel {
@@ -382,7 +379,7 @@ onMounted(async () => {
 .panel-head h2,
 .status-block h3 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 20px;
   font-weight: 900;
 }
@@ -393,8 +390,8 @@ onMounted(async () => {
   min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  background: rgba(255, 211, 111, 0.1);
-  color: #ffe2a6;
+  background: rgba(var(--wl-gold-rgb), 0.1);
+  color: var(--wl-gold-soft);
   font-size: 12px;
   font-weight: 900;
   white-space: nowrap;
@@ -410,19 +407,19 @@ onMounted(async () => {
 .module-tile {
   min-height: 118px;
   padding: 14px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
   background: rgba(255, 255, 255, 0.035);
-  color: #d8fbff;
+  color: var(--wl-text-soft);
   cursor: pointer;
   text-align: left;
 }
 
 .module-tile.active {
-  border-color: rgba(255, 211, 111, 0.6);
+  border-color: var(--wl-border-gold);
   background:
-    radial-gradient(circle at top right, rgba(255, 211, 111, 0.16), transparent 45%),
-    rgba(124, 246, 255, 0.07);
+    radial-gradient(circle at top right, rgba(var(--wl-gold-rgb), 0.16), transparent 45%),
+    rgba(var(--wl-cyan-rgb), 0.07);
 }
 
 .module-title,
@@ -432,20 +429,20 @@ onMounted(async () => {
 }
 
 .module-title {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 15px;
   font-weight: 900;
 }
 
 .module-tile small {
   margin-top: 8px;
-  color: rgba(216, 251, 255, 0.66);
+  color: var(--wl-muted);
   line-height: 1.5;
 }
 
 .module-tile em {
   margin-top: 12px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-style: normal;
   font-weight: 900;
@@ -455,13 +452,13 @@ onMounted(async () => {
 .empty-state {
   margin-top: 18px;
   padding: 16px;
-  border: 1px dashed rgba(124, 246, 255, 0.24);
-  border-radius: 8px;
-  color: rgba(216, 251, 255, 0.68);
+  border: 1px dashed var(--wl-border-strong);
+  border-radius: var(--wl-radius);
+  color: var(--wl-muted);
 }
 
 .empty-state strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 900;
 }
 
@@ -473,7 +470,7 @@ onMounted(async () => {
 .question-label {
   display: block;
   margin-top: 18px;
-  color: #ffe2a6;
+  color: var(--wl-gold-soft);
   font-size: 13px;
   font-weight: 900;
 }
@@ -482,18 +479,18 @@ onMounted(async () => {
   width: 100%;
   margin-top: 10px;
   padding: 14px 16px;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  border-radius: 8px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
   background: rgba(2, 5, 10, 0.72);
-  color: #f6fbff;
+  color: var(--wl-text);
   line-height: 1.7;
   resize: vertical;
 }
 
 .question-input:focus {
   outline: none;
-  border-color: rgba(255, 211, 111, 0.7);
-  box-shadow: 0 0 0 3px rgba(255, 211, 111, 0.12);
+  border-color: var(--wl-border-gold);
+  box-shadow: var(--wl-focus-ring);
 }
 
 .question-actions {
@@ -502,7 +499,7 @@ onMounted(async () => {
 
 .status-block p {
   margin: 10px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   line-height: 1.7;
 }
 
@@ -518,9 +515,9 @@ onMounted(async () => {
   align-items: center;
   min-height: 26px;
   padding: 0 9px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
+  border: 1px solid var(--wl-border);
   border-radius: 999px;
-  color: #d8fbff;
+  color: var(--wl-text-soft);
   font-size: 12px;
   font-weight: 800;
 }
@@ -534,8 +531,8 @@ onMounted(async () => {
 .status-matrix div,
 .pipeline-item {
   padding: 12px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 7px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
   background: rgba(255, 255, 255, 0.035);
 }
 
@@ -550,14 +547,14 @@ onMounted(async () => {
 }
 
 .status-matrix strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 18px;
   font-weight: 900;
 }
 
 .status-matrix span,
 .pipeline-item span {
-  color: rgba(216, 251, 255, 0.62);
+  color: var(--wl-muted-soft);
   font-size: 12px;
 }
 
@@ -567,7 +564,7 @@ onMounted(async () => {
 }
 
 .pipeline-item strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 900;
 }
 

@@ -87,9 +87,9 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 <style scoped lang="less">
 .graph-focus-panel {
   padding: 16px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.88);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
 }
 
 .panel-header {
@@ -101,7 +101,7 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -110,7 +110,7 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 
 .panel-header h3 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 16px;
   font-weight: 800;
 }
@@ -118,9 +118,9 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 .graph-button {
   min-height: 30px;
   padding: 0 10px;
-  border: 1px solid rgba(255, 211, 111, 0.38);
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.38);
   border-radius: 6px;
-  background: rgba(255, 211, 111, 0.12);
+  background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
   cursor: pointer;
   font-size: 12px;
@@ -136,9 +136,9 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 
 .focus-summary div {
   padding: 10px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 7px;
-  background: rgba(124, 246, 255, 0.05);
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.05);
 }
 
 .focus-summary strong,
@@ -150,13 +150,13 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 }
 
 .focus-summary strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 16px;
   font-weight: 900;
 }
 
 .focus-summary span {
-  color: rgba(216, 251, 255, 0.6);
+  color: var(--wl-muted-soft);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -176,10 +176,10 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
   justify-content: center;
   max-width: 180px;
   padding: 6px 9px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
+  border: 1px solid var(--wl-border);
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.035);
-  color: #d8fbff;
+  color: var(--wl-text-soft);
   cursor: pointer;
   text-align: left;
 }
@@ -197,7 +197,7 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 }
 
 .entity-chip small {
-  color: rgba(216, 251, 255, 0.58);
+  color: var(--wl-muted-soft);
   font-size: 11px;
 }
 
@@ -213,7 +213,7 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 }
 
 .trace-grid dt {
-  color: rgba(255, 211, 111, 0.78);
+  color: rgba(var(--wl-gold-rgb), 0.78);
   font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
@@ -222,7 +222,7 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
 .trace-grid dd {
   margin: 3px 0 0;
   overflow-wrap: anywhere;
-  color: rgba(216, 251, 255, 0.72);
+  color: var(--wl-muted);
   font-size: 12px;
 }
 </style>

@@ -1,0 +1,133 @@
+:root {
+  --wl-bg-0: #02050a;
+  --wl-bg-1: #05080d;
+  --wl-bg-2: #07101a;
+  --wl-bg-3: #0b1621;
+  --wl-page-bg:
+    radial-gradient(circle at 8% 18%, rgba(255, 211, 111, 0.14), transparent 25%),
+    radial-gradient(circle at 88% 16%, rgba(124, 246, 255, 0.14), transparent 28%),
+    linear-gradient(180deg, var(--wl-bg-1), var(--wl-bg-0) 72%, #060a10);
+  --wl-panel: rgba(7, 15, 24, 0.88);
+  --wl-panel-solid: #07111b;
+  --wl-panel-soft: rgba(124, 246, 255, 0.055);
+  --wl-panel-raised: rgba(11, 22, 33, 0.94);
+  --wl-border: rgba(124, 246, 255, 0.16);
+  --wl-border-strong: rgba(124, 246, 255, 0.28);
+  --wl-border-gold: rgba(255, 211, 111, 0.48);
+  --wl-text: #f6fbff;
+  --wl-text-soft: #d8fbff;
+  --wl-muted: rgba(216, 251, 255, 0.68);
+  --wl-muted-soft: rgba(216, 251, 255, 0.52);
+  --wl-cyan: #7cf6ff;
+  --wl-cyan-rgb: 124, 246, 255;
+  --wl-cyan-soft: #d8fbff;
+  --wl-gold: #ffd36f;
+  --wl-gold-rgb: 255, 211, 111;
+  --wl-gold-soft: #ffe2a6;
+  --wl-ink: #061018;
+  --wl-green: #70f0bb;
+  --wl-amber: #ffcf67;
+  --wl-red: #ff7b7b;
+  --wl-radius: 8px;
+  --wl-radius-sm: 7px;
+  --wl-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+  --wl-shadow-soft: 0 12px 42px rgba(0, 0, 0, 0.28);
+  --wl-focus-ring: 0 0 0 3px rgba(255, 211, 111, 0.12);
+  --wl-graph-node-1: #7cf6ff;
+  --wl-graph-node-2: #ffd36f;
+  --wl-graph-node-3: #70f0bb;
+  --wl-graph-node-4: #9db8ff;
+  --wl-graph-node-5: #ffb38f;
+  --wl-graph-node-6: #d8fbff;
+  --wl-graph-edge: rgba(124, 246, 255, 0.42);
+}
+
+body {
+  background: var(--wl-bg-0);
+}
+
+.wl-surface {
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
+}
+
+.wl-command-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.wl-command-button-primary {
+  border-color: var(--wl-border-gold);
+  background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7));
+  color: var(--wl-ink);
+}
+
+.wl-ant-dark :where(.ant-input, .ant-input-number-input, .ant-select-selection-item) {
+  color: var(--wl-text);
+}
+
+.wl-ant-dark :where(.ant-input::placeholder, .ant-input-number-input::placeholder) {
+  color: var(--wl-muted-soft);
+}
+
+.graph-container .ant-select-selector,
+.graph-container .ant-input-affix-wrapper,
+.graph-container .ant-input,
+.graph-container .ant-input-number {
+  border-color: var(--wl-border) !important;
+  border-radius: var(--wl-radius-sm) !important;
+  background: rgba(2, 5, 10, 0.74) !important;
+  background-color: rgba(2, 5, 10, 0.74) !important;
+  color: var(--wl-text) !important;
+  box-shadow: none !important;
+}
+
+.graph-container .ant-select-selection-item,
+.graph-container .ant-select-selection-placeholder,
+.graph-container .ant-input,
+.graph-container .ant-input-number-input {
+  color: var(--wl-text) !important;
+}
+
+.graph-container .ant-select-arrow,
+.graph-container .ant-input-suffix {
+  color: var(--wl-cyan) !important;
+}
+
+.graph-container .ant-btn {
+  border-radius: var(--wl-radius-sm) !important;
+  font-weight: 800;
+  box-shadow: none !important;
+}
+
+.graph-container .ant-btn-default {
+  border-color: var(--wl-border) !important;
+  background: rgba(var(--wl-cyan-rgb), 0.06) !important;
+  background-color: rgba(var(--wl-cyan-rgb), 0.06) !important;
+  color: var(--wl-text-soft) !important;
+}
+
+.graph-container .ant-btn-default:hover {
+  border-color: var(--wl-border-strong) !important;
+  background: rgba(var(--wl-cyan-rgb), 0.1) !important;
+  background-color: rgba(var(--wl-cyan-rgb), 0.1) !important;
+  color: var(--wl-text) !important;
+}
+
+.graph-container .ant-btn-primary {
+  border-color: var(--wl-border-gold) !important;
+  background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7)) !important;
+  background-color: transparent !important;
+  color: var(--wl-ink) !important;
+}

@@ -120,9 +120,9 @@ const emitAction = (action) => {
 <style scoped lang="less">
 .detail-panel {
   padding: 16px;
-  border: 1px solid rgba(124, 246, 255, 0.16);
-  border-radius: 8px;
-  background: rgba(7, 15, 24, 0.88);
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
 }
 
 .panel-header {
@@ -134,7 +134,7 @@ const emitAction = (action) => {
 
 .eyebrow {
   margin: 0 0 6px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -143,7 +143,7 @@ const emitAction = (action) => {
 
 .panel-header h3 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 16px;
   font-weight: 800;
   line-height: 1.4;
@@ -155,10 +155,10 @@ const emitAction = (action) => {
   align-items: center;
   min-height: 26px;
   padding: 0 9px;
-  border: 1px solid rgba(255, 211, 111, 0.28);
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.28);
   border-radius: 999px;
-  background: rgba(255, 211, 111, 0.1);
-  color: #ffe2a6;
+  background: rgba(var(--wl-gold-rgb), 0.1);
+  color: var(--wl-gold-soft);
   font-size: 12px;
   font-weight: 800;
   white-space: nowrap;
@@ -167,7 +167,7 @@ const emitAction = (action) => {
 .lead,
 .summary,
 .empty-copy {
-  color: rgba(216, 251, 255, 0.72);
+  color: var(--wl-muted);
   line-height: 1.7;
 }
 
@@ -197,20 +197,20 @@ const emitAction = (action) => {
 
 .quality-grid div {
   padding: 10px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 7px;
-  background: rgba(124, 246, 255, 0.05);
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.05);
 }
 
 .quality-grid strong {
   display: block;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 18px;
   font-weight: 900;
 }
 
 .quality-grid span {
-  color: rgba(216, 251, 255, 0.62);
+  color: var(--wl-muted-soft);
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -219,26 +219,26 @@ const emitAction = (action) => {
 .section-block {
   margin-top: 14px;
   padding: 12px;
-  border: 1px solid rgba(124, 246, 255, 0.14);
-  border-radius: 7px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
   background: rgba(255, 255, 255, 0.035);
 }
 
 .section-block.subtle {
-  border-color: rgba(255, 211, 111, 0.16);
-  background: rgba(255, 211, 111, 0.055);
+  border-color: rgba(var(--wl-gold-rgb), 0.16);
+  background: rgba(var(--wl-gold-rgb), 0.055);
 }
 
 .section-block strong {
   display: block;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 13px;
   font-weight: 800;
 }
 
 .section-block p {
   margin: 7px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   font-size: 13px;
   line-height: 1.7;
 }
@@ -250,7 +250,7 @@ const emitAction = (action) => {
 }
 
 .detail-grid dt {
-  color: rgba(255, 211, 111, 0.74);
+  color: rgba(var(--wl-gold-rgb), 0.74);
   font-size: 11px;
   font-weight: 800;
   text-transform: uppercase;
@@ -258,7 +258,7 @@ const emitAction = (action) => {
 
 .detail-grid dd {
   margin: 4px 0 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -277,17 +277,17 @@ const emitAction = (action) => {
   justify-content: center;
   gap: 3px;
   padding: 10px 12px;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  border-radius: 7px;
-  background: rgba(124, 246, 255, 0.06);
-  color: #d8fbff;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
   cursor: pointer;
   text-align: left;
 }
 
 .action-button.primary {
-  border-color: rgba(255, 211, 111, 0.5);
-  background: rgba(255, 211, 111, 0.12);
+  border-color: rgba(var(--wl-gold-rgb), 0.5);
+  background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
 }
 
@@ -296,7 +296,7 @@ const emitAction = (action) => {
 }
 
 .action-button small {
-  color: rgba(216, 251, 255, 0.62);
+  color: var(--wl-muted-soft);
   line-height: 1.45;
 }
 </style>

@@ -52,12 +52,12 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
 <style scoped lang="less">
 .inspect-panel {
   padding: 20px;
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 86%, transparent);
+  border-radius: var(--wl-radius);
+  border: 1px solid var(--wl-border);
   background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--main-100) 18%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 94%, transparent), var(--main-10));
-  box-shadow: 0 18px 38px color-mix(in srgb, var(--gray-1000) 7%, transparent);
+    radial-gradient(circle at top right, rgba(var(--wl-cyan-rgb), 0.12), transparent 34%),
+    var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
 }
 
 .panel-header {
@@ -69,7 +69,7 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
 
 .eyebrow {
   margin: 0 0 8px;
-  color: var(--main-600);
+  color: var(--wl-gold);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -78,7 +78,7 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
 
 .panel-header h3 {
   margin: 0;
-  color: var(--gray-1000);
+  color: var(--wl-text);
   font-size: 1.08rem;
 }
 
@@ -89,8 +89,8 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
   min-height: 28px;
   padding: 0 10px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--main-20) 82%, var(--gray-0));
-  color: var(--main-700);
+  background: rgba(var(--wl-cyan-rgb), 0.07);
+  color: var(--wl-text-soft);
   font-size: 12px;
   font-weight: 700;
 }
@@ -110,24 +110,24 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
   width: 100%;
   min-height: 62px;
   padding: 14px 16px;
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 84%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 88%, var(--main-10));
-  color: var(--gray-900);
+  border-radius: var(--wl-radius-sm);
+  border: 1px solid var(--wl-border);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--wl-muted);
   cursor: pointer;
   text-align: left;
   transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .action-item.primary {
-  border-color: color-mix(in srgb, var(--main-300) 88%, transparent);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--main-20) 78%, var(--gray-0)), color-mix(in srgb, var(--gray-0) 88%, transparent));
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
 }
 
 .action-item:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--main-400) 84%, transparent);
-  box-shadow: 0 14px 24px color-mix(in srgb, var(--main-500) 10%, transparent);
+  border-color: var(--wl-border-strong);
+  box-shadow: 0 14px 24px rgba(var(--wl-cyan-rgb), 0.1);
 }
 
 .action-copy {
@@ -137,13 +137,13 @@ const getTargetLabel = (value) => targetLabelMap[value] || value || '下一步'
 }
 
 .action-copy strong {
-  color: var(--gray-1000);
+  color: var(--wl-text);
   line-height: 1.5;
 }
 
 .action-copy small,
 .empty-copy {
-  color: var(--gray-600);
+  color: var(--wl-muted);
   line-height: 1.7;
 }
 </style>

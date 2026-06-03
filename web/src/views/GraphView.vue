@@ -675,12 +675,79 @@ const goToDatabasePage = () => {
 <style lang="less" scoped>
 @graph-header-height: 55px;
 
+.database-empty {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+  background: var(--wl-page-bg);
+  color: var(--wl-muted);
+
+  :deep(.ant-empty-description) {
+    color: var(--wl-muted);
+  }
+}
+
 .graph-container {
   padding: 0;
-  background-color: var(--gray-0);
+  min-height: 100vh;
+  background: var(--wl-page-bg);
+  color: var(--wl-text);
 
-  .header-container {
+  :deep(.header-container) {
     height: @graph-header-height;
+  }
+
+  :deep(.header-actions) {
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  :deep(.ant-select-selector),
+  :deep(.ant-input-affix-wrapper),
+  :deep(.ant-input),
+  :deep(.ant-input-number) {
+    border-color: var(--wl-border) !important;
+    border-radius: var(--wl-radius-sm) !important;
+    background: rgba(2, 5, 10, 0.74) !important;
+    color: var(--wl-text) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.ant-select-selection-item),
+  :deep(.ant-select-selection-placeholder),
+  :deep(.ant-input),
+  :deep(.ant-input-number-input) {
+    color: var(--wl-text) !important;
+  }
+
+  :deep(.ant-select-arrow),
+  :deep(.ant-input-suffix) {
+    color: var(--wl-cyan);
+  }
+
+  :deep(.ant-btn) {
+    border-radius: var(--wl-radius-sm);
+    font-weight: 800;
+    box-shadow: none;
+  }
+
+  :deep(.ant-btn-default) {
+    border-color: var(--wl-border);
+    background: rgba(var(--wl-cyan-rgb), 0.06);
+    color: var(--wl-text-soft);
+  }
+
+  :deep(.ant-btn-default:hover) {
+    border-color: var(--wl-border-strong);
+    background: rgba(var(--wl-cyan-rgb), 0.1);
+    color: var(--wl-text);
+  }
+
+  :deep(.ant-btn-primary) {
+    border-color: var(--wl-border-gold);
+    background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7));
+    color: var(--wl-ink);
   }
 }
 
@@ -688,9 +755,10 @@ const goToDatabasePage = () => {
   display: flex;
   align-items: center;
   padding: 14px 24px;
-  border-bottom: 1px solid var(--gray-120);
+  border-bottom: 1px solid var(--wl-border);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--main-20) 60%, var(--gray-0)), var(--gray-0));
+    radial-gradient(circle at 16% 0%, rgba(var(--wl-gold-rgb), 0.14), transparent 34%),
+    linear-gradient(90deg, rgba(7, 15, 24, 0.9), rgba(2, 5, 10, 0.84));
 }
 
 .theme-graph-copy {
@@ -698,10 +766,11 @@ const goToDatabasePage = () => {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
-  color: var(--gray-700);
+  color: var(--wl-muted);
 
   strong {
-    color: var(--main-900);
+    color: var(--wl-text);
+    font-weight: 900;
   }
 }
 
@@ -709,15 +778,16 @@ const goToDatabasePage = () => {
   display: inline-flex;
   align-items: center;
   padding: 4px 8px;
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.24);
   border-radius: 999px;
-  background: var(--main-20);
-  color: var(--main-700);
+  background: rgba(var(--wl-gold-rgb), 0.1);
+  color: var(--wl-gold-soft);
   font-size: 12px;
   font-weight: 700;
 }
 
 .theme-graph-detail {
-  color: var(--gray-500);
+  color: var(--wl-muted-soft);
   font-size: 13px;
 }
 
@@ -728,6 +798,7 @@ const goToDatabasePage = () => {
   .label {
     font-size: 14px;
     margin-right: 8px;
+    color: var(--wl-muted);
   }
 }
 
@@ -736,7 +807,7 @@ const goToDatabasePage = () => {
   align-items: center;
   margin-right: 16px;
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: var(--wl-muted);
 }
 
 .status-text {
@@ -750,16 +821,17 @@ const goToDatabasePage = () => {
   display: inline-block;
 
   &.loading {
-    background-color: var(--color-warning-500);
+    background-color: var(--wl-amber);
     animation: pulse 1.5s infinite ease-in-out;
   }
 
   &.open {
-    background-color: var(--color-success-500);
+    background-color: var(--wl-green);
+    box-shadow: 0 0 12px rgba(112, 240, 187, 0.55);
   }
 
   &.closed {
-    background-color: var(--color-error-500);
+    background-color: var(--wl-red);
   }
 }
 
@@ -800,8 +872,9 @@ const goToDatabasePage = () => {
   .upload-config {
     margin: 24px 0;
     padding: 16px;
-    background-color: var(--gray-0);
-    border-radius: 4px;
+    border: 1px solid var(--wl-border);
+    background: rgba(2, 5, 10, 0.72);
+    border-radius: var(--wl-radius-sm);
 
     .config-row {
       display: flex;
@@ -816,7 +889,7 @@ const goToDatabasePage = () => {
         width: 100px;
         flex-shrink: 0;
         font-size: 14px;
-        color: var(--color-text);
+        color: var(--wl-muted);
         text-align: right;
         margin-right: 16px;
       }
@@ -831,7 +904,7 @@ const goToDatabasePage = () => {
       margin-bottom: 16px;
       padding-left: 116px;
       font-size: 12px;
-      color: var(--color-text-secondary);
+      color: var(--wl-muted-soft);
       line-height: 1.5;
 
       &:last-child {
@@ -845,7 +918,18 @@ const goToDatabasePage = () => {
   width: 100%;
   height: calc(100vh - @graph-header-height);
   overflow: hidden;
-  background: var(--gray-10);
+  background:
+    linear-gradient(rgba(var(--wl-cyan-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--wl-cyan-rgb), 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 18% 22%, rgba(var(--wl-gold-rgb), 0.1), transparent 28%),
+    radial-gradient(circle at 84% 52%, rgba(var(--wl-cyan-rgb), 0.12), transparent 32%),
+    var(--wl-bg-0);
+  background-size:
+    38px 38px,
+    38px 38px,
+    auto,
+    auto,
+    auto;
 
   .actions {
     display: flex;
@@ -878,6 +962,61 @@ const goToDatabasePage = () => {
   button {
     height: 37px;
     box-shadow: none;
+  }
+
+  :deep(.ant-input),
+  :deep(.ant-input-affix-wrapper),
+  :deep(.ant-input-number),
+  :deep(.ant-select-selector) {
+    border-color: var(--wl-border) !important;
+    border-radius: var(--wl-radius-sm) !important;
+    background: rgba(2, 5, 10, 0.74) !important;
+    color: var(--wl-text) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.ant-input::placeholder),
+  :deep(.ant-input-number-input::placeholder) {
+    color: var(--wl-muted-soft);
+  }
+
+  :deep(.ant-input-affix-wrapper-focused),
+  :deep(.ant-input-affix-wrapper:focus),
+  :deep(.ant-input-affix-wrapper:hover),
+  :deep(.ant-input:hover),
+  :deep(.ant-select-selector:hover) {
+    border-color: var(--wl-border-strong) !important;
+  }
+
+  :deep(.ant-input-suffix) {
+    color: var(--wl-cyan);
+  }
+
+  :deep(.ant-btn) {
+    border-radius: var(--wl-radius-sm);
+    font-weight: 800;
+  }
+
+  :deep(.ant-btn-default) {
+    border-color: var(--wl-border);
+    background: rgba(var(--wl-cyan-rgb), 0.06);
+    color: var(--wl-text-soft);
+  }
+
+  :deep(.ant-btn-default:hover) {
+    border-color: var(--wl-border-strong);
+    background: rgba(var(--wl-cyan-rgb), 0.1);
+    color: var(--wl-text);
+  }
+
+  :deep(.ant-btn-primary) {
+    border-color: var(--wl-border-gold);
+    background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.7));
+    color: var(--wl-ink);
+  }
+
+  :deep(.ant-empty-description) {
+    color: var(--wl-muted);
   }
 }
 

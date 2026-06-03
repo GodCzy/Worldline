@@ -157,13 +157,13 @@ const buildEdgePath = (edge, offset = 0) => {
 .branch-canvas {
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgba(124, 246, 255, 0.18);
-  border-radius: 8px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
   background:
-    radial-gradient(circle at 8% 50%, rgba(255, 211, 111, 0.18), transparent 22%),
-    radial-gradient(circle at 92% 50%, rgba(124, 246, 255, 0.18), transparent 24%),
+    radial-gradient(circle at 8% 50%, rgba(var(--wl-gold-rgb), 0.18), transparent 22%),
+    radial-gradient(circle at 92% 50%, rgba(var(--wl-cyan-rgb), 0.18), transparent 24%),
     linear-gradient(180deg, rgba(7, 13, 22, 0.98), rgba(2, 5, 10, 0.98));
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
+  box-shadow: var(--wl-shadow);
 }
 
 .canvas-header {
@@ -176,7 +176,7 @@ const buildEdgePath = (edge, offset = 0) => {
 
 .eyebrow {
   margin: 0 0 5px;
-  color: #ffd36f;
+  color: var(--wl-gold);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -185,7 +185,7 @@ const buildEdgePath = (edge, offset = 0) => {
 
 .canvas-header h2 {
   margin: 0;
-  color: #f6fbff;
+  color: var(--wl-text);
   font-size: 18px;
   font-weight: 800;
   line-height: 1.35;
@@ -194,7 +194,7 @@ const buildEdgePath = (edge, offset = 0) => {
 .stage-subtitle {
   max-width: 780px;
   margin: 6px 0 0;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   font-size: 13px;
   line-height: 1.6;
 }
@@ -212,10 +212,10 @@ const buildEdgePath = (edge, offset = 0) => {
   align-items: center;
   min-height: 28px;
   padding: 0 10px;
-  border: 1px solid rgba(124, 246, 255, 0.22);
+  border: 1px solid var(--wl-border-strong);
   border-radius: 999px;
-  background: rgba(124, 246, 255, 0.08);
-  color: #d8fbff;
+  background: rgba(var(--wl-cyan-rgb), 0.08);
+  color: var(--wl-text-soft);
   font-size: 12px;
   font-weight: 700;
 }
@@ -268,12 +268,12 @@ const buildEdgePath = (edge, offset = 0) => {
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  color: rgba(216, 251, 255, 0.68);
+  color: var(--wl-muted);
   text-align: center;
 }
 
 .empty-state strong {
-  color: #f6fbff;
+  color: var(--wl-text);
   font-weight: 800;
 }
 

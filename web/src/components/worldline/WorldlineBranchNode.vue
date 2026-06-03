@@ -118,7 +118,7 @@ const tooltipBox = computed(() => {
 
 .node-halo {
   fill: rgba(90, 242, 255, 0.1);
-  stroke: rgba(124, 246, 255, 0.55);
+  stroke: rgba(var(--wl-cyan-rgb), 0.55);
   stroke-width: 1.2;
   transition:
     fill 160ms ease,
@@ -138,15 +138,15 @@ const tooltipBox = computed(() => {
 
 .branch-node.kind-convergence .node-core {
   fill: #fff7de;
-  stroke: #ffd36f;
+  stroke: var(--wl-gold);
 }
 
 .branch-node.tone-focus .node-core {
-  stroke: #7cf6ff;
+  stroke: var(--wl-cyan);
 }
 
 .branch-node.tone-peak .node-core {
-  stroke: #ffd36f;
+  stroke: var(--wl-gold);
 }
 
 .branch-node:hover .node-halo,
@@ -154,15 +154,15 @@ const tooltipBox = computed(() => {
 .branch-node.selected .node-halo {
   fill: rgba(90, 242, 255, 0.18);
   stroke: rgba(255, 218, 138, 0.85);
-  filter: drop-shadow(0 0 10px rgba(124, 246, 255, 0.48));
+  filter: drop-shadow(0 0 10px rgba(var(--wl-cyan-rgb), 0.48));
 }
 
 .branch-node.selected .node-core {
-  filter: drop-shadow(0 0 8px rgba(255, 211, 111, 0.72));
+  filter: drop-shadow(0 0 8px rgba(var(--wl-gold-rgb), 0.72));
 }
 
 .node-title {
-  fill: #f6fbff;
+  fill: var(--wl-text);
   font-size: 12px;
   font-weight: 700;
   paint-order: stroke;
@@ -192,12 +192,12 @@ const tooltipBox = computed(() => {
 
 .tooltip-shell {
   fill: rgba(7, 15, 24, 0.94);
-  stroke: rgba(124, 246, 255, 0.48);
+  stroke: rgba(var(--wl-cyan-rgb), 0.48);
   stroke-width: 1;
 }
 
 .tooltip-text {
-  fill: #d8fbff;
+  fill: var(--wl-text-soft);
   font-size: 10px;
   font-weight: 600;
 }

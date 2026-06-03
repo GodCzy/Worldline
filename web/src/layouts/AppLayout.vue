@@ -352,6 +352,8 @@ provide('settingsModal', {
   width: 100%;
   height: 100vh;
   min-width: var(--min-width);
+  background: var(--wl-bg-0);
+  color: var(--wl-text);
 }
 
 .app-layout.embed-mode {
@@ -374,6 +376,7 @@ div.header,
   flex: 1 1 auto;
   min-width: 0;
   overflow-y: auto;
+  background: var(--wl-bg-0);
 }
 
 .header {
@@ -382,10 +385,13 @@ div.header,
   flex: 0 0 @header-width-collapsed;
   justify-content: flex-start;
   align-items: center;
-  background-color: color-mix(in srgb, var(--main-0) 88%, var(--gray-0));
+  background:
+    radial-gradient(circle at 50% 0%, rgba(var(--wl-gold-rgb), 0.12), transparent 32%),
+    linear-gradient(180deg, rgba(7, 15, 24, 0.96), rgba(2, 5, 10, 0.98));
   height: 100%;
   width: @header-width-collapsed;
-  border-right: 1px solid var(--gray-100);
+  border-right: 1px solid var(--wl-border);
+  box-shadow: 8px 0 36px rgba(0, 0, 0, 0.28);
   transition:
     width 0.2s ease,
     flex-basis 0.2s ease,
@@ -416,10 +422,12 @@ div.header,
       width: 100%;
       height: 100%;
       border-radius: 8px;
+      border: 1px solid var(--wl-border);
+      box-shadow: 0 0 18px rgba(var(--wl-cyan-rgb), 0.16);
     }
 
     .logo-fallback-icon {
-      color: var(--main-color);
+      color: var(--wl-cyan);
     }
 
     & > a {
@@ -438,13 +446,15 @@ div.header,
     height: 40px;
     padding: 0 10px;
     border: 1px solid transparent;
-    border-radius: 12px;
+    border-radius: var(--wl-radius-sm);
     background-color: transparent;
-    color: var(--gray-1000);
+    color: var(--wl-muted);
     font-size: 14px;
     transition:
       background-color 0.2s ease-in-out,
-      color 0.2s ease-in-out;
+      border-color 0.2s ease-in-out,
+      color 0.2s ease-in-out,
+      box-shadow 0.2s ease-in-out;
     margin: 0;
     text-decoration: none;
     cursor: pointer;
@@ -486,22 +496,28 @@ div.header,
     }
 
     &.active {
-      background-color: color-mix(in srgb, var(--main-50) 70%, var(--gray-0));
-      color: var(--main-color);
+      border-color: var(--wl-border-strong);
+      background:
+        linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.14), transparent 34%),
+        rgba(var(--wl-cyan-rgb), 0.1);
+      color: var(--wl-text);
+      box-shadow: inset 2px 0 0 var(--wl-gold);
     }
 
     &.warning {
-      color: var(--color-error-500);
+      color: var(--wl-red);
     }
 
     &:hover {
-      color: var(--main-color);
+      border-color: var(--wl-border-strong);
+      background: rgba(var(--wl-cyan-rgb), 0.065);
+      color: var(--wl-cyan-soft);
     }
 
     &.nav-expand-toggle {
       margin-bottom: 4px;
       border-style: dashed;
-      border-color: color-mix(in srgb, var(--gray-180) 88%, transparent);
+      border-color: var(--wl-border);
     }
 
     &.github {
@@ -529,7 +545,7 @@ div.header,
         margin-top: 0;
 
         .star-icon {
-          color: var(--color-warning-500);
+          color: var(--wl-gold);
           font-size: 12px;
           margin-right: 2px;
         }
@@ -561,11 +577,11 @@ div.header,
         width: 100%;
         height: 100%;
         cursor: pointer;
-        color: var(--gray-1000);
+        color: var(--wl-muted);
         transition: color 0.2s ease-in-out;
 
         &:hover {
-          color: var(--main-color);
+          color: var(--wl-cyan);
         }
       }
     }
@@ -612,8 +628,10 @@ div.header,
   width: 100%;
   height: 50px;
   border-right: none;
-  border-bottom: 1px solid var(--main-40);
-  background-color: var(--main-20);
+  border-bottom: 1px solid var(--wl-border);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(var(--wl-gold-rgb), 0.1), transparent 28%),
+    linear-gradient(90deg, rgba(7, 15, 24, 0.96), rgba(2, 5, 10, 0.98));
   padding: 0 20px;
   gap: 24px;
 
@@ -690,7 +708,7 @@ div.header,
       }
 
       &.active {
-        color: var(--main-color);
+        color: var(--wl-cyan);
       }
 
       a {
@@ -704,7 +722,7 @@ div.header,
         margin-left: 6px;
 
         .star-icon {
-          color: var(--color-warning-500);
+          color: var(--wl-gold);
           font-size: 14px;
           margin-right: 2px;
         }
@@ -718,18 +736,18 @@ div.header,
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--gray-1000);
+        color: var(--wl-muted);
         transition: color 0.2s ease-in-out;
         cursor: pointer;
 
         &:hover {
-          color: var(--main-color);
+          color: var(--wl-cyan);
         }
       }
 
       &.active {
         .theme-toggle-icon {
-          color: var(--main-color);
+          color: var(--wl-cyan);
         }
       }
     }

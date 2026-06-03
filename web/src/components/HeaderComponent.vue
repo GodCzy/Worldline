@@ -41,10 +41,12 @@ const props = defineProps({
 
 <style scoped lang="less">
 .header-container {
-  background-color: var(--bg-sider);
-  backdrop-filter: blur(10px);
+  background:
+    linear-gradient(90deg, rgba(7, 15, 24, 0.92), rgba(2, 5, 10, 0.88)),
+    radial-gradient(circle at 12% 0%, rgba(var(--wl-gold-rgb), 0.1), transparent 30%);
+  backdrop-filter: blur(16px);
   padding: 10px 24px;
-  border-bottom: 1px solid var(--gray-150);
+  border-bottom: 1px solid var(--wl-border);
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -61,7 +63,7 @@ const props = defineProps({
   flex: 1;
   width: 100%;
   font-size: 14px;
-  color: var(--gray-900);
+  color: var(--wl-muted);
 
   .header-title-block {
     display: flex;
@@ -72,12 +74,13 @@ const props = defineProps({
   h1 {
     margin: 0;
     font-size: 18px;
-    font-weight: 500;
-    color: var(--gray-2000);
+    font-weight: 800;
+    color: var(--wl-text);
   }
 
   p {
     margin: 4px 0 0;
+    color: var(--wl-muted);
   }
 }
 
