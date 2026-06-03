@@ -27,9 +27,20 @@ const emptyDisplayMeta = () => ({
   workspaceHint: ''
 })
 
+const emptyQuality = () => ({
+  status: '',
+  gateId: '',
+  branchCount: 0,
+  citationCoverage: 0,
+  latestGate: null
+})
+
 export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   const themeId = ref('')
   const moduleId = ref('')
+  const knowledgeDbId = ref('')
+  const knowledgeMode = ref('')
+  const layers = ref([])
   const rootQuestion = ref('')
   const questionDraft = ref('')
   const status = ref('idle')
@@ -42,6 +53,11 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   const activeBranchId = ref('')
   const selectedNodeId = ref('')
   const tree = ref(emptyTree())
+  const snapshots = ref([])
+  const activeSnapshotIndex = ref(0)
+  const quality = ref(emptyQuality())
+  const routeTrace = ref({})
+  const overview = ref({})
   const viewState = ref(emptyViewState())
   const displayMeta = ref(emptyDisplayMeta())
 
@@ -57,6 +73,10 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   const branchCount = computed(() => branches.value.length)
   const hasBranches = computed(() => branchCount.value > 0)
   const evidenceRefs = computed(() => activeBranch.value?.evidenceRefs || [])
+  const wikiRefs = computed(() => activeBranch.value?.wikiRefs || [])
+  const entityRefs = computed(() => activeBranch.value?.entityRefs || [])
+  const timelineRefs = computed(() => activeBranch.value?.timelineRefs || [])
+  const activeSnapshot = computed(() => snapshots.value[activeSnapshotIndex.value] || snapshots.value[0] || null)
   const nextActions = computed(() => activeBranch.value?.nextActions || [])
   const handoffTarget = computed(() => viewState.value.handoffTarget || '')
   const handoffLabel = computed(() => viewState.value.handoffLabel || '')
@@ -66,6 +86,9 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   const reset = () => {
     themeId.value = ''
     moduleId.value = ''
+    knowledgeDbId.value = ''
+    knowledgeMode.value = ''
+    layers.value = []
     rootQuestion.value = ''
     questionDraft.value = ''
     status.value = 'idle'
@@ -78,6 +101,11 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     activeBranchId.value = ''
     selectedNodeId.value = ''
     tree.value = emptyTree()
+    snapshots.value = []
+    activeSnapshotIndex.value = 0
+    quality.value = emptyQuality()
+    routeTrace.value = {}
+    overview.value = {}
     viewState.value = emptyViewState()
     displayMeta.value = emptyDisplayMeta()
   }
@@ -85,6 +113,9 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   const hydrate = (payload = {}) => {
     themeId.value = payload.themeId || ''
     moduleId.value = payload.moduleId || payload.themeId || ''
+    knowledgeDbId.value = payload.knowledgeDbId || payload.knowledge_db_id || ''
+    knowledgeMode.value = payload.knowledgeMode || payload.knowledge_mode || ''
+    layers.value = Array.isArray(payload.layers) ? payload.layers : []
     rootQuestion.value = payload.rootQuestion || ''
     questionDraft.value = payload.questionDraft || payload.rootQuestion || ''
     status.value = payload.status || 'ready'
@@ -97,6 +128,14 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     activeBranchId.value = payload.activeBranchId || branches.value[0]?.id || ''
     selectedNodeId.value = payload.selectedNodeId || activeBranchId.value || ''
     tree.value = payload.tree || emptyTree()
+    snapshots.value = Array.isArray(payload.snapshots) ? payload.snapshots : []
+    activeSnapshotIndex.value = 0
+    quality.value = {
+      ...emptyQuality(),
+      ...(payload.quality || {})
+    }
+    routeTrace.value = payload.routeTrace || {}
+    overview.value = payload.overview || {}
     viewState.value = {
       ...emptyViewState(),
       ...(payload.viewState || {})
@@ -157,6 +196,16 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     }
   }
 
+  const setActiveSnapshot = (index = 0) => {
+    const numericIndex = Number(index)
+    if (!Number.isFinite(numericIndex) || snapshots.value.length === 0) {
+      activeSnapshotIndex.value = 0
+      return
+    }
+
+    activeSnapshotIndex.value = Math.min(Math.max(0, numericIndex), snapshots.value.length - 1)
+  }
+
   const setHandoff = ({ target = '', label = '' } = {}) => {
     viewState.value = {
       ...viewState.value,
@@ -184,6 +233,9 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
   return {
     themeId,
     moduleId,
+    knowledgeDbId,
+    knowledgeMode,
+    layers,
     rootQuestion,
     questionDraft,
     status,
@@ -196,6 +248,12 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     activeBranchId,
     selectedNodeId,
     tree,
+    snapshots,
+    activeSnapshotIndex,
+    activeSnapshot,
+    quality,
+    routeTrace,
+    overview,
     viewState,
     displayMeta,
     activeBranch,
@@ -204,6 +262,9 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     branchCount,
     hasBranches,
     evidenceRefs,
+    wikiRefs,
+    entityRefs,
+    timelineRefs,
     nextActions,
     handoffTarget,
     handoffLabel,
@@ -216,6 +277,7 @@ export const useWorldlineContextStore = defineStore('worldlineContext', () => {
     setGenerationMode,
     setActiveBranch,
     setSelectedNode,
+    setActiveSnapshot,
     setHandoff,
     clearHandoff,
     rememberGenerationSource

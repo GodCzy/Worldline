@@ -245,4 +245,12 @@ async def test_workbench_overview_and_generate(sqlite_pg_manager) -> None:
     assert result["branches"]
     assert result["tree"]["nodes"]
     assert result["branches"][0]["evidenceRefs"]
+    assert result["knowledgeMode"] == "llm_wiki_primary_rag_auxiliary"
+    assert "llm_wiki" in result["layers"]
+    assert result["branches"][0]["wikiRefs"]
+    assert result["branches"][0]["entityRefs"]
+    assert result["branches"][0]["timelineRefs"]
+    assert result["branches"][0]["quality"]["citationCoverage"] > 0
+    assert result["snapshots"]
+    assert result["quality"]["branchCount"] == len(result["branches"])
     assert result["routeTrace"]["deterministic_baseline"] is True

@@ -1,12 +1,16 @@
 <template>
-  <section class="branch-canvas">
+  <section class="branch-canvas" data-worldline-canvas="true">
     <div class="canvas-header">
       <div>
-        <p class="eyebrow">WORLDLINE STAGE</p>
-        <h2>{{ displayMeta.stageTitle || '线束树状世界线' }}</h2>
+        <p class="eyebrow">{{ displayMeta.stageLabel || 'WORLDLINE STAGE' }}</p>
+        <h2>{{ displayMeta.stageTitle || '世界线工作台' }}</h2>
+        <p class="stage-subtitle">
+          {{ displayMeta.stageSubtitle || '从证据出发，观察分支如何进入 Wiki、图谱和质量门禁。' }}
+        </p>
       </div>
       <div class="canvas-meta">
-        <span>{{ branchCount || tree.nodes?.length || 0 }} 条分支</span>
+        <span>{{ branchCount || branchNodeCount }} 条分支</span>
+        <span v-if="activeSnapshot">{{ activeSnapshot.label }} / {{ activeSnapshot.metric }}</span>
       </div>
     </div>
 
@@ -15,36 +19,48 @@
         v-if="(tree.nodes || []).length"
         class="canvas-svg"
         :viewBox="`0 0 ${tree.width || 1200} ${tree.height || 640}`"
-        preserveAspectRatio="xMinYMin meet"
-        :style="svgStyle"
+        preserveAspectRatio="xMidYMid meet"
       >
         <defs>
-          <pattern id="worldline-grid" width="28" height="28" patternUnits="userSpaceOnUse">
-            <path
-              d="M 28 0 L 0 0 0 28"
-              fill="none"
-              stroke="var(--main-300)"
-              stroke-opacity="0.1"
-              stroke-width="1"
-            />
+          <pattern id="worldline-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(124,246,255,0.08)" stroke-width="1" />
           </pattern>
-          <linearGradient id="bundle-active" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="var(--main-300)" stop-opacity="0.38" />
-            <stop offset="100%" stop-color="var(--main-700)" stop-opacity="0.78" />
+          <linearGradient id="bundle-cyan" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#ffe2a6" stop-opacity="0.96" />
+            <stop offset="45%" stop-color="#7cf6ff" stop-opacity="0.86" />
+            <stop offset="100%" stop-color="#fff7de" stop-opacity="0.98" />
+          </linearGradient>
+          <linearGradient id="bundle-muted" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#d9b66f" stop-opacity="0.32" />
+            <stop offset="100%" stop-color="#7cf6ff" stop-opacity="0.22" />
           </linearGradient>
           <filter id="edgeGlow">
-            <feDropShadow dx="0" dy="0" stdDeviation="2" flood-color="var(--main-500)" flood-opacity="0.18" />
+            <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#7cf6ff" flood-opacity="0.42" />
+            <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ffd36f" flood-opacity="0.18" />
           </filter>
+          <radialGradient id="rootFlare" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#fff7de" stop-opacity="0.96" />
+            <stop offset="100%" stop-color="#ffd36f" stop-opacity="0" />
+          </radialGradient>
         </defs>
 
         <rect x="0" y="0" :width="tree.width || 1200" :height="tree.height || 640" fill="url(#worldline-grid)" />
+        <circle cx="92" cy="300" r="58" fill="url(#rootFlare)" opacity="0.9" />
+        <circle :cx="(tree.width || 1200) - 100" cy="300" r="64" fill="url(#rootFlare)" opacity="0.75" />
 
         <g v-for="edge in tree.edges || []" :key="edge.id">
           <path
             v-for="offset in bundleOffsets"
             :key="`${edge.id}-${offset}`"
             :d="buildEdgePath(edge, offset)"
-            :class="['branch-edge', edge.kind, { highlighted: edge.isHighlighted }]"
+            :class="[
+              'branch-edge',
+              edge.kind,
+              {
+                highlighted: edge.isHighlighted || edge.branchId === activeBranchId,
+                muted: activeBranchId && edge.branchId && edge.branchId !== activeBranchId
+              }
+            ]"
             fill="none"
           />
         </g>
@@ -61,8 +77,8 @@
       </svg>
 
       <div v-else class="empty-state">
-        <strong>尚未生成世界线</strong>
-        <p>先输入一句目标，生成基础分支。</p>
+        <strong>等待世界线生成</strong>
+        <p>输入目标后，系统会从证据、Wiki、图谱和质量门禁生成可验证分支。</p>
       </div>
     </div>
   </section>
@@ -92,6 +108,10 @@ const props = defineProps({
   displayMeta: {
     type: Object,
     default: () => ({})
+  },
+  activeSnapshot: {
+    type: Object,
+    default: null
   }
 })
 
@@ -110,14 +130,8 @@ const densityLevel = computed(() => {
 const bundleOffsets = computed(() => {
   if (densityLevel.value === 'dense') return [-1, 0, 1]
   if (densityLevel.value === 'compact') return [-2, 0, 2]
-  return [-3, 0, 3]
+  return [-4, -1, 2, 5]
 })
-
-const svgStyle = computed(() => ({
-  width: `${props.tree.width || 1200}px`,
-  height: `${props.tree.height || 640}px`,
-  minWidth: '100%'
-}))
 
 const findNode = (nodeId) => (props.tree.nodes || []).find((node) => node.id === nodeId)
 
@@ -132,43 +146,65 @@ const buildEdgePath = (edge, offset = 0) => {
   const startY = Number(source.y || 0) + offset
   const endX = Number(target.x || 0)
   const endY = Number(target.y || 0) + offset
-  const span = Math.max(70, (endX - startX) * 0.45)
+  const span = Math.max(90, (endX - startX) * 0.42)
+  const lift = edge.kind === 'convergence' ? offset * 2 : offset * 1.4
 
-  return `M ${startX} ${startY} C ${startX + span} ${startY}, ${endX - span} ${endY}, ${endX} ${endY}`
+  return `M ${startX} ${startY} C ${startX + span} ${startY - lift}, ${endX - span} ${endY + lift}, ${endX} ${endY}`
 }
 </script>
 
 <style scoped lang="less">
 .branch-canvas {
-  border-radius: 22px;
-  border: 1px solid color-mix(in srgb, var(--main-200) 30%, transparent);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  border-radius: 8px;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--main-100) 16%, transparent), transparent 35%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 95%, transparent), var(--main-10));
-  box-shadow: 0 12px 28px color-mix(in srgb, var(--gray-1000) 6%, transparent);
+    radial-gradient(circle at 8% 50%, rgba(255, 211, 111, 0.18), transparent 22%),
+    radial-gradient(circle at 92% 50%, rgba(124, 246, 255, 0.18), transparent 24%),
+    linear-gradient(180deg, rgba(7, 13, 22, 0.98), rgba(2, 5, 10, 0.98));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.48);
 }
 
 .canvas-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 14px;
-  padding: 14px 16px 0;
+  gap: 16px;
+  padding: 16px 18px 6px;
 }
 
 .eyebrow {
-  margin: 0 0 6px;
-  color: var(--main-600);
+  margin: 0 0 5px;
+  color: #ffd36f;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.13em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
 .canvas-header h2 {
   margin: 0;
-  font-size: 1.02rem;
-  color: var(--gray-1000);
+  color: #f6fbff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.stage-subtitle {
+  max-width: 780px;
+  margin: 6px 0 0;
+  color: rgba(216, 251, 255, 0.68);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.canvas-meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .canvas-meta span {
@@ -176,43 +212,52 @@ const buildEdgePath = (edge, offset = 0) => {
   align-items: center;
   min-height: 28px;
   padding: 0 10px;
+  border: 1px solid rgba(124, 246, 255, 0.22);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--main-30) 76%, var(--gray-0));
-  color: var(--main-700);
+  background: rgba(124, 246, 255, 0.08);
+  color: #d8fbff;
   font-size: 12px;
   font-weight: 700;
 }
 
 .canvas-shell {
-  margin-top: 12px;
-  border-radius: 18px;
-  max-height: min(72vh, 980px);
-  overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--main-100) 20%, transparent);
+  width: 100%;
+  min-height: 470px;
+  overflow: hidden;
 }
 
 .canvas-svg {
   display: block;
-  min-height: 560px;
+  width: 100%;
+  height: min(62vh, 680px);
+  min-height: 520px;
 }
 
 .branch-edge {
-  stroke: color-mix(in srgb, var(--main-300) 40%, transparent);
-  stroke-width: 0.9;
-
-  &.secondary {
-    stroke-opacity: 0.5;
-  }
+  stroke: url(#bundle-muted);
+  stroke-width: 1.1;
+  opacity: 0.76;
+  transition:
+    opacity 160ms ease,
+    stroke-width 160ms ease;
 
   &.guide {
-    stroke-opacity: 0.38;
-    stroke-dasharray: 3 4;
+    stroke-dasharray: 4 5;
+  }
+
+  &.convergence {
+    stroke-width: 0.9;
   }
 
   &.highlighted {
-    stroke: url(#bundle-active);
-    stroke-width: 1.15;
+    stroke: url(#bundle-cyan);
+    stroke-width: 1.55;
+    opacity: 1;
     filter: url(#edgeGlow);
+  }
+
+  &.muted {
+    opacity: 0.24;
   }
 }
 
@@ -223,16 +268,38 @@ const buildEdgePath = (edge, offset = 0) => {
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  color: var(--gray-600);
+  color: rgba(216, 251, 255, 0.68);
+  text-align: center;
 }
 
 .empty-state strong {
-  color: var(--gray-900);
+  color: #f6fbff;
+  font-weight: 800;
 }
 
-@media (max-width: 980px) {
+.empty-state p {
+  max-width: 420px;
+  margin: 0;
+  line-height: 1.7;
+}
+
+@media (max-width: 780px) {
   .canvas-header {
     flex-direction: column;
+  }
+
+  .canvas-meta {
+    justify-content: flex-start;
+  }
+
+  .canvas-shell {
+    overflow-x: auto;
+  }
+
+  .canvas-svg {
+    width: 980px;
+    max-width: none;
+    height: 560px;
   }
 }
 </style>

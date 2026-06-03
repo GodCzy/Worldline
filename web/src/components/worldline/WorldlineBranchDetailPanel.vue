@@ -1,66 +1,88 @@
 <template>
-  <section class="inspect-panel detail-panel">
+  <section class="detail-panel" data-worldline-detail="true">
     <div class="panel-header">
       <div>
-        <p class="eyebrow">节点详情</p>
-        <h3>{{ branch ? branch.title : '等待选择一条世界线' }}</h3>
+        <p class="eyebrow">BRANCH INSPECTOR</p>
+        <h3>{{ branch ? branch.title : '等待选择世界线分支' }}</h3>
       </div>
-      <div class="panel-actions" v-if="branch">
-        <span class="state-pill">{{ branch.stageLabel }}</span>
-        <button class="detail-toggle" type="button" @click="isExpanded = !isExpanded">
-          {{ isExpanded ? '收起' : '展开' }}
-        </button>
-      </div>
+      <span v-if="branch" class="state-pill">{{ branch.choiceLabel || branch.stageLabel || 'Branch' }}</span>
     </div>
 
     <template v-if="branch">
       <p class="lead">{{ branch.subtitle }}</p>
       <p class="summary">{{ shortSummary }}</p>
 
-      <div class="meta-row">
-        <span class="meta-chip">{{ branch.riskLabel }}</span>
-        <span class="meta-chip">{{ branch.costLabel }}</span>
-        <span class="meta-chip">{{ branch.confidenceLabel }}</span>
+      <div class="metric-row">
+        <span>{{ branch.riskLabel || '可验证' }}</span>
+        <span>{{ branch.costLabel || '低扰动' }}</span>
+        <span>{{ branch.confidenceLabel || '证据基线' }}</span>
       </div>
 
-      <template v-if="isExpanded">
-        <div class="section-block">
-          <strong>为什么会生成这条线</strong>
-          <p>{{ branch.choiceReason || branch.summary }}</p>
+      <div class="quality-grid">
+        <div>
+          <strong>{{ branch.quality?.evidenceCount ?? evidenceCount }}</strong>
+          <span>Evidence</span>
         </div>
-
-        <dl class="detail-grid">
-          <div>
-            <dt>当前聚焦</dt>
-            <dd>{{ branch.choiceLabel }}</dd>
-          </div>
-          <div>
-            <dt>适合人群</dt>
-            <dd>{{ (branch.suitability || []).join(' / ') || '未标注' }}</dd>
-          </div>
-          <div>
-            <dt>当前节奏</dt>
-            <dd>{{ branch.routeTone }}</dd>
-          </div>
-          <div>
-            <dt>下一步</dt>
-            <dd>{{ branch.nextStepTitle }}</dd>
-          </div>
-        </dl>
-
-        <div class="section-block subtle">
-          <strong>什么时候应该切线</strong>
-          <p>{{ branch.switchHint }}</p>
+        <div>
+          <strong>{{ coverageLabel }}</strong>
+          <span>Coverage</span>
         </div>
-      </template>
+        <div>
+          <strong>{{ branch.quality?.supportChannels ?? supportChannels }}</strong>
+          <span>Channels</span>
+        </div>
+      </div>
+
+      <div class="section-block">
+        <strong>为什么生成这条线</strong>
+        <p>{{ branch.choiceReason || branch.summary }}</p>
+      </div>
+
+      <dl class="detail-grid">
+        <div>
+          <dt>当前焦点</dt>
+          <dd>{{ branch.focus || branch.choiceLabel || branch.id }}</dd>
+        </div>
+        <div>
+          <dt>适合场景</dt>
+          <dd>{{ (branch.suitability || []).join(' / ') || '未标注' }}</dd>
+        </div>
+        <div>
+          <dt>路线语气</dt>
+          <dd>{{ branch.routeTone || '先验证，再生成。' }}</dd>
+        </div>
+        <div>
+          <dt>下一步</dt>
+          <dd>{{ branch.nextStepTitle }}</dd>
+        </div>
+      </dl>
+
+      <div class="section-block subtle">
+        <strong>什么时候切线</strong>
+        <p>{{ branch.switchHint || '当证据不足、图谱冲突或质量门禁失败时，先回到当前层修复。' }}</p>
+      </div>
+
+      <div v-if="branch.nextActions?.length" class="action-list">
+        <button
+          v-for="action in branch.nextActions"
+          :key="action.id"
+          class="action-button"
+          :class="{ primary: action.emphasis === 'primary' }"
+          type="button"
+          @click="emitAction(action)"
+        >
+          <span>{{ action.label }}</span>
+          <small>{{ action.description }}</small>
+        </button>
+      </div>
     </template>
 
-    <p v-else class="empty-copy">先在主舞台中点击一条分支，再查看模型对这条世界线的解释。</p>
+    <p v-else class="empty-copy">先在主舞台中点击一条分支，再检查它的证据、图谱、时间事实和 Agent 交接路径。</p>
   </section>
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   branch: {
@@ -69,33 +91,38 @@ const props = defineProps({
   }
 })
 
-const isExpanded = ref(false)
+const emit = defineEmits(['handoff', 'open-graph'])
 
+const evidenceCount = computed(() => props.branch?.evidenceRefs?.length || 0)
+const supportChannels = computed(() => {
+  if (!props.branch) return 0
+  return ['evidenceRefs', 'wikiRefs', 'entityRefs', 'timelineRefs'].filter((key) => props.branch[key]?.length).length
+})
 const shortSummary = computed(() => {
   const summary = props.branch?.summary || ''
-  if (!summary) {
-    return '选择一条分支后，这里会显示简要说明。'
-  }
-  return summary.length > 120 ? `${summary.slice(0, 118)}…` : summary
+  if (!summary) return '选择分支后，这里会显示可验证说明。'
+  return summary.length > 180 ? `${summary.slice(0, 178)}…` : summary
+})
+const coverageLabel = computed(() => {
+  const coverage = Number(props.branch?.quality?.citationCoverage ?? 0)
+  return `${Math.round(coverage * 100)}%`
 })
 
-watch(
-  () => props.branch?.id,
-  () => {
-    isExpanded.value = false
+const emitAction = (action) => {
+  if (action.targetType === 'graph') {
+    emit('open-graph', action)
+    return
   }
-)
+  emit('handoff', action)
+}
 </script>
 
 <style scoped lang="less">
-.inspect-panel {
-  padding: 20px;
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 86%, transparent);
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--main-100) 18%, transparent), transparent 34%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 94%, transparent), var(--main-10));
-  box-shadow: 0 18px 38px color-mix(in srgb, var(--gray-1000) 7%, transparent);
+.detail-panel {
+  padding: 16px;
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(7, 15, 24, 0.88);
 }
 
 .panel-header {
@@ -105,121 +132,171 @@ watch(
   align-items: flex-start;
 }
 
-.panel-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .eyebrow {
-  margin: 0 0 8px;
-  color: var(--main-600);
-  font-size: 12px;
+  margin: 0 0 6px;
+  color: #ffd36f;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .panel-header h3 {
   margin: 0;
-  color: var(--gray-1000);
-  font-size: 1.15rem;
-  line-height: 1.45;
+  color: #f6fbff;
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.4;
 }
 
 .state-pill,
-.meta-chip {
+.metric-row span {
   display: inline-flex;
   align-items: center;
-  min-height: 28px;
-  padding: 0 10px;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(255, 211, 111, 0.28);
   border-radius: 999px;
-  background: color-mix(in srgb, var(--main-20) 82%, var(--gray-0));
-  color: var(--main-700);
+  background: rgba(255, 211, 111, 0.1);
+  color: #ffe2a6;
   font-size: 12px;
-  font-weight: 700;
-}
-
-.detail-toggle {
-  border: 1px solid color-mix(in srgb, var(--gray-150) 70%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 88%, transparent);
-  color: var(--gray-700);
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 4px 10px;
-  cursor: pointer;
-}
-
-.detail-toggle:hover {
-  color: var(--main-700);
-  border-color: color-mix(in srgb, var(--main-300) 70%, transparent);
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .lead,
 .summary,
 .empty-copy {
-  color: var(--gray-600);
-  line-height: 1.75;
+  color: rgba(216, 251, 255, 0.72);
+  line-height: 1.7;
 }
 
 .lead {
   margin: 12px 0 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .summary {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
+  font-size: 13px;
 }
 
-.meta-row {
+.metric-row {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 14px;
 }
 
+.quality-grid div {
+  padding: 10px;
+  border: 1px solid rgba(124, 246, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(124, 246, 255, 0.05);
+}
+
+.quality-grid strong {
+  display: block;
+  color: #f6fbff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.quality-grid span {
+  color: rgba(216, 251, 255, 0.62);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .section-block {
-  margin-top: 16px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: color-mix(in srgb, var(--gray-0) 84%, var(--main-10));
-  border: 1px solid color-mix(in srgb, var(--gray-120) 72%, transparent);
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(124, 246, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .section-block.subtle {
-  background: color-mix(in srgb, var(--main-10) 84%, var(--gray-0));
+  border-color: rgba(255, 211, 111, 0.16);
+  background: rgba(255, 211, 111, 0.055);
 }
 
 .section-block strong {
   display: block;
-  color: var(--gray-900);
-  font-size: 14px;
+  color: #f6fbff;
+  font-size: 13px;
+  font-weight: 800;
 }
 
 .section-block p {
-  margin: 8px 0 0;
-  color: var(--gray-600);
-  line-height: 1.75;
+  margin: 7px 0 0;
+  color: rgba(216, 251, 255, 0.68);
+  font-size: 13px;
+  line-height: 1.7;
 }
 
 .detail-grid {
   display: grid;
-  gap: 12px;
-  margin: 16px 0 0;
+  gap: 10px;
+  margin: 14px 0 0;
 }
 
 .detail-grid dt {
-  color: var(--gray-500);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  color: rgba(255, 211, 111, 0.74);
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
 }
 
 .detail-grid dd {
   margin: 4px 0 0;
-  color: var(--gray-900);
-  line-height: 1.7;
+  color: #f6fbff;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.action-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.action-button {
+  display: flex;
+  min-height: 48px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(124, 246, 255, 0.06);
+  color: #d8fbff;
+  cursor: pointer;
+  text-align: left;
+}
+
+.action-button.primary {
+  border-color: rgba(255, 211, 111, 0.5);
+  background: rgba(255, 211, 111, 0.12);
+  color: #fff7de;
+}
+
+.action-button span {
+  font-weight: 900;
+}
+
+.action-button small {
+  color: rgba(216, 251, 255, 0.62);
+  line-height: 1.45;
 }
 </style>

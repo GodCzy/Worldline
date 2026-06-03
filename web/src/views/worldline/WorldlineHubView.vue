@@ -1,124 +1,116 @@
-﻿<template>
+<template>
   <div class="worldline-hub-view">
-    <section class="workspace-shell">
-      <header class="workspace-header">
-        <div class="workspace-copy">
-          <p class="eyebrow">WORLDLINE</p>
-          <h1>世界线</h1>
-          <p class="subtitle">先选模块，再展开世界线。</p>
+    <section class="hub-shell">
+      <header class="hub-header">
+        <div class="header-copy">
+          <p class="eyebrow">WORLDLINE COMMAND</p>
+          <h1>证据驱动的世界线工作台</h1>
+          <p class="subtitle">
+            LLM Wiki 是主线，RAG 只做证据候选召回；Temporal Evidence Graph 用来解释事实如何分叉、变化和收束。
+          </p>
         </div>
 
         <div class="header-actions">
-          <router-link class="ghost-link" to="/themes">主题分区</router-link>
-          <a
-            v-if="docsUrl"
-            class="ghost-link"
-            :href="docsUrl"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            文档中心
-          </a>
+          <router-link class="ghost-link" to="/graph">图谱</router-link>
+          <router-link class="ghost-link" to="/themes">模块</router-link>
+          <a v-if="docsUrl" class="ghost-link" :href="docsUrl" target="_blank" rel="noopener noreferrer">文档</a>
         </div>
       </header>
 
-      <main class="workspace-main">
-        <section class="workspace-panel controller-panel">
+      <main class="hub-grid">
+        <section class="launch-panel">
           <div class="panel-head">
             <div>
-              <p class="eyebrow">模块选择</p>
-              <h2>先选模块，再生成基础世界线</h2>
+              <p class="eyebrow">LAUNCH</p>
+              <h2>选择知识模块并生成基础世界线</h2>
             </div>
             <span class="panel-badge">{{ moduleBadgeText }}</span>
           </div>
 
-          <div v-if="hasAvailableThemes" class="module-strip" role="tablist" aria-label="世界线模块">
+          <div v-if="hasAvailableThemes" class="module-grid" role="tablist" aria-label="世界线模块">
             <button
               v-for="theme in themes"
               :key="theme.id"
-              class="module-pill"
+              class="module-tile"
               :class="{ active: theme.id === selectedThemeId }"
               type="button"
               @click="selectTheme(theme.id)"
             >
-              <span class="module-pill-title">{{ theme.name }}</span>
-              <small>{{ theme.subtitle || '世界线模块' }}</small>
+              <span class="module-title">{{ theme.name }}</span>
+              <small>{{ theme.subtitle || moduleTypeLabel(theme) }}</small>
+              <em>{{ moduleTypeLabel(theme) }}</em>
             </button>
           </div>
 
           <div v-else class="empty-state">
-            <strong>当前没有启用的主题模块。</strong>
-            <p>旧主题与演示模块已移出默认运行面。请先接入真实知识库或在系统配置中声明新的 Worldline 模块。</p>
-            <div class="empty-actions">
-              <router-link class="secondary-button" to="/themes">查看模块页</router-link>
-              <router-link class="secondary-button" to="/database">查看知识库</router-link>
-            </div>
+            <strong>没有可用的 Worldline 模块</strong>
+            <p>请接入真实知识库，或保留 Phase 5 Preview 作为本地前端验收模块。</p>
           </div>
 
-          <div class="question-panel">
-            <label class="question-label" for="worldline-hub-question">问题起点</label>
-            <textarea
-              id="worldline-hub-question"
-              v-model="questionDraft"
-              class="question-input"
-              rows="4"
-              :placeholder="placeholderQuestion"
-            />
+          <label class="question-label" for="worldline-hub-question">问题起点</label>
+          <textarea
+            id="worldline-hub-question"
+            v-model="questionDraft"
+            class="question-input"
+            rows="4"
+            :placeholder="placeholderQuestion"
+          />
 
-            <div class="question-actions">
-              <button
-                class="primary-button"
-                :class="{ disabled: !activeThemeSupported }"
-                type="button"
-                :disabled="!activeThemeSupported"
-                @click="openWorkbench()"
-              >
-                生成基础世界线
-              </button>
-              <button
-                v-if="canResumeCurrentTheme"
-                class="secondary-button"
-                type="button"
-                @click="resumeCurrentTheme()"
-              >
-                继续上次世界线
-              </button>
-            </div>
+          <div class="question-actions">
+            <button
+              class="primary-button"
+              type="button"
+              :disabled="!activeThemeSupported"
+              @click="openWorkbench()"
+            >
+              生成世界线
+            </button>
+            <button
+              v-if="canResumeCurrentTheme"
+              class="secondary-button"
+              type="button"
+              @click="resumeCurrentTheme()"
+            >
+              继续上次分支
+            </button>
           </div>
         </section>
 
-        <aside class="workspace-panel module-panel">
-          <div class="module-card">
-            <p class="eyebrow">当前模块</p>
+        <aside class="status-panel">
+          <div class="status-block">
+            <p class="eyebrow">ACTIVE MODULE</p>
             <h3>{{ activeTheme?.name || '未选择模块' }}</h3>
-            <p class="module-description">
-              {{ compactThemeDescription }}
-            </p>
-
-            <div v-if="compactHighlights.length" class="highlight-list">
-              <div v-for="item in compactHighlights" :key="item" class="highlight-item">
-                {{ item }}
-              </div>
-            </div>
-
-            <div v-if="compactTags.length" class="tag-list">
+            <p>{{ compactThemeDescription }}</p>
+            <div class="tag-list">
               <span v-for="tag in compactTags" :key="tag">{{ tag }}</span>
             </div>
-            <details
-              v-if="remainingHighlights.length || remainingTags.length || activeTheme?.description"
-              class="more-details"
-            >
-              <summary>查看更多</summary>
-              <p v-if="activeTheme?.description">{{ activeTheme.description }}</p>
-              <div v-if="remainingHighlights.length" class="highlight-list">
-                <div v-for="item in remainingHighlights" :key="item" class="highlight-item">
-                  {{ item }}
-                </div>
-              </div>
-              <div v-if="remainingTags.length" class="tag-list">
-                <span v-for="tag in remainingTags" :key="tag">{{ tag }}</span>
-              </div>
-            </details>
+          </div>
+
+          <div class="status-matrix">
+            <div>
+              <strong>{{ hasLiveBridge ? 'Live' : 'Preview' }}</strong>
+              <span>Bridge</span>
+            </div>
+            <div>
+              <strong>{{ worldlineStore.branchCount || '-' }}</strong>
+              <span>Branches</span>
+            </div>
+            <div>
+              <strong>{{ worldlineStore.quality.status || 'pending' }}</strong>
+              <span>Quality</span>
+            </div>
+            <div>
+              <strong>{{ worldlineStore.protocolVersion }}</strong>
+              <span>Protocol</span>
+            </div>
+          </div>
+
+          <div class="pipeline-list">
+            <p class="eyebrow">PHASE 5 SURFACES</p>
+            <div v-for="item in surfaces" :key="item.title" class="pipeline-item">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.detail }}</span>
+            </div>
           </div>
         </aside>
       </main>
@@ -131,7 +123,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInfoStore } from '@/stores/info'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
-import { getWorldlineDefaultQuestion } from '@/data/worldline'
+import { getWorldlineDefaultQuestion, hasWorldlineAdapter } from '@/data/worldline'
 import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId } from '@/apis/worldline_api'
 
 const router = useRouter()
@@ -140,28 +132,26 @@ const worldlineStore = useWorldlineContextStore()
 
 const questionDraft = ref('')
 const selectedThemeId = ref('')
-const fallbackQuestion =
-  '请描述你的目标、偏好和限制，让世界线先展开几条未来分支。'
+const fallbackQuestion = '描述你的目标、约束和证据来源，让 Worldline 展开几条可验证分支。'
 
-const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme)
-const configuredThemes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
-const themes = computed(() => configuredThemes.value)
+const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme) || hasWorldlineAdapter(theme.id)
+const themes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
 const docsUrl = computed(() => infoStore.docsUrl || '')
 const hasAvailableThemes = computed(() => themes.value.length > 0)
 const moduleBadgeText = computed(() => (themes.value.length ? `${themes.value.length} 个模块` : '等待接入'))
 const activeTheme = computed(
   () => themes.value.find((theme) => theme.id === selectedThemeId.value) || themes.value[0] || null
 )
-const activeThemeSupported = computed(() => Boolean(activeTheme.value?.id && hasWorldlineLiveBridge(activeTheme.value)))
+const hasLiveBridge = computed(() => Boolean(activeTheme.value && hasWorldlineLiveBridge(activeTheme.value)))
+const activeThemeSupported = computed(
+  () => Boolean(activeTheme.value?.id && (hasWorldlineLiveBridge(activeTheme.value) || hasWorldlineAdapter(activeTheme.value.id)))
+)
 const compactThemeDescription = computed(() => {
   const description = (activeTheme.value?.description || '').trim()
-  if (!description) return '围绕当前模块，先生成基础分支再继续推进。'
-  return description.length > 64 ? `${description.slice(0, 63)}…` : description
+  if (!description) return '围绕当前模块生成基础世界线，再进入工作台验证证据、图谱与时间事实。'
+  return description.length > 96 ? `${description.slice(0, 95)}…` : description
 })
-const compactHighlights = computed(() => (activeTheme.value?.highlights || []).slice(0, 2))
-const remainingHighlights = computed(() => (activeTheme.value?.highlights || []).slice(2))
-const compactTags = computed(() => (activeTheme.value?.tags || []).slice(0, 3))
-const remainingTags = computed(() => (activeTheme.value?.tags || []).slice(3))
+const compactTags = computed(() => (activeTheme.value?.tags || []).slice(0, 5))
 const placeholderQuestion = computed(() =>
   getWorldlineDefaultQuestion(activeTheme.value?.id || selectedThemeId.value || '', fallbackQuestion)
 )
@@ -172,20 +162,40 @@ const canResumeCurrentTheme = computed(
     worldlineStore.themeId &&
     worldlineStore.themeId === selectedThemeId.value
 )
+const surfaces = [
+  {
+    title: 'Worldline Stage',
+    detail: '左到右分叉与收束的青金发光线束'
+  },
+  {
+    title: 'Evidence Rail',
+    detail: 'source uri、page、line、bbox、Wiki refs 同屏可见'
+  },
+  {
+    title: 'Temporal Scrubber',
+    detail: 'Source、Wiki、Graph、Gate 快照可切换'
+  },
+  {
+    title: 'Agent Handoff',
+    detail: '分支上下文带入 Agent 或 Graph 继续验证'
+  }
+]
+
+const moduleTypeLabel = (theme = {}) => {
+  if (hasWorldlineLiveBridge(theme)) return 'Live Bridge'
+  if (hasWorldlineAdapter(theme.id)) return 'Local Preview'
+  return 'Worldline'
+}
 
 const ensureSelectedTheme = () => {
-  if (selectedThemeId.value) {
-    return
-  }
+  if (selectedThemeId.value) return
 
   const storedThemeId =
-    worldlineStore.themeId &&
-    themes.value.some((theme) => theme.id === worldlineStore.themeId)
+    worldlineStore.themeId && themes.value.some((theme) => theme.id === worldlineStore.themeId)
       ? worldlineStore.themeId
       : ''
   const primaryThemeId =
-    infoStore.primaryTheme?.id &&
-    themes.value.some((theme) => theme.id === infoStore.primaryTheme.id)
+    infoStore.primaryTheme?.id && themes.value.some((theme) => theme.id === infoStore.primaryTheme.id)
       ? infoStore.primaryTheme.id
       : ''
 
@@ -193,18 +203,13 @@ const ensureSelectedTheme = () => {
 }
 
 const syncQuestionDraft = (themeId = selectedThemeId.value, { preserveExisting = false } = {}) => {
-  if (preserveExisting && questionDraft.value) {
-    return
-  }
+  if (preserveExisting && questionDraft.value) return
 
   if (worldlineStore.themeId && worldlineStore.themeId === themeId) {
     questionDraft.value = worldlineStore.questionDraft || worldlineStore.rootQuestion || ''
   }
 
-  if (questionDraft.value) {
-    return
-  }
-
+  if (questionDraft.value) return
   questionDraft.value = getWorldlineDefaultQuestion(themeId, fallbackQuestion)
 }
 
@@ -228,21 +233,13 @@ const buildWorkbenchLocation = () => {
 }
 
 const openWorkbench = async () => {
-  if (!activeThemeSupported.value) {
-    return
-  }
-
+  if (!activeThemeSupported.value) return
   await router.push(buildWorkbenchLocation())
 }
 
 const resumeCurrentTheme = async () => {
-  if (!activeThemeSupported.value) {
-    return
-  }
-
-  await router.push({
-    path: `/worldline/${selectedThemeId.value || activeTheme.value?.id || ''}`
-  })
+  if (!activeThemeSupported.value) return
+  await router.push({ path: `/worldline/${selectedThemeId.value || activeTheme.value?.id || ''}` })
 }
 
 watch(themes, () => {
@@ -251,10 +248,7 @@ watch(themes, () => {
 })
 
 watch(selectedThemeId, (themeId, previousThemeId) => {
-  if (!themeId || themeId === previousThemeId) {
-    return
-  }
-
+  if (!themeId || themeId === previousThemeId) return
   syncQuestionDraft(themeId)
 })
 
@@ -268,157 +262,207 @@ onMounted(async () => {
 <style scoped lang="less">
 .worldline-hub-view {
   min-height: 100vh;
+  color: #f6fbff;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--main-100) 45%, transparent), transparent 42%),
-    radial-gradient(circle at top right, color-mix(in srgb, var(--main-200) 22%, transparent), transparent 28%),
-    linear-gradient(180deg, var(--main-10), var(--gray-10));
+    radial-gradient(circle at 8% 18%, rgba(255, 211, 111, 0.16), transparent 26%),
+    radial-gradient(circle at 88% 16%, rgba(124, 246, 255, 0.16), transparent 28%),
+    linear-gradient(180deg, #05080d, #02050a 70%, #060a10);
 }
 
-.workspace-shell {
-  max-width: 1480px;
+.hub-shell {
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 28px 28px 56px;
+  padding: 24px 24px 44px;
 }
 
-.workspace-header {
+.hub-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
-.workspace-copy h1 {
+.header-copy h1 {
+  max-width: 760px;
   margin: 0;
-  color: var(--gray-1000);
-  font-size: clamp(2.2rem, 4vw, 3.6rem);
-  letter-spacing: -0.03em;
+  color: #f6fbff;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.08;
 }
 
 .subtitle {
-  max-width: 560px;
-  margin: 10px 0 0;
-  color: var(--gray-600);
-  line-height: 1.8;
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: rgba(216, 251, 255, 0.68);
+  line-height: 1.75;
 }
 
-.header-actions {
+.eyebrow {
+  margin: 0 0 8px;
+  color: #ffd36f;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header-actions,
+.question-actions {
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 10px;
 }
 
-.ghost-link {
+.ghost-link,
+.primary-button,
+.secondary-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gray-150) 90%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 84%, transparent);
-  color: var(--gray-700);
+  border-radius: 7px;
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  color: #d8fbff;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-.workspace-main {
+.ghost-link,
+.secondary-button {
+  background: rgba(124, 246, 255, 0.06);
+}
+
+.primary-button {
+  border-color: rgba(255, 211, 111, 0.56);
+  background: linear-gradient(135deg, rgba(255, 211, 111, 0.92), rgba(124, 246, 255, 0.7));
+  color: #061018;
+}
+
+.primary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hub-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 16px;
 }
 
-.workspace-panel {
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-  border-radius: 28px;
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-  box-shadow: 0 24px 56px color-mix(in srgb, var(--gray-1000) 6%, transparent);
-  backdrop-filter: blur(18px);
+.launch-panel,
+.status-panel {
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(7, 15, 24, 0.86);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
 }
 
-.controller-panel {
-  padding: 26px;
+.launch-panel {
+  padding: 20px;
+}
+
+.status-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
 }
 
 .panel-head {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
   gap: 14px;
+  align-items: flex-start;
 }
 
 .panel-head h2,
-.module-card h3 {
+.status-block h3 {
   margin: 0;
-  color: var(--gray-1000);
-  font-size: 1.35rem;
+  color: #f6fbff;
+  font-size: 20px;
+  font-weight: 900;
 }
 
 .panel-badge {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 12px;
+  min-height: 28px;
+  padding: 0 10px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--main-20) 84%, var(--gray-0));
-  color: var(--main-700);
+  background: rgba(255, 211, 111, 0.1);
+  color: #ffe2a6;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 900;
   white-space: nowrap;
 }
 
-.eyebrow {
-  margin: 0 0 8px;
-  color: var(--main-600);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
 }
 
-.module-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.module-pill {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 3px;
-  min-width: 180px;
-  padding: 14px 16px;
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-  background: linear-gradient(180deg, var(--gray-0), var(--main-10));
-  color: var(--gray-800);
+.module-tile {
+  min-height: 118px;
+  padding: 14px;
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #d8fbff;
   cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  text-align: left;
 }
 
-.module-pill.active {
-  border-color: color-mix(in srgb, var(--main-300) 88%, transparent);
-  box-shadow: 0 14px 28px color-mix(in srgb, var(--main-500) 12%, transparent);
-  transform: translateY(-1px);
+.module-tile.active {
+  border-color: rgba(255, 211, 111, 0.6);
+  background:
+    radial-gradient(circle at top right, rgba(255, 211, 111, 0.16), transparent 45%),
+    rgba(124, 246, 255, 0.07);
 }
 
-.module-pill-title {
-  font-size: 14px;
-  font-weight: 700;
+.module-title,
+.module-tile small,
+.module-tile em {
+  display: block;
 }
 
-.module-pill small {
-  color: var(--gray-600);
+.module-title {
+  color: #f6fbff;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.module-tile small {
+  margin-top: 8px;
+  color: rgba(216, 251, 255, 0.66);
   line-height: 1.5;
 }
 
+.module-tile em {
+  margin-top: 12px;
+  color: #ffd36f;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
 .empty-state {
-  margin-top: 20px;
-  padding: 16px 18px;
-  border-radius: 20px;
-  border: 1px dashed color-mix(in srgb, var(--gray-150) 90%, transparent);
-  color: var(--gray-600);
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px dashed rgba(124, 246, 255, 0.24);
+  border-radius: 8px;
+  color: rgba(216, 251, 255, 0.68);
+}
+
+.empty-state strong {
+  color: #f6fbff;
+  font-weight: 900;
 }
 
 .empty-state p {
@@ -426,188 +470,139 @@ onMounted(async () => {
   line-height: 1.7;
 }
 
-.empty-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.question-panel {
-  margin-top: 22px;
-  padding: 18px;
-  border-radius: 24px;
-  background:
-    radial-gradient(circle at top right, color-mix(in srgb, var(--main-100) 32%, transparent), transparent 32%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 92%, transparent), var(--main-10));
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-}
-
 .question-label {
   display: block;
-  color: var(--gray-800);
-  font-size: 14px;
-  font-weight: 700;
+  margin-top: 18px;
+  color: #ffe2a6;
+  font-size: 13px;
+  font-weight: 900;
 }
 
 .question-input {
   width: 100%;
-  margin-top: 12px;
-  padding: 16px 18px;
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--gray-150) 88%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-  color: var(--gray-1000);
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  border-radius: 8px;
+  background: rgba(2, 5, 10, 0.72);
+  color: #f6fbff;
   line-height: 1.7;
   resize: vertical;
 }
 
 .question-input:focus {
   outline: none;
-  border-color: color-mix(in srgb, var(--main-400) 88%, transparent);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--main-100) 34%, transparent);
-}
-
-.tag-list,
-.highlight-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.hint-chip,
-.tag-list span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 28px;
-  padding: 0 11px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--main-20) 82%, var(--gray-0));
-  color: var(--main-700);
-  font-size: 12px;
-  font-weight: 700;
+  border-color: rgba(255, 211, 111, 0.7);
+  box-shadow: 0 0 0 3px rgba(255, 211, 111, 0.12);
 }
 
 .question-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
-.primary-button,
-.secondary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 46px;
-  padding: 0 18px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.primary-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.primary-button {
-  background: linear-gradient(135deg, var(--main-700), var(--main-500));
-  color: var(--gray-0);
-}
-
-.secondary-button {
-  background: color-mix(in srgb, var(--gray-0) 90%, transparent);
-  border-color: color-mix(in srgb, var(--gray-150) 88%, transparent);
-  color: var(--gray-800);
-}
-
-.module-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px;
-}
-
-.module-card,
-.resume-card {
-  padding: 18px;
-  border-radius: 22px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 92%, transparent), var(--main-10));
-  border: 1px solid color-mix(in srgb, var(--gray-120) 84%, transparent);
-}
-
-.module-description {
-  margin: 12px 0 0;
-  color: var(--gray-600);
-  line-height: 1.8;
-}
-
-.highlight-list {
-  margin-top: 16px;
-}
-
-.highlight-item {
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--main-20) 78%, var(--gray-0));
-  color: var(--gray-800);
-  line-height: 1.6;
+.status-block p {
+  margin: 10px 0 0;
+  color: rgba(216, 251, 255, 0.68);
+  line-height: 1.7;
 }
 
 .tag-list {
-  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
 }
 
-.resume-card ul {
-  margin: 12px 0 0;
-  padding-left: 18px;
-  color: var(--gray-600);
-  line-height: 1.8;
+.tag-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 999px;
+  color: #d8fbff;
+  font-size: 12px;
+  font-weight: 800;
 }
 
-.more-details {
-  margin-top: 14px;
-
-  summary {
-    cursor: pointer;
-    color: var(--main-700);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  p {
-    margin: 10px 0 0;
-    color: var(--gray-600);
-    line-height: 1.7;
-  }
+.status-matrix {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-@media (max-width: 1080px) {
-  .workspace-main {
+.status-matrix div,
+.pipeline-item {
+  padding: 12px;
+  border: 1px solid rgba(124, 246, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.status-matrix strong,
+.status-matrix span,
+.pipeline-item strong,
+.pipeline-item span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-matrix strong {
+  color: #f6fbff;
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.status-matrix span,
+.pipeline-item span {
+  color: rgba(216, 251, 255, 0.62);
+  font-size: 12px;
+}
+
+.pipeline-list {
+  display: grid;
+  gap: 9px;
+}
+
+.pipeline-item strong {
+  color: #f6fbff;
+  font-weight: 900;
+}
+
+@media (max-width: 980px) {
+  .hub-grid {
     grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 720px) {
-  .workspace-shell {
-    padding: 20px 16px 40px;
+@media (max-width: 680px) {
+  .hub-shell {
+    padding: 18px 14px 34px;
   }
 
-  .workspace-header {
+  .hub-header {
     flex-direction: column;
   }
 
-  .controller-panel,
-  .module-panel {
-    padding: 18px;
+  .header-actions,
+  .question-actions {
+    width: 100%;
   }
 
-  .question-actions .primary-button,
-  .question-actions .secondary-button {
-    width: 100%;
+  .ghost-link,
+  .primary-button,
+  .secondary-button {
+    flex: 1;
+  }
+
+  .panel-head {
+    flex-direction: column;
+  }
+
+  .status-matrix {
+    grid-template-columns: 1fr;
   }
 }
 </style>

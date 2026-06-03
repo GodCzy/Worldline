@@ -35,7 +35,32 @@ export const DEFAULT_INFO_CONFIG = {
       icon: 'shield'
     }
   ],
-  themes: [],
+  themes: [
+    {
+      id: 'phase5-preview',
+      name: 'Phase 5 Preview',
+      subtitle: '本地前端验收模块',
+      description:
+        '用于验证 Worldline UI 的当前阶段样本。真实知识库接入后，live bridge 结果优先于本地预览。',
+      featured: true,
+      status: 'preview',
+      tags: ['LLM Wiki', 'Temporal Graph', 'Evidence Gate'],
+      highlights: [
+        '黑底青金发光世界线舞台',
+        '证据轨、Wiki 引用、图谱实体和时间 scrubber 同屏可见',
+        'Agent handoff 保留 branch、evidence、graph 上下文'
+      ],
+      context: {
+        theme: 'phase5-preview',
+        module: 'phase5-preview',
+        scene: 'worldline',
+        version: 'worldline-phase5-preview'
+      },
+      worldline: {
+        preview: true
+      }
+    }
+  ],
   actions: [
     {
       name: 'Docs',

@@ -2,13 +2,15 @@
   <div class="worldline-workbench">
     <header class="workbench-header">
       <div class="header-copy">
-        <p class="eyebrow">WORLDLINE WORKSPACE</p>
-        <h1>世界线工作台</h1>
+        <p class="eyebrow">WORLDLINE WORKBENCH</p>
+        <h1>{{ workbenchTitle }}</h1>
+        <p>{{ workbenchSubtitle }}</p>
       </div>
 
       <div class="header-actions">
-        <router-link class="header-link" to="/worldline">返回世界线 Hub</router-link>
-        <router-link class="header-link" to="/themes">主题分区</router-link>
+        <router-link class="header-link" to="/worldline">Hub</router-link>
+        <router-link class="header-link" to="/graph">Graph</router-link>
+        <router-link class="header-link" to="/themes">Modules</router-link>
       </div>
     </header>
 
@@ -22,87 +24,96 @@
         @click="switchTheme(theme.id)"
       >
         <span>{{ theme.name }}</span>
+        <small>{{ moduleTypeLabel(theme) }}</small>
       </button>
     </section>
 
     <main class="workbench-shell">
       <section v-if="!hasThemeId" class="unsupported-shell">
         <div class="unsupported-card">
-          <p class="eyebrow">NO THEME SELECTED</p>
-          <h2>请先选择一个主题模块</h2>
-          <p class="unsupported-description">工作台不再绑定默认演示主题。请先从 Hub 选择已接入真实知识库的模块。</p>
-          <div class="unsupported-actions">
-            <router-link class="header-link" to="/worldline">返回世界线 Hub</router-link>
-            <router-link class="header-link" to="/themes">去主题分区</router-link>
-          </div>
+          <p class="eyebrow">NO MODULE</p>
+          <h2>请先选择一个 Worldline 模块</h2>
+          <p>工作台需要 live bridge 或本地 Phase 5 Preview adapter 才能生成世界线。</p>
+          <router-link class="header-link" to="/worldline">返回 Hub</router-link>
         </div>
       </section>
 
       <template v-else-if="isThemeSupported">
-        <section class="stage-column">
-          <section class="stage-panel">
-            <div v-if="!worldlineStore.hasBranches" class="live-empty-state">
-              <p class="eyebrow">NO LIVE BRANCHES</p>
-              <h2>{{ workbenchEmptyTitle }}</h2>
-              <p>{{ workbenchEmptyDescription }}</p>
-            </div>
+        <section class="command-bar">
+          <div class="question-box">
+            <label for="worldline-workbench-question">问题起点</label>
+            <input
+              id="worldline-workbench-question"
+              v-model="questionDraft"
+              type="text"
+              placeholder="描述目标、约束和证据来源"
+              @keydown.enter.prevent="generateBaseWorldline"
+            />
+          </div>
+          <button class="generate-button" type="button" :disabled="isGenerating" @click="generateBaseWorldline">
+            {{ isGenerating ? '生成中' : generationLabel }}
+          </button>
+          <button class="handoff-button" type="button" :disabled="!worldlineStore.activeBranch" @click="goToThemeChat">
+            Agent Handoff
+          </button>
+        </section>
+
+        <section class="status-line" :class="liveStatus.state">
+          <span>{{ liveStatusLabel }}</span>
+          <strong>{{ worldlineStore.quality.status || worldlineStore.status }}</strong>
+          <em>{{ worldlineStore.knowledgeMode || 'llm_wiki_primary_rag_auxiliary' }}</em>
+        </section>
+
+        <section class="workbench-grid">
+          <div class="stage-column">
             <WorldlineBranchCanvas
-              v-else
               class="canvas-panel"
               :tree="worldlineStore.tree"
               :active-branch-id="worldlineStore.activeBranchId"
               :selected-node-id="worldlineStore.selectedNodeId"
               :branch-count="worldlineStore.branchCount"
               :display-meta="worldlineStore.displayMeta || {}"
+              :active-snapshot="worldlineStore.activeSnapshot"
               @select-node="handleNodeSelection"
             />
-          </section>
 
-          <WorldlineEvidenceRail :evidence-refs="worldlineStore.evidenceRefs" />
+            <WorldlineTimelineScrubber
+              :snapshots="worldlineStore.snapshots"
+              :active-index="worldlineStore.activeSnapshotIndex"
+              :timeline-refs="worldlineStore.timelineRefs"
+              @update:active-index="worldlineStore.setActiveSnapshot"
+            />
+          </div>
 
-          <section class="selection-brief" v-if="worldlineStore.activeBranch">
-            <p class="brief-tag">当前选中</p>
-            <p>{{ branchBriefShort }}</p>
-          </section>
-
-          <section class="dialogue-panel">
-            <div class="dialogue-head">
-              <strong>继续生成或深聊这条世界线</strong>
-              <p class="dialogue-hint">{{ handoffHint }}</p>
-            </div>
-
-            <div class="dialogue-input-wrap">
-              <input
-                class="dialogue-input"
-                :value="questionDraft"
-                type="text"
-                placeholder="描述目标、限制与偏好"
-                @input="questionDraft = $event.target.value"
-                @keydown.enter.prevent="generateBaseWorldline"
-              />
-              <button class="dialogue-send" type="button" :disabled="isGenerating" @click="generateBaseWorldline">
-                {{ isGenerating ? '生成中…' : '生成世界线' }}
-              </button>
-            </div>
-
-            <div class="dialogue-actions">
-              <button class="secondary-btn" type="button" @click="goToThemeChat">
-                带当前分支继续深聊
-              </button>
-            </div>
-          </section>
+          <aside class="inspect-column">
+            <WorldlineBranchDetailPanel
+              :branch="worldlineStore.activeBranch"
+              @handoff="goToThemeChat"
+              @open-graph="openGraphFocus"
+            />
+            <WorldlineEvidenceRail
+              :evidence-refs="worldlineStore.evidenceRefs"
+              :wiki-refs="worldlineStore.wikiRefs"
+              :entity-refs="worldlineStore.entityRefs"
+              :timeline-refs="worldlineStore.timelineRefs"
+            />
+            <WorldlineGraphFocusPanel
+              :entity-refs="worldlineStore.entityRefs"
+              :timeline-refs="worldlineStore.timelineRefs"
+              :quality="worldlineStore.quality"
+              :route-trace="worldlineStore.routeTrace"
+              @open-graph="openGraphFocus"
+            />
+          </aside>
         </section>
       </template>
 
       <section v-else class="unsupported-shell">
         <div class="unsupported-card">
-          <p class="eyebrow">UNSUPPORTED THEME</p>
+          <p class="eyebrow">UNSUPPORTED MODULE</p>
           <h2>{{ unsupportedTitle }}</h2>
-          <p class="unsupported-description">{{ unsupportedDescription }}</p>
-          <div class="unsupported-actions">
-            <router-link class="header-link" to="/worldline">返回世界线 Hub</router-link>
-            <router-link class="header-link" to="/themes">返回主题分区</router-link>
-          </div>
+          <p>{{ unsupportedDescription }}</p>
+          <router-link class="header-link" to="/worldline">返回 Hub</router-link>
         </div>
       </section>
     </main>
@@ -117,13 +128,13 @@ import { useUserStore } from '@/stores/user'
 import { useAgentStore } from '@/stores/agent'
 import { useThemeContextStore } from '@/stores/themeContext'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
-import {
-  getWorldlineDefaultQuestion,
-  resolveWorldlineAdapter
-} from '@/data/worldline'
+import { getWorldlineDefaultQuestion, hasWorldlineAdapter, resolveWorldlineAdapter } from '@/data/worldline'
 import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId, worldlineApi } from '@/apis/worldline_api'
 import WorldlineBranchCanvas from '@/components/worldline/WorldlineBranchCanvas.vue'
 import WorldlineEvidenceRail from '@/components/worldline/WorldlineEvidenceRail.vue'
+import WorldlineBranchDetailPanel from '@/components/worldline/WorldlineBranchDetailPanel.vue'
+import WorldlineTimelineScrubber from '@/components/worldline/WorldlineTimelineScrubber.vue'
+import WorldlineGraphFocusPanel from '@/components/worldline/WorldlineGraphFocusPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,55 +152,42 @@ const liveStatus = ref({ state: 'idle', message: '' })
 const currentThemeId = computed(() => String(route.params.themeId || '').trim().toLowerCase())
 const hasThemeId = computed(() => Boolean(currentThemeId.value))
 const currentThemeAdapter = computed(() => resolveWorldlineAdapter(currentThemeId.value))
-const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme)
-const configuredThemes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
-const availableThemes = computed(() => configuredThemes.value)
-const currentTheme = computed(
-  () => availableThemes.value.find((theme) => theme.id === currentThemeId.value) || null
-)
+const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme) || hasWorldlineAdapter(theme.id)
+const availableThemes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
+const currentTheme = computed(() => availableThemes.value.find((theme) => theme.id === currentThemeId.value) || null)
 const routeKnowledgeDbId = computed(() => {
   const fromQuery = route.query.knowledge_db_id || route.query.db_id
   return typeof fromQuery === 'string' ? fromQuery.trim() : ''
 })
-const currentKnowledgeDbId = computed(
-  () => routeKnowledgeDbId.value || resolveThemeKnowledgeDbId(currentTheme.value)
-)
+const currentKnowledgeDbId = computed(() => routeKnowledgeDbId.value || resolveThemeKnowledgeDbId(currentTheme.value))
 const isLiveSupported = computed(() => Boolean(currentKnowledgeDbId.value))
 const isThemeSupported = computed(() => Boolean(currentThemeAdapter.value || isLiveSupported.value))
 const incomingQuestion = computed(() => (typeof route.query.question === 'string' ? route.query.question.trim() : ''))
+const generationLabel = computed(() => worldlineStore.displayMeta.generationLabel || '生成世界线')
+const workbenchTitle = computed(() => currentTheme.value?.name || worldlineStore.displayMeta.themeName || 'Worldline')
+const workbenchSubtitle = computed(
+  () =>
+    worldlineStore.displayMeta.workspaceHint ||
+    '检查分支证据、Wiki 引用、图谱实体、时间事实和 Agent handoff。'
+)
 const unsupportedTitle = computed(() =>
-  hasThemeId.value ? `主题 ${currentThemeId.value} 尚未接入世界线工作台` : '当前未指定主题'
+  hasThemeId.value ? `模块 ${currentThemeId.value} 尚未接入 Worldline` : '当前没有指定模块'
 )
-const unsupportedDescription = computed(() => '当前主题没有 live bridge。请先返回选择已接入真实知识库的模块。')
-const workbenchEmptyTitle = computed(() =>
-  isLiveSupported.value && !userStore.isAdmin ? '需要管理员权限读取真实知识库' : '当前知识库还没有可生成的世界线'
+const unsupportedDescription = computed(
+  () => '请返回 Hub 选择已配置 live bridge 的知识库模块，或使用 Phase 5 Preview 进行本地验收。'
 )
-const workbenchEmptyDescription = computed(() => {
+const liveStatusLabel = computed(() => {
   if (liveStatus.value.message) return liveStatus.value.message
-  if (isLiveSupported.value) {
-    return '后端 live facade 没有返回可用分支。请先导入文档、重建 Wiki/Graph，或检查知识库映射。'
-  }
-  return '当前主题没有 live bridge，无法生成世界线分支。'
+  if (worldlineStore.lastGeneratedFrom === 'live-generate') return '已使用真实 Worldline facade'
+  if (worldlineStore.lastGeneratedFrom === 'phase5-preview') return '已使用 Phase 5 本地预览'
+  return '等待生成'
 })
 
-const branchBrief = computed(() => {
-  const branch = worldlineStore.activeBranch
-  if (!branch) return ''
-  const summary = branch.summary || branch.subtitle || ''
-  return summary.length > 60 ? `${summary.slice(0, 59)}…` : summary
-})
-const branchBriefShort = computed(() => {
-  const content = branchBrief.value || ''
-  return content.length > 42 ? `${content.slice(0, 41)}…` : content
-})
-const handoffHint = computed(() => {
-  const activeBranch = worldlineStore.activeBranch
-  if (!activeBranch) {
-    return '先选中一条分支，再把该分支上下文带入智能体继续对话。'
-  }
-
-  return `将基于「${activeBranch.title}」继续深聊，并保留当前主题上下文。`
-})
+const moduleTypeLabel = (theme = {}) => {
+  if (hasWorldlineLiveBridge(theme)) return 'Live Bridge'
+  if (hasWorldlineAdapter(theme.id)) return 'Local Preview'
+  return 'Worldline'
+}
 
 const ensureDefaultAgent = async () => {
   if (!agentStore.isInitialized) {
@@ -216,20 +214,25 @@ const hasHydratableBranches = (result) =>
 const buildEmptyWorldlineResult = (message = '') => ({
   themeId: currentThemeId.value,
   moduleId: currentThemeId.value,
+  knowledgeDbId: currentKnowledgeDbId.value,
+  knowledgeMode: 'llm_wiki_primary_rag_auxiliary',
+  layers: ['evidence_ledger', 'llm_wiki', 'temporal_evidence_graph', 'quality_gate'],
   rootQuestion: questionDraft.value,
   questionDraft: questionDraft.value,
   status: message ? 'blocked' : 'empty',
   error: message,
   branches: [],
-  tree: { width: 1080, height: 560, nodes: [], edges: [] },
+  tree: { width: 1160, height: 560, nodes: [], edges: [] },
+  snapshots: [],
+  quality: { status: message ? 'blocked' : 'empty' },
   displayMeta: {
     stageLabel: '等待数据',
-    stageTitle: workbenchEmptyTitle.value,
-    stageSubtitle: workbenchEmptyDescription.value,
+    stageTitle: '当前知识库还没有可生成的世界线',
+    stageSubtitle: message || '请导入文档、重建 Wiki/Graph，或检查知识库映射。',
     themeName: currentTheme.value?.name || currentThemeId.value,
     generationLabel: '生成世界线',
     generationMode: 'base',
-    workspaceHint: '请先补齐 live bridge、知识库数据或静态 adapter。'
+    workspaceHint: '先补齐 live bridge、知识库数据或本地 adapter。'
   }
 })
 
@@ -240,10 +243,9 @@ const tryGenerateLiveWorldline = async () => {
   }
 
   if (!userStore.isAdmin) {
-    liveStatus.value = {
-      state: 'blocked',
-      message: '该主题已配置 live bridge，但后端 Worldline 契约保持 admin-only。请使用管理员账号进入。'
-    }
+    liveStatus.value = currentThemeAdapter.value
+      ? { state: 'preview', message: '未登录管理员，已回退到本地预览。' }
+      : { state: 'blocked', message: '该模块需要管理员权限读取真实 Worldline facade。' }
     return null
   }
 
@@ -261,19 +263,18 @@ const tryGenerateLiveWorldline = async () => {
       }
     })
     if (hasHydratableBranches(result)) {
-      liveStatus.value = { state: 'ready', message: '已使用后端 Worldline facade 生成。' }
+      liveStatus.value = { state: 'ready', message: '已使用真实 Worldline facade 生成。' }
       return result
     }
-    liveStatus.value = {
-      state: 'empty',
-      message: '后端 live facade 暂无可用分支。'
-    }
+    liveStatus.value = { state: 'empty', message: '后端 facade 暂无可用分支。' }
     return null
   } catch (error) {
     console.warn('Worldline live generate failed:', error)
     liveStatus.value = {
-      state: 'failed',
-      message: error?.message || '后端 Worldline facade 调用失败。'
+      state: currentThemeAdapter.value ? 'preview' : 'failed',
+      message: currentThemeAdapter.value
+        ? '后端调用失败，已回退到本地预览。'
+        : error?.message || '后端 Worldline facade 调用失败。'
     }
     return null
   }
@@ -299,7 +300,7 @@ const generateBaseWorldline = async () => {
         theme: currentThemeId.value,
         module: currentThemeId.value
       })
-      applyWorldlineResult(result, 'base-generate')
+      applyWorldlineResult(result, 'phase5-preview')
       return
     }
 
@@ -335,7 +336,7 @@ const goToThemeChat = async () => {
 
   worldlineStore.setHandoff({
     target: 'chat',
-    label: '带着当前主线进入对话'
+    label: '带着当前世界线分支进入 Agent'
   })
   sessionStorage.setItem(WORLDLINE_HANDOFF_KEY, '1')
 
@@ -352,6 +353,17 @@ const goToThemeChat = async () => {
 
   const target = await buildAgentLocation(branch)
   await router.push(target)
+}
+
+const openGraphFocus = async () => {
+  const branch = worldlineStore.activeBranch
+  if (branch?.context) {
+    syncThemeContextFromBranch(branch)
+  }
+  await router.push({
+    path: '/graph',
+    query: themeContextStore.toRouteQuery(branch?.context || themeContextStore.activeContext || {})
+  })
 }
 
 const switchTheme = async (themeId) => {
@@ -402,9 +414,11 @@ onMounted(async () => {
 .worldline-workbench {
   min-height: 100vh;
   padding: 18px 20px 30px;
+  color: #f6fbff;
   background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--main-100) 26%, transparent), transparent 32%),
-    linear-gradient(180deg, var(--main-10), var(--gray-10));
+    radial-gradient(circle at 4% 48%, rgba(255, 211, 111, 0.16), transparent 25%),
+    radial-gradient(circle at 94% 50%, rgba(124, 246, 255, 0.16), transparent 27%),
+    linear-gradient(180deg, #05080d, #02050a 72%, #060a10);
 }
 
 .workbench-header {
@@ -412,253 +426,217 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   gap: 18px;
-  max-width: 1660px;
+  max-width: 1700px;
   margin: 0 auto 12px;
 }
 
 .header-copy h1 {
   margin: 0;
-  color: var(--gray-1000);
-  font-size: clamp(1.9rem, 3.6vw, 2.8rem);
-  letter-spacing: -0.03em;
+  color: #f6fbff;
+  font-size: clamp(1.8rem, 3vw, 2.7rem);
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.header-copy p:last-child {
+  max-width: 860px;
+  margin: 8px 0 0;
+  color: rgba(216, 251, 255, 0.66);
+  line-height: 1.6;
 }
 
 .eyebrow {
-  margin: 0 0 7px;
-  color: var(--main-600);
+  margin: 0 0 6px;
+  color: #ffd36f;
   font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 800;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
 }
 
-.header-actions {
+.header-actions,
+.module-strip {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.header-link {
+.header-link,
+.module-pill,
+.generate-button,
+.handoff-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-height: 36px;
   padding: 0 12px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--gray-150) 88%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 90%, transparent);
-  color: var(--gray-700);
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(124, 246, 255, 0.06);
+  color: #d8fbff;
+  cursor: pointer;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 .module-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  max-width: 1660px;
+  max-width: 1700px;
   margin: 0 auto 12px;
 }
 
 .module-pill {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  padding: 9px 11px;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-  cursor: pointer;
+}
+
+.module-pill small {
+  color: rgba(216, 251, 255, 0.55);
+  font-weight: 800;
 }
 
 .module-pill.active {
-  border-color: color-mix(in srgb, var(--main-300) 88%, transparent);
-  box-shadow: 0 8px 18px color-mix(in srgb, var(--main-500) 10%, transparent);
-}
-
-.module-pill span {
-  color: var(--gray-900);
-  font-weight: 700;
+  border-color: rgba(255, 211, 111, 0.56);
+  background: rgba(255, 211, 111, 0.12);
+  color: #fff7de;
 }
 
 .workbench-shell {
-  max-width: 1660px;
+  max-width: 1700px;
   margin: 0 auto;
 }
 
-.stage-column {
+.command-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: end;
+  margin-bottom: 10px;
+  padding: 12px;
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(7, 15, 24, 0.86);
+}
+
+.question-box label {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffd36f;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.question-box input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(124, 246, 255, 0.18);
+  border-radius: 7px;
+  background: rgba(2, 5, 10, 0.72);
+  color: #f6fbff;
+}
+
+.question-box input:focus {
+  outline: none;
+  border-color: rgba(255, 211, 111, 0.64);
+}
+
+.generate-button {
+  border-color: rgba(255, 211, 111, 0.56);
+  background: linear-gradient(135deg, rgba(255, 211, 111, 0.92), rgba(124, 246, 255, 0.7));
+  color: #061018;
+}
+
+.generate-button:disabled,
+.handoff-button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.status-line {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 246, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(124, 246, 255, 0.05);
+  color: rgba(216, 251, 255, 0.68);
+  font-size: 12px;
+}
+
+.status-line strong,
+.status-line em {
+  color: #fff7de;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.workbench-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(330px, 0.55fr);
+  gap: 12px;
+}
+
+.stage-column,
+.inspect-column {
+  display: flex;
+  min-width: 0;
   flex-direction: column;
   gap: 12px;
 }
 
-.stage-panel {
-  padding: 14px;
-  border-radius: 24px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-  background:
-    radial-gradient(circle at top left, color-mix(in srgb, var(--main-100) 14%, transparent), transparent 36%),
-    linear-gradient(180deg, color-mix(in srgb, var(--gray-0) 94%, transparent), var(--main-10));
-  box-shadow: 0 18px 38px color-mix(in srgb, var(--gray-1000) 7%, transparent);
-}
-
-.live-empty-state {
-  min-height: 360px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 28px;
-  border-radius: 16px;
-  border: 1px dashed color-mix(in srgb, var(--gray-180) 80%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 88%, transparent);
-}
-
-.live-empty-state h2 {
-  margin: 0;
-  color: var(--gray-1000);
-  font-size: 1.2rem;
-}
-
-.live-empty-state p:last-child {
-  max-width: 680px;
-  margin: 10px 0 0;
-  color: var(--gray-600);
-  line-height: 1.7;
-}
-
-.selection-brief {
-  padding: 10px 12px;
-  border-radius: 12px;
-  border: 1px solid color-mix(in srgb, var(--main-200) 35%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-}
-
-.brief-tag {
-  margin: 0;
-  color: var(--main-700);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.selection-brief p {
-  margin: 4px 0 0;
-  color: var(--gray-600);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.dialogue-panel {
-  border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--main-300) 34%, transparent);
-  background:
-    radial-gradient(circle at 10% 0, color-mix(in srgb, var(--main-80) 18%, transparent), transparent 45%),
-    color-mix(in srgb, var(--gray-0) 95%, transparent);
-  padding: 12px;
-}
-
-.dialogue-head strong {
-  color: var(--gray-900);
-  font-size: 13px;
-}
-
-.dialogue-hint {
-  margin: 6px 0 0;
-  color: var(--gray-600);
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.dialogue-input-wrap {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
-}
-
-.dialogue-input {
-  width: 100%;
-  border: 1px solid color-mix(in srgb, var(--gray-180) 72%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--gray-0) 96%, transparent);
-  color: var(--gray-900);
-  padding: 10px 12px;
-  font-size: 14px;
-  outline: none;
-}
-
-.dialogue-input:focus {
-  border-color: color-mix(in srgb, var(--main-400) 80%, transparent);
-}
-
-.dialogue-send,
-.secondary-btn {
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.dialogue-send {
-  border: 1px solid color-mix(in srgb, var(--main-500) 75%, transparent);
-  background: color-mix(in srgb, var(--main-40) 78%, var(--gray-0));
-  color: var(--main-800);
-  min-height: 40px;
-  padding: 0 14px;
-}
-
-.dialogue-send:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.dialogue-actions {
-  margin-top: 10px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-.secondary-btn {
-  border: 1px solid color-mix(in srgb, var(--gray-180) 74%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-  color: var(--gray-700);
-  min-height: 34px;
-  padding: 0 12px;
-}
-
 .unsupported-shell {
-  display: block;
+  display: grid;
+  min-height: 460px;
+  place-items: center;
 }
 
 .unsupported-card {
-  padding: 18px;
-  border-radius: 20px;
-  border: 1px solid color-mix(in srgb, var(--gray-120) 88%, transparent);
-  background: color-mix(in srgb, var(--gray-0) 94%, transparent);
+  width: min(620px, 100%);
+  padding: 20px;
+  border: 1px solid rgba(124, 246, 255, 0.16);
+  border-radius: 8px;
+  background: rgba(7, 15, 24, 0.9);
 }
 
 .unsupported-card h2 {
   margin: 0;
-  color: var(--gray-1000);
-  font-size: 1.1rem;
+  color: #f6fbff;
+  font-weight: 900;
 }
 
-.unsupported-description {
-  margin: 8px 0 0;
-  color: var(--gray-600);
-  line-height: 1.55;
+.unsupported-card p {
+  color: rgba(216, 251, 255, 0.68);
+  line-height: 1.7;
 }
 
-.unsupported-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 14px;
+@media (max-width: 1180px) {
+  .workbench-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-@media (max-width: 920px) {
+@media (max-width: 760px) {
+  .worldline-workbench {
+    padding: 14px 12px 24px;
+  }
+
   .workbench-header {
     flex-direction: column;
   }
 
-  .dialogue-input-wrap {
+  .header-actions,
+  .module-strip {
+    width: 100%;
+  }
+
+  .header-link,
+  .module-pill {
+    flex: 1;
+  }
+
+  .command-bar {
     grid-template-columns: 1fr;
   }
 }

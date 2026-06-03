@@ -1,7 +1,11 @@
+import phase5PreviewAdapter from './phase5Preview'
+
 const normalizeThemeId = (value = '') =>
   typeof value === 'string' ? value.trim().toLowerCase() : ''
 
-const worldlineAdapters = {}
+const worldlineAdapters = {
+  'phase5-preview': phase5PreviewAdapter
+}
 
 export const resolveWorldlineAdapter = (themeId = '') =>
   worldlineAdapters[normalizeThemeId(themeId)] || null

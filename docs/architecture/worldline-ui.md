@@ -1,34 +1,72 @@
 # Worldline UI Architecture
 
-更新时间：2026-06-03
+Updated: 2026-06-03
+
+## Phase 5 Position
+
+Worldline UI is the primary product surface for the Evidence-backed LLM Wiki + Temporal Knowledge Graph OS. It is not a marketing landing page and not a generic RAG chat shell.
+
+The first usable screen should expose work: pick a knowledge module, launch a worldline, inspect evidence, scrub timeline snapshots, focus graph context, and hand the selected branch to an Agent.
 
 ## Visual Direction
 
-Worldline UI 以黑色背景、青色/金色发光线束、左到右分叉汇聚的世界线为核心视觉。界面应像知识操作台，而不是营销页或普通聊天页。
+- Dark operational console.
+- Cyan and gold luminous worldline bundles.
+- Left-to-right root question, branching, inspection nodes, and convergence.
+- SVG first, no Three.js in Phase 5.
+- Panels are compact work surfaces, not decorative nested cards.
 
-## First Implementation
+## Required Views
 
-- 使用现有 Vue 3、Vite、Pinia、Ant Design Vue。
-- 世界线舞台优先用 SVG/Canvas 和现有 G6 资产。
-- 先不引入 Three.js/TresJS/Cosmograph。
-- Sigma 作为万级节点图谱的性能后备。
+- `/worldline`: command hub for module selection, question launch, current status, and Phase 5 surface checklist.
+- `/worldline/:themeId`: full workbench with worldline stage, branch inspector, evidence rail, timeline scrubber, graph focus, and Agent handoff.
+- `/graph`: administrator graph surface that can receive Worldline route context and show the focused graph loop.
 
-## Views
+## Interaction Contract
 
-- `/worldline`：控制台。展示模块、问题入口、最近证据、最近 Wiki/Graph/Quality Gate 状态。
-- `/worldline/:themeId`：工作台。主舞台展示世界线，右侧或抽屉展示分支详情和下一步。
-- `/graph`：管理员图谱页。支持从世界线分支聚焦相关实体和一跳邻居。
+- Hover/select on a branch highlights the branch path and updates the active inspector.
+- Evidence rail must expose source uri, page, line, bbox, Wiki refs, entity refs, and timeline refs when present.
+- Timeline scrubber switches Source/Wiki/Graph/Gate snapshots without changing the route.
+- Agent handoff must preserve theme, module, scene, branch, focus, graph, and entry query context.
+- Graph handoff must route to `/graph` with the same context.
 
-## Interactions
+## Data Contract
 
-- hover：高亮分支路径、证据锚点和相关时间点。
-- select：打开证据轨、Wiki 引用、图谱实体和 Agent handoff。
-- scrub：时间轴切换证据新增、Wiki 重建、图谱更新和质量门快照。
-- handoff：把当前分支上下文交给 Agent，但保留 evidence ids 和审计信息。
+`worldlineStore.hydrate` remains compatible with older payloads and can consume these optional Phase 5 fields:
+
+- `knowledgeMode`
+- `layers`
+- `branches[].wikiRefs`
+- `branches[].entityRefs`
+- `branches[].timelineRefs`
+- `branches[].quality`
+- `snapshots`
+- `quality`
+- `routeTrace`
+- `overview`
+
+Live backend results take priority. `phase5-preview` is a local frontend validation adapter only; it must not be treated as a persisted knowledge source.
 
 ## Screenshot Gates
 
-- Desktop：1920x1080、1440x900。
-- Mobile：390x844。
-- States：empty、loading、error、with branches、hover、selected、evidence rail、handoff。
-- Checks：非空画布、文本不重叠、按钮可点、暗色/亮色可读、移动端不溢出。
+Required viewports:
+
+- `1920x1080`
+- `1440x900`
+- `390x844`
+
+Required pages:
+
+- `/worldline`
+- `/worldline/phase5-preview`
+- `/graph?theme=phase5-preview&module=phase5-preview&scene=graph_timeline&version=worldline-phase5-preview&graph=phase5-graph-focus`
+
+Required states:
+
+- Empty or blocked state when no live bridge is available.
+- Loading or fallback status during generation.
+- With branches.
+- Hover or selected branch.
+- Evidence rail tab content.
+- Timeline scrubber active state.
+- Graph focus and Agent handoff controls.
