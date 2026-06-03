@@ -100,7 +100,8 @@ class AutoWikiService:
             slug = self._slug(f"document-{file_id}")
             page_id = self.repository.make_page_id(db_id, "document", file_id, slug)
             evidence_ids = self._collect_evidence_ids(chunks)
-            markdown = self._document_markdown(filename, chunks, evidence_ids)
+            intelligence = self._page_intelligence("document", filename, chunks, evidence_ids)
+            markdown = self._document_markdown(filename, chunks, evidence_ids, intelligence)
             pages.append(
                 {
                     "page_id": page_id,
@@ -114,6 +115,7 @@ class AutoWikiService:
                     "metadata": {
                         "source_chunk_count": len(chunks),
                         "doc_version_ids": sorted({chunk["doc_version_id"] for chunk in chunks}),
+                        **intelligence,
                     },
                     "backlinks": [],
                 }
@@ -134,6 +136,7 @@ class AutoWikiService:
             slug = self._slug(f"topic-{topic}")
             page_id = self.repository.make_page_id(db_id, "topic", topic, slug)
             evidence_ids = self._collect_evidence_ids(related)
+            intelligence = self._page_intelligence("topic", topic, related, evidence_ids)
             pages.append(
                 {
                     "page_id": page_id,
@@ -141,12 +144,13 @@ class AutoWikiService:
                     "slug": slug,
                     "title": topic,
                     "source_id": topic,
-                    "markdown": self._topic_markdown(topic, related, evidence_ids),
+                    "markdown": self._topic_markdown(topic, related, evidence_ids, intelligence),
                     "evidence_ids": evidence_ids,
                     "freshness": self._freshness(related),
                     "metadata": {
                         "related_file_ids": sorted({chunk["file_id"] for chunk in related}),
                         "source_chunk_count": len(related),
+                        **intelligence,
                     },
                     "backlinks": [],
                 }
@@ -168,6 +172,7 @@ class AutoWikiService:
                 definitions.append((topic, self._first_sentence(chunk["text"])))
 
         evidence_ids = self._collect_evidence_ids(source_chunks)
+        intelligence = self._page_intelligence("glossary", "Glossary", source_chunks, evidence_ids, topics=topics)
         lines = ["# Glossary", ""]
         if definitions:
             for topic, definition in definitions:
@@ -184,7 +189,7 @@ class AutoWikiService:
             "markdown": "\n".join(lines),
             "evidence_ids": evidence_ids[:50],
             "freshness": self._freshness(source_chunks),
-            "metadata": {"term_count": len(definitions)},
+            "metadata": {"term_count": len(definitions), **intelligence},
             "backlinks": [],
         }
 
@@ -199,6 +204,7 @@ class AutoWikiService:
         slug = "home"
         page_id = self.repository.make_page_id(db_id, "home", None, slug)
         evidence_ids = self._collect_evidence_ids(source_chunks)
+        intelligence = self._page_intelligence("home", "Auto-Wiki Home", source_chunks, evidence_ids)
         lines = [
             "# Auto-Wiki Home",
             "",
@@ -225,6 +231,7 @@ class AutoWikiService:
                 "document_count": len(document_pages),
                 "topic_count": len(topic_pages),
                 "glossary_page_id": glossary_page["page_id"],
+                **intelligence,
             },
             "backlinks": [],
         }
@@ -263,28 +270,287 @@ class AutoWikiService:
     def _page_mentions(self, source: dict[str, Any], target: dict[str, Any]) -> bool:
         return target["title"].lower() in source["markdown"].lower()
 
-    def _document_markdown(self, filename: str, chunks: list[dict[str, Any]], evidence_ids: list[str]) -> str:
+    def _document_markdown(
+        self,
+        filename: str,
+        chunks: list[dict[str, Any]],
+        evidence_ids: list[str],
+        intelligence: dict[str, Any],
+    ) -> str:
         lines = [
             f"# {filename}",
             "",
-            "## Summary",
+            "## STORM Outline",
             "",
         ]
+        for section in intelligence["outline"]["sections"]:
+            lines.append(f"- **{section['title']}**: {section['purpose']}")
+        lines.extend(
+            [
+                "",
+                "## Summary",
+                "",
+            ]
+        )
         for chunk in chunks[:5]:
             lines.append(f"- {self._trim(self._first_sentence(chunk['text']), 220)}")
-        lines.extend(["", "## Evidence", ""])
+        lines.extend(
+            [
+                "",
+                "## Claims",
+                "",
+            ]
+        )
+        for claim in intelligence["claims"][:8]:
+            lines.append(f"- {claim['claim']} {self._citation_suffix(claim.get('evidence_ids') or [])}")
+        lines.extend(
+            [
+                "",
+                "## Open Questions",
+                "",
+            ]
+        )
+        for question in intelligence["open_questions"]:
+            lines.append(f"- {question['question']}")
+        lines.extend(
+            [
+                "",
+                "## Evidence",
+                "",
+            ]
+        )
         for evidence_id in evidence_ids[:20]:
             lines.append(f"- `{evidence_id}`")
         return "\n".join(lines)
 
-    def _topic_markdown(self, topic: str, chunks: list[dict[str, Any]], evidence_ids: list[str]) -> str:
-        lines = [f"# {topic}", "", "## Evidence-backed notes", ""]
+    def _topic_markdown(
+        self,
+        topic: str,
+        chunks: list[dict[str, Any]],
+        evidence_ids: list[str],
+        intelligence: dict[str, Any],
+    ) -> str:
+        lines = [
+            f"# {topic}",
+            "",
+            "## STORM Outline",
+            "",
+        ]
+        for section in intelligence["outline"]["sections"]:
+            lines.append(f"- **{section['title']}**: {section['purpose']}")
+        lines.extend(
+            [
+                "",
+                "## Evidence-backed notes",
+                "",
+            ]
+        )
         for chunk in chunks[:8]:
             lines.append(f"- {self._trim(self._first_sentence(chunk['text']), 260)}")
         lines.extend(["", "## Citations", ""])
-        for evidence_id in evidence_ids[:20]:
-            lines.append(f"- `{evidence_id}`")
+        for citation in intelligence["citations"][:20]:
+            lines.append(f"- `{citation['evidence_id']}` from `{citation['chunk_id']}`")
         return "\n".join(lines)
+
+    def _page_intelligence(
+        self,
+        page_type: str,
+        title: str,
+        chunks: list[dict[str, Any]],
+        evidence_ids: list[str],
+        *,
+        topics: list[str] | None = None,
+    ) -> dict[str, Any]:
+        claims = self._claims(chunks)
+        citations = self._citations(chunks)
+        return {
+            "outline": self._storm_outline(page_type, title, chunks, evidence_ids, topics=topics),
+            "sections": self._wiki_sections(page_type, chunks, evidence_ids),
+            "claims": claims,
+            "citations": citations,
+            "disputes": self._disputes(chunks),
+            "open_questions": self._open_questions(page_type, title, chunks),
+            "review": self._review_state(),
+            "evidence_coverage": self._evidence_coverage(claims, citations, evidence_ids),
+            "rag_role": {
+                "primary": False,
+                "role": "evidence_candidate_recall",
+                "candidate_chunk_ids": [chunk["chunk_id"] for chunk in chunks[:20]],
+            },
+            "generation_strategy": {
+                "style": "storm-lite",
+                "external_model_calls": 0,
+                "deterministic": True,
+            },
+        }
+
+    def _storm_outline(
+        self,
+        page_type: str,
+        title: str,
+        chunks: list[dict[str, Any]],
+        evidence_ids: list[str],
+        *,
+        topics: list[str] | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "style": "storm-lite",
+            "title": title,
+            "page_type": page_type,
+            "perspectives": [
+                {"id": "source", "label": "Source Summary", "role": "summarize evidence-bound sources"},
+                {"id": "claims", "label": "Supported Claims", "role": "separate claims from citations"},
+                {"id": "review", "label": "Review Queue", "role": "surface disputes and open questions"},
+            ],
+            "sections": [
+                {
+                    "id": "summary",
+                    "title": "Multi-perspective Summary",
+                    "purpose": "建立读者对来源、主题和上下文的第一层理解。",
+                    "evidence_ids": evidence_ids[:8],
+                },
+                {
+                    "id": "claims",
+                    "title": "Evidence-backed Claims",
+                    "purpose": "只列出能回连 EvidenceAnchor 的主张。",
+                    "evidence_ids": evidence_ids[:20],
+                },
+                {
+                    "id": "questions",
+                    "title": "Disputes And Open Questions",
+                    "purpose": "暴露未确认、可能冲突或需要人工审核的点。",
+                    "evidence_ids": evidence_ids[:20],
+                },
+            ],
+            "topic_candidates": topics or self._extract_topics(chunks, max_topics=5),
+        }
+
+    def _wiki_sections(
+        self,
+        page_type: str,
+        chunks: list[dict[str, Any]],
+        evidence_ids: list[str],
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "id": f"{page_type}-summary",
+                "title": "Summary",
+                "claim_count": min(len(chunks), 5),
+                "evidence_ids": evidence_ids[:10],
+                "status": "supported" if evidence_ids else "needs_evidence",
+            },
+            {
+                "id": f"{page_type}-citations",
+                "title": "Citations",
+                "claim_count": len(evidence_ids),
+                "evidence_ids": evidence_ids[:20],
+                "status": "supported" if evidence_ids else "needs_evidence",
+            },
+        ]
+
+    def _claims(self, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        claims = []
+        for chunk in chunks[:12]:
+            evidence_ids = list(chunk.get("evidence_ids") or [])
+            claims.append(
+                {
+                    "claim": self._trim(self._first_sentence(chunk["text"]), 260),
+                    "status": "supported" if evidence_ids else "needs_evidence",
+                    "evidence_ids": evidence_ids[:8],
+                    "source_chunk_id": chunk["chunk_id"],
+                    "doc_version_id": chunk["doc_version_id"],
+                }
+            )
+        return claims
+
+    def _citations(self, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        citations: list[dict[str, Any]] = []
+        seen = set()
+        for chunk in chunks:
+            for evidence_id in chunk.get("evidence_ids") or []:
+                if evidence_id in seen:
+                    continue
+                seen.add(evidence_id)
+                citations.append(
+                    {
+                        "evidence_id": evidence_id,
+                        "chunk_id": chunk["chunk_id"],
+                        "file_id": chunk["file_id"],
+                        "doc_version_id": chunk["doc_version_id"],
+                        "source": "EvidenceAnchor",
+                    }
+                )
+        return citations
+
+    def _disputes(self, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        dispute_markers = ("conflict", "dispute", "contradict", "风险", "冲突", "争议")
+        disputes = []
+        for chunk in chunks:
+            text = chunk["text"]
+            if any(marker in text.lower() for marker in dispute_markers):
+                disputes.append(
+                    {
+                        "status": "needs_review",
+                        "summary": self._trim(self._first_sentence(text), 220),
+                        "source_chunk_id": chunk["chunk_id"],
+                        "evidence_ids": list(chunk.get("evidence_ids") or [])[:8],
+                    }
+                )
+        if disputes:
+            return disputes
+        return [
+            {
+                "status": "none_detected",
+                "summary": "No explicit contradiction markers were found in the current evidence bundle.",
+                "evidence_ids": self._collect_evidence_ids(chunks)[:8],
+            }
+        ]
+
+    def _open_questions(self, page_type: str, title: str, chunks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        evidence_ids = self._collect_evidence_ids(chunks)
+        return [
+            {
+                "question": f"Which claims on {title} still need human review before publication?",
+                "reason": "manual_review_required",
+                "evidence_ids": evidence_ids[:8],
+            },
+            {
+                "question": f"Has any source chunk for this {page_type} changed since the latest DocumentVersion?",
+                "reason": "freshness_check",
+                "evidence_ids": evidence_ids[:8],
+            },
+        ]
+
+    def _review_state(self) -> dict[str, Any]:
+        return {
+            "status": "pending_review",
+            "required": True,
+            "reviewed_by": None,
+            "reviewed_at": None,
+        }
+
+    def _evidence_coverage(
+        self,
+        claims: list[dict[str, Any]],
+        citations: list[dict[str, Any]],
+        evidence_ids: list[str],
+    ) -> dict[str, Any]:
+        claim_count = len(claims)
+        covered_claim_count = sum(1 for claim in claims if claim.get("evidence_ids"))
+        ratio = 1.0 if claim_count == 0 else covered_claim_count / claim_count
+        return {
+            "status": "covered" if evidence_ids and ratio >= 1.0 else "partial",
+            "ratio": round(ratio, 6),
+            "claim_count": claim_count,
+            "covered_claim_count": covered_claim_count,
+            "citation_count": len(citations),
+            "evidence_count": len(evidence_ids),
+        }
+
+    def _citation_suffix(self, evidence_ids: list[str]) -> str:
+        if not evidence_ids:
+            return "`unsupported`"
+        return " ".join(f"`{evidence_id}`" for evidence_id in evidence_ids[:3])
 
     def _extract_topics(self, source_chunks: list[dict[str, Any]], *, max_topics: int) -> list[str]:
         counter: Counter[str] = Counter()

@@ -1223,6 +1223,44 @@ async def list_worldline_relationships(
         raise HTTPException(status_code=500, detail=f"查询 Worldline relationships 失败: {e}")
 
 
+@knowledge.get("/databases/{db_id}/graph/conflicts")
+async def list_worldline_graph_conflicts(
+    db_id: str,
+    limit: int = Query(500, ge=1, le=500),
+    current_user: User = Depends(get_admin_user),
+):
+    """检测 Graphiti 风格 temporal fact 冲突，返回待人工审核项。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().detect_temporal_conflicts(db_id, limit=limit)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline graph conflicts 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline graph conflicts 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/graph/neo4j-projection")
+async def get_worldline_neo4j_projection(
+    db_id: str,
+    limit: int = Query(500, ge=1, le=500),
+    current_user: User = Depends(get_admin_user),
+):
+    """返回只读 Neo4j projection payload；不直接写外部图数据库。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().build_neo4j_projection(db_id, limit=limit)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"生成 Worldline Neo4j projection 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"生成 Worldline Neo4j projection 失败: {e}")
+
+
 @knowledge.get("/databases/{db_id}/timeline")
 async def list_worldline_timeline(
     db_id: str,

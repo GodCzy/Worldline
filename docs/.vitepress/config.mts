@@ -31,6 +31,8 @@ export default defineConfig({
         text: 'Architecture',
         items: [
           { text: 'Knowledge Compiler', link: '/architecture/knowledge-compiler' },
+          { text: 'LLM Wiki', link: '/architecture/llm-wiki' },
+          { text: 'Temporal Evidence Graph', link: '/architecture/temporal-evidence-graph' },
           { text: 'Worldline UI', link: '/architecture/worldline-ui' },
           { text: 'MCP And Skill Governance', link: '/architecture/mcp-skill-governance' },
           { text: 'Evaluation Gates', link: '/architecture/evaluation-gates' }

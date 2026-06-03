@@ -124,6 +124,29 @@ async def test_phase5_graph_timeline_and_stale_detector(sqlite_pg_manager) -> No
     timeline = await KnowledgeGraphService().list_timeline("kb_phase5")
     assert timeline["items"][0]["occurred_at"].startswith("2026-06-03")
     assert timeline["items"][0]["evidence_ids"]
+    assert timeline["items"][0]["metadata"]["episode"]["episode_type"] == "temporal_fact"
+    assert timeline["items"][0]["metadata"]["provenance"]["source"] == "EvidenceAnchor"
+    assert timeline["items"][0]["metadata"]["validity_window"]["valid_from"].startswith("2026-06-03")
+
+    entities = await KnowledgeGraphService().list_entities("kb_phase5")
+    assert entities["items"][0]["metadata"]["episodes"][0]["episode_type"] == "entity_mention"
+    assert entities["items"][0]["metadata"]["provenance"]["evidence_count"] >= 1
+    assert entities["items"][0]["metadata"]["validity_window"]["basis"] == "source_doc_versions"
+
+    relationships = await KnowledgeGraphService().list_relationships("kb_phase5")
+    assert relationships["items"][0]["metadata"]["episodes"][0]["episode_type"] == "relationship_co_mention"
+    assert relationships["items"][0]["metadata"]["direction"] == "undirected_co_mention"
+
+    conflicts = await KnowledgeGraphService().detect_temporal_conflicts("kb_phase5")
+    assert conflicts["status"] == "clean"
+    assert conflicts["conflict_count"] == 0
+
+    projection = await KnowledgeGraphService().build_neo4j_projection("kb_phase5")
+    assert projection["storage"]["target"] == "neo4j"
+    assert projection["storage"]["write_enabled"] is False
+    assert projection["nodes"]
+    assert projection["relationships"]
+    assert projection["temporal_facts"]
 
     stale = await KnowledgeGraphService().detect_stale_pages("kb_phase5")
     assert stale["stale_count"] == 0
@@ -179,7 +202,9 @@ async def test_phase7_quality_gate_builds_golden_set_and_replay(sqlite_pg_manage
     assert gate["metrics"]["context_precision"] >= 0.80
     assert gate["metrics"]["golden_item_count"] >= 1
     assert gate["metrics"]["stale_page_count"] == 0
+    assert gate["metrics"]["temporal_conflict_count"] == 0
     assert gate["coverage_map"]["graph"]["covered"] is True
+    assert gate["coverage_map"]["graph"]["conflicts"] == 0
     assert gate["coverage_map"]["timeline"]["covered"] is True
     assert gate["coverage_map"]["wiki"]["covered"] is True
     assert gate["coverage_map"]["production"]["permission_checks"] is True

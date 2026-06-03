@@ -29,6 +29,8 @@ Worldline 当前主线是 Evidence-backed LLM Wiki + Temporal Knowledge Graph OS
 
 - [Worldline Project Book](./product/worldline-project-book.md)
 - [Knowledge Compiler Architecture](./architecture/knowledge-compiler.md)
+- [LLM Wiki Architecture](./architecture/llm-wiki.md)
+- [Temporal Evidence Graph Architecture](./architecture/temporal-evidence-graph.md)
 - [Worldline UI Architecture](./architecture/worldline-ui.md)
 - [MCP And Skill Governance](./architecture/mcp-skill-governance.md)
 - [Evaluation Gates](./architecture/evaluation-gates.md)

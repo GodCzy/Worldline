@@ -133,6 +133,7 @@ class WikiRepository:
         return f"wiki_{hashstr(f'{db_id}:{page_type}:{stable_source}:{slug}', length=32)}"
 
     def serialize_page(self, page: WikiPage, *, include_markdown: bool) -> dict[str, Any]:
+        metadata = page.page_metadata or {}
         payload = {
             "page_id": page.page_id,
             "db_id": page.db_id,
@@ -144,7 +145,16 @@ class WikiRepository:
             "evidence_ids": page.evidence_ids or [],
             "freshness": page.freshness or {},
             "status": page.status,
-            "metadata": page.page_metadata or {},
+            "review": metadata.get("review") or {},
+            "evidence_coverage": metadata.get("evidence_coverage") or {},
+            "outline": metadata.get("outline") or {},
+            "sections": metadata.get("sections") or [],
+            "claims": metadata.get("claims") or [],
+            "citations": metadata.get("citations") or [],
+            "disputes": metadata.get("disputes") or [],
+            "open_questions": metadata.get("open_questions") or [],
+            "rag_role": metadata.get("rag_role") or {},
+            "metadata": metadata,
             "generated_at": page.generated_at.isoformat() if page.generated_at else None,
             "updated_at": page.updated_at.isoformat() if page.updated_at else None,
         }

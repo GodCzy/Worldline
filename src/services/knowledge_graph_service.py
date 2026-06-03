@@ -56,6 +56,7 @@ class KnowledgeGraphService:
         entity_by_name = {entity["name"].lower(): entity for entity in entities}
         relationships = self._extract_relationships(db_id, source_chunks, entity_by_name)
         temporal_facts = self._extract_temporal_facts(db_id, source_chunks, entity_by_name)
+        conflicts = self._detect_conflicts_from_facts(temporal_facts)
 
         await self.repository.insert_entities(entities)
         await self.repository.insert_relationships(relationships)
@@ -74,6 +75,12 @@ class KnowledgeGraphService:
                 "relationships": sum(1 for rel in relationships if rel["evidence_ids"]),
                 "temporal_facts": sum(1 for fact in temporal_facts if fact["evidence_ids"]),
             },
+            "storage": {
+                "primary": "postgres_evidence_graph",
+                "neo4j_projection": "available",
+                "external_neo4j_write": False,
+            },
+            "conflicts": conflicts,
         }
 
     async def list_entities(self, db_id: str, *, limit: int = 100, offset: int = 0) -> dict[str, Any]:
@@ -84,6 +91,80 @@ class KnowledgeGraphService:
 
     async def list_timeline(self, db_id: str, *, limit: int = 100, offset: int = 0) -> dict[str, Any]:
         return await self.repository.list_timeline(db_id, limit=limit, offset=offset)
+
+    async def detect_temporal_conflicts(self, db_id: str, *, limit: int = 500) -> dict[str, Any]:
+        timeline = await self.repository.list_timeline(db_id, limit=limit)
+        return self._detect_conflicts_from_serialized(db_id, timeline["items"])
+
+    async def build_neo4j_projection(self, db_id: str, *, limit: int = 500) -> dict[str, Any]:
+        entities = (await self.repository.list_entities(db_id, limit=limit))["items"]
+        relationships = (await self.repository.list_relationships(db_id, limit=limit))["items"]
+        timeline = (await self.repository.list_timeline(db_id, limit=limit))["items"]
+        return {
+            "db_id": db_id,
+            "status": "ready" if entities or relationships or timeline else "empty",
+            "storage": {
+                "target": "neo4j",
+                "write_enabled": False,
+                "projection_only": True,
+                "service_boundary": "KnowledgeGraphService",
+            },
+            "nodes": [
+                {
+                    "id": entity["entity_id"],
+                    "labels": ["WorldlineEntity", self._neo4j_label(entity["entity_type"])],
+                    "properties": {
+                        "db_id": db_id,
+                        "name": entity["name"],
+                        "entity_type": entity["entity_type"],
+                        "aliases": entity["aliases"],
+                        "evidence_ids": entity["evidence_ids"],
+                        "source_chunk_ids": entity["source_chunk_ids"],
+                        **(entity.get("metadata") or {}),
+                    },
+                }
+                for entity in entities
+            ],
+            "relationships": [
+                {
+                    "id": relationship["relationship_id"],
+                    "type": relationship["relation_type"].upper(),
+                    "source": relationship["source_entity_id"],
+                    "target": relationship["target_entity_id"],
+                    "properties": {
+                        "db_id": db_id,
+                        "weight": relationship["weight"],
+                        "evidence_ids": relationship["evidence_ids"],
+                        "source_chunk_ids": relationship["source_chunk_ids"],
+                        **(relationship.get("metadata") or {}),
+                    },
+                }
+                for relationship in relationships
+            ],
+            "temporal_facts": [
+                {
+                    "id": fact["fact_id"],
+                    "labels": ["TemporalFact"],
+                    "properties": {
+                        "db_id": db_id,
+                        "subject": fact["subject"],
+                        "predicate": fact["predicate"],
+                        "object": fact["object"],
+                        "occurred_at": fact["occurred_at"],
+                        "source_entity_id": fact["source_entity_id"],
+                        "evidence_ids": fact["evidence_ids"],
+                        "source_chunk_ids": fact["source_chunk_ids"],
+                        **(fact.get("metadata") or {}),
+                    },
+                }
+                for fact in timeline
+            ],
+            "cypher_contract": {
+                "entity_merge": "MERGE (e:WorldlineEntity {entity_id: $id}) SET e += $properties",
+                "relationship_merge": "MATCH (s:WorldlineEntity {entity_id: $source}), (t:WorldlineEntity {entity_id: $target}) MERGE (s)-[r:CO_MENTIONS {relationship_id: $id}]->(t) SET r += $properties",
+                "temporal_fact_merge": "MERGE (f:TemporalFact {fact_id: $id}) SET f += $properties",
+            },
+        }
 
     async def detect_stale_pages(self, db_id: str) -> dict[str, Any]:
         pages = await self.repository.list_wiki_pages(db_id)
@@ -175,6 +256,13 @@ class KnowledgeGraphService:
                     "entity_metadata": {
                         "mention_count": counter[name],
                         "file_ids": sorted({chunk["file_id"] for chunk in chunks}),
+                        "episodes": [
+                            self._episode(db_id, "entity_mention", chunk, subject=display_name)
+                            for chunk in chunks[:20]
+                        ],
+                        "provenance": self._provenance(chunks),
+                        "validity_window": self._validity_window(chunks),
+                        "graphiti_pattern": "episode_entity",
                     },
                 }
             )
@@ -218,6 +306,19 @@ class KnowledgeGraphService:
                         "source_name": left_entity["name"],
                         "target_name": right_entity["name"],
                         "co_mention_count": len(chunks),
+                        "episodes": [
+                            self._episode(
+                                db_id,
+                                "relationship_co_mention",
+                                chunk,
+                                subject=f"{left_entity['name']}->{right_entity['name']}",
+                            )
+                            for chunk in chunks[:20]
+                        ],
+                        "provenance": self._provenance(chunks),
+                        "validity_window": self._validity_window(chunks),
+                        "direction": "undirected_co_mention",
+                        "graphiti_pattern": "episode_relationship",
                     },
                 }
             )
@@ -238,6 +339,7 @@ class KnowledgeGraphService:
             for match in self.DATE_RE.finditer(text):
                 occurred_at = self._parse_date_match(match)
                 object_text = self._trim(self._first_sentence(text), 280)
+                episode = self._episode(db_id, "temporal_fact", chunk, subject=subject)
                 facts.append(
                     {
                         "fact_id": self._temporal_fact_id(db_id, subject, occurred_at.isoformat(), chunk["chunk_id"]),
@@ -254,10 +356,133 @@ class KnowledgeGraphService:
                             "file_id": chunk["file_id"],
                             "filename": chunk.get("filename"),
                             "matched_text": match.group(0),
+                            "episode": episode,
+                            "provenance": self._provenance([chunk]),
+                            "validity_window": {
+                                "valid_from": occurred_at.isoformat(),
+                                "valid_to": None,
+                                "invalidated_at": None,
+                                "basis": "date_mention",
+                            },
+                            "graphiti_pattern": "episode_temporal_fact",
                         },
                     }
                 )
         return facts
+
+    def _episode(self, db_id: str, episode_type: str, chunk: dict[str, Any], *, subject: str) -> dict[str, Any]:
+        evidence_ids = list(chunk.get("evidence_ids") or [])
+        episode_key = f"{db_id}:{episode_type}:{subject}:{chunk['chunk_id']}"
+        return {
+            "episode_id": f"ep_{hashstr(episode_key, length=32)}",
+            "episode_type": episode_type,
+            "subject": subject,
+            "file_id": chunk["file_id"],
+            "filename": chunk.get("filename"),
+            "doc_version_id": chunk["doc_version_id"],
+            "chunk_id": chunk["chunk_id"],
+            "evidence_ids": evidence_ids,
+            "source": "KnowledgeChunk",
+        }
+
+    def _provenance(self, chunks: list[dict[str, Any]]) -> dict[str, Any]:
+        evidence_ids = self._collect_evidence_ids(chunks)
+        return {
+            "source": "EvidenceAnchor",
+            "file_ids": sorted({chunk["file_id"] for chunk in chunks}),
+            "doc_version_ids": sorted({chunk["doc_version_id"] for chunk in chunks}),
+            "source_chunk_ids": [chunk["chunk_id"] for chunk in chunks[:50]],
+            "evidence_ids": evidence_ids,
+            "evidence_count": len(evidence_ids),
+        }
+
+    def _validity_window(self, chunks: list[dict[str, Any]]) -> dict[str, Any]:
+        doc_versions = sorted({chunk["doc_version_id"] for chunk in chunks})
+        return {
+            "valid_from": None,
+            "valid_to": None,
+            "invalidated_at": None,
+            "basis": "source_doc_versions",
+            "source_doc_version_ids": doc_versions,
+        }
+
+    def _detect_conflicts_from_facts(self, facts: list[dict[str, Any]]) -> dict[str, Any]:
+        grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+        for fact in facts:
+            key = (fact["subject"].lower(), fact["predicate"], fact["occurred_at"].date().isoformat())
+            grouped[key].append(fact)
+
+        conflicts = []
+        for (subject, predicate, occurred_at), group in grouped.items():
+            objects = {item["object"] for item in group}
+            if len(objects) <= 1:
+                continue
+            conflicts.append(
+                {
+                    "subject": subject,
+                    "predicate": predicate,
+                    "occurred_at": occurred_at,
+                    "object_count": len(objects),
+                    "fact_ids": [item["fact_id"] for item in group],
+                    "evidence_ids": self._collect_fact_evidence_ids(group),
+                    "status": "needs_review",
+                }
+            )
+        return {
+            "status": "clean" if not conflicts else "needs_review",
+            "conflict_count": len(conflicts),
+            "items": conflicts,
+        }
+
+    def _detect_conflicts_from_serialized(self, db_id: str, facts: list[dict[str, Any]]) -> dict[str, Any]:
+        grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
+        for fact in facts:
+            date = str(fact.get("occurred_at") or "")[:10]
+            key = (str(fact.get("subject") or "").lower(), str(fact.get("predicate") or ""), date)
+            grouped[key].append(fact)
+
+        conflicts = []
+        for (subject, predicate, occurred_at), group in grouped.items():
+            objects = {str(item.get("object") or "") for item in group}
+            if len(objects) <= 1:
+                continue
+            conflicts.append(
+                {
+                    "subject": subject,
+                    "predicate": predicate,
+                    "occurred_at": occurred_at,
+                    "object_count": len(objects),
+                    "fact_ids": [item["fact_id"] for item in group],
+                    "evidence_ids": self._collect_serialized_fact_evidence_ids(group),
+                    "status": "needs_review",
+                }
+            )
+        return {
+            "db_id": db_id,
+            "status": "clean" if not conflicts else "needs_review",
+            "conflict_count": len(conflicts),
+            "items": conflicts,
+        }
+
+    def _collect_fact_evidence_ids(self, facts: list[dict[str, Any]]) -> list[str]:
+        evidence_ids: list[str] = []
+        for fact in facts:
+            for evidence_id in fact.get("evidence_ids") or []:
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+        return evidence_ids
+
+    def _collect_serialized_fact_evidence_ids(self, facts: list[dict[str, Any]]) -> list[str]:
+        evidence_ids: list[str] = []
+        for fact in facts:
+            for evidence_id in fact.get("evidence_ids") or []:
+                if evidence_id not in evidence_ids:
+                    evidence_ids.append(evidence_id)
+        return evidence_ids
+
+    def _neo4j_label(self, value: str | None) -> str:
+        cleaned = re.sub(r"[^A-Za-z0-9]+", "_", value or "Concept").strip("_")
+        return cleaned[:1].upper() + cleaned[1:] if cleaned else "Concept"
 
     def _tokens(self, text: str) -> list[str]:
         raw_tokens = re.findall(r"[A-Za-z][A-Za-z0-9_-]{2,}|[\u4e00-\u9fff]{2,8}", text or "")

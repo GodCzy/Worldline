@@ -114,6 +114,18 @@ async def test_auto_wiki_rebuild_generates_page_types_and_backlinks(sqlite_pg_ma
     assert full_document_page is not None
     assert full_document_page["freshness"]["status"] == "fresh"
     assert len(full_document_page["evidence_ids"]) == 2
+    assert full_document_page["outline"]["style"] == "storm-lite"
+    assert len(full_document_page["outline"]["perspectives"]) == 3
+    assert "## STORM Outline" in full_document_page["markdown"]
+    assert full_document_page["review"]["status"] == "pending_review"
+    assert full_document_page["evidence_coverage"]["status"] == "covered"
+    assert full_document_page["evidence_coverage"]["ratio"] == 1.0
+    assert full_document_page["citations"][0]["source"] == "EvidenceAnchor"
+    assert full_document_page["claims"][0]["status"] == "supported"
+    assert full_document_page["open_questions"]
+    assert full_document_page["disputes"][0]["status"] == "none_detected"
+    assert full_document_page["rag_role"]["primary"] is False
+    assert full_document_page["rag_role"]["role"] == "evidence_candidate_recall"
     assert any(backlink["page_type"] == "home" for backlink in full_document_page["backlinks"])
     assert any(backlink["page_type"] == "glossary" for backlink in full_document_page["backlinks"])
 

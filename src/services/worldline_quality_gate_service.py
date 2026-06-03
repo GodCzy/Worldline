@@ -30,6 +30,7 @@ class WorldlineQualityGateService:
         "context_precision_min": 0.80,
         "golden_items_min": 1,
         "stale_pages_max": 0,
+        "temporal_conflicts_max": 0,
         "permission_checks_required": True,
     }
 
@@ -126,11 +127,12 @@ class WorldlineQualityGateService:
             golden_items = await self.repository.list_golden_set(db_id)
 
         stale_report = await self.graph_service.detect_stale_pages(db_id)
+        conflict_report = await self.graph_service.detect_temporal_conflicts(db_id)
         counts = await self._collect_counts(db_id)
         evidence_accuracy = await self._calculate_evidence_accuracy(db_id, counts)
         context_scores = self._calculate_context_scores(golden_items, evidence_accuracy)
         permission_checks = self._permission_checks()
-        coverage_map = self._coverage_map(counts, stale_report, golden_items)
+        coverage_map = self._coverage_map(counts, stale_report, conflict_report, golden_items)
 
         metrics = {
             "evidence_accuracy": evidence_accuracy,
@@ -143,6 +145,7 @@ class WorldlineQualityGateService:
             "temporal_fact_count": counts["temporal_facts"],
             "wiki_page_count": counts["wiki_pages"],
             "stale_page_count": stale_report["stale_count"],
+            "temporal_conflict_count": conflict_report["conflict_count"],
             "permission_checks_passed": permission_checks["passed"],
         }
 
@@ -277,13 +280,17 @@ class WorldlineQualityGateService:
         self,
         counts: dict[str, int],
         stale_report: dict[str, Any],
+        conflict_report: dict[str, Any],
         golden_items: list[GoldenSetItem],
     ) -> dict[str, Any]:
         return {
             "graph": {
                 "entities": counts["entities"],
                 "relationships": counts["relationships"],
-                "covered": counts["entities"] > 0 and counts["relationships"] > 0,
+                "conflicts": conflict_report["conflict_count"],
+                "covered": counts["entities"] > 0
+                and counts["relationships"] > 0
+                and conflict_report["conflict_count"] == 0,
             },
             "timeline": {
                 "temporal_facts": counts["temporal_facts"],
@@ -359,6 +366,14 @@ class WorldlineQualityGateService:
                     "check": "stale_pages",
                     "observed": metrics["stale_page_count"],
                     "expected": f"<= {thresholds['stale_pages_max']}",
+                }
+            )
+        if metrics["temporal_conflict_count"] > int(thresholds["temporal_conflicts_max"]):
+            failures.append(
+                {
+                    "check": "temporal_conflicts",
+                    "observed": metrics["temporal_conflict_count"],
+                    "expected": f"<= {thresholds['temporal_conflicts_max']}",
                 }
             )
         if thresholds.get("permission_checks_required") and not permission_checks["passed"]:
