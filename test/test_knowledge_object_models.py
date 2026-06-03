@@ -6,9 +6,15 @@ from src.storage.postgres.models_knowledge import (
     DocumentNode,
     DocumentVersion,
     EvidenceAnchor,
+    GoldenSetItem,
     KnowledgeChunk,
+    KnowledgeEntity,
+    KnowledgeRelationship,
+    QualityGateRun,
     SourceAsset,
+    TemporalFact,
     WikiPage,
+    WorldlineWorkflowRun,
 )
 
 
@@ -18,8 +24,14 @@ def test_phase1_knowledge_object_tables_are_registered() -> None:
         "document_versions",
         "document_nodes",
         "evidence_anchors",
+        "golden_set_items",
         "knowledge_chunks",
+        "knowledge_entities",
+        "knowledge_relationships",
+        "quality_gate_runs",
+        "temporal_facts",
         "wiki_pages",
+        "worldline_workflow_runs",
     }
 
     assert expected_tables.issubset(Base.metadata.tables.keys())
@@ -157,10 +169,114 @@ def test_wiki_page_contract_supports_auto_wiki_outputs() -> None:
     }.issubset(index_names)
 
 
+def test_knowledge_graph_contract_binds_entities_relationships_and_temporal_facts() -> None:
+    entity_table = KnowledgeEntity.__table__
+    relationship_table = KnowledgeRelationship.__table__
+    fact_table = TemporalFact.__table__
+
+    assert entity_table.columns["entity_id"].unique is True
+    assert entity_table.columns["db_id"].nullable is False
+    assert entity_table.columns["name"].nullable is False
+    assert KnowledgeEntity.entity_metadata.property.columns[0].name == "metadata"
+
+    assert relationship_table.columns["relationship_id"].unique is True
+    assert relationship_table.columns["source_entity_id"].nullable is False
+    assert relationship_table.columns["target_entity_id"].nullable is False
+    assert relationship_table.columns["relation_type"].nullable is False
+    assert KnowledgeRelationship.relationship_metadata.property.columns[0].name == "metadata"
+
+    assert fact_table.columns["fact_id"].unique is True
+    assert fact_table.columns["subject"].nullable is False
+    assert fact_table.columns["object"].nullable is False
+    assert fact_table.columns["occurred_at"].nullable is False
+    assert TemporalFact.fact_metadata.property.columns[0].name == "metadata"
+
+    fk_targets = {
+        *(fk.target_fullname for fk in entity_table.foreign_keys),
+        *(fk.target_fullname for fk in relationship_table.foreign_keys),
+        *(fk.target_fullname for fk in fact_table.foreign_keys),
+    }
+    assert "knowledge_bases.db_id" in fk_targets
+    assert "knowledge_entities.entity_id" in fk_targets
+
+    index_names = {
+        *(index.name for index in entity_table.indexes),
+        *(index.name for index in relationship_table.indexes),
+        *(index.name for index in fact_table.indexes),
+    }
+    assert {
+        "idx_knowledge_entities_db_name",
+        "idx_knowledge_entities_db_type",
+        "idx_knowledge_relationships_db_type",
+        "idx_knowledge_relationships_source",
+        "idx_knowledge_relationships_target",
+        "idx_temporal_facts_db_time",
+        "idx_temporal_facts_subject",
+    }.issubset(index_names)
+
+
+def test_workflow_and_quality_gate_contract_supports_phase6_and_phase7() -> None:
+    golden_table = GoldenSetItem.__table__
+    gate_table = QualityGateRun.__table__
+    workflow_table = WorldlineWorkflowRun.__table__
+
+    assert golden_table.columns["item_id"].unique is True
+    assert golden_table.columns["query"].nullable is False
+    assert GoldenSetItem.item_metadata.property.columns[0].name == "metadata"
+
+    assert gate_table.columns["gate_id"].unique is True
+    assert gate_table.columns["status"].nullable is False
+    assert "metrics" in gate_table.columns
+    assert "coverage_map" in gate_table.columns
+    assert "failure_replay" in gate_table.columns
+    assert "tracing" in gate_table.columns
+    assert "cost_stats" in gate_table.columns
+    assert "latency_stats" in gate_table.columns
+    assert "permission_checks" in gate_table.columns
+
+    assert workflow_table.columns["workflow_id"].unique is True
+    assert workflow_table.columns["orchestrator"].nullable is False
+    assert workflow_table.columns["dispatch_backend"].nullable is False
+    assert "steps" in workflow_table.columns
+    assert "trace" in workflow_table.columns
+
+    fk_targets = {
+        *(fk.target_fullname for fk in golden_table.foreign_keys),
+        *(fk.target_fullname for fk in gate_table.foreign_keys),
+        *(fk.target_fullname for fk in workflow_table.foreign_keys),
+    }
+    assert "knowledge_bases.db_id" in fk_targets
+
+    index_names = {
+        *(index.name for index in golden_table.indexes),
+        *(index.name for index in gate_table.indexes),
+        *(index.name for index in workflow_table.indexes),
+    }
+    assert {
+        "idx_golden_set_items_db_status",
+        "idx_quality_gate_runs_db_status",
+        "idx_quality_gate_runs_created",
+        "idx_worldline_workflow_runs_db_status",
+    }.issubset(index_names)
+
+
 def test_phase1_tables_compile_to_postgresql_ddl() -> None:
     dialect = postgresql.dialect()
 
-    for model in (SourceAsset, DocumentVersion, DocumentNode, EvidenceAnchor, KnowledgeChunk, WikiPage):
+    for model in (
+        SourceAsset,
+        DocumentVersion,
+        DocumentNode,
+        EvidenceAnchor,
+        KnowledgeChunk,
+        WikiPage,
+        KnowledgeEntity,
+        KnowledgeRelationship,
+        TemporalFact,
+        GoldenSetItem,
+        QualityGateRun,
+        WorldlineWorkflowRun,
+    ):
         ddl = str(CreateTable(model.__table__).compile(dialect=dialect))
         assert f"CREATE TABLE {model.__tablename__}" in ddl
         assert "JSONB" in ddl

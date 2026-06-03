@@ -39,6 +39,15 @@ _UNSET = object()
 
 # Default MCP Server configurations (Imported to DB on first run)
 _DEFAULT_MCP_SERVERS = {
+    "worldline": {
+        "command": "python",
+        "args": ["-m", "src.mcp.worldline_server"],
+        "env": {"PYTHONPATH": "."},
+        "transport": "stdio",
+        "description": "Worldline controlled MCP server for wiki, graph, workflow, and quality-gate tools.",
+        "icon": "W",
+        "tags": ["system", "worldline", "controlled"],
+    },
     "sequentialthinking": {
         "url": "https://remote.mcpservers.org/sequentialthinking/mcp",
         "transport": "streamable_http",
@@ -137,7 +146,7 @@ async def init_mcp_servers() -> None:
                         sse_read_timeout=config.get("sse_read_timeout"),
                         tags=config.get("tags"),
                         icon=config.get("icon"),
-                        enabled=1,
+                        enabled=config.get("enabled", 1),
                         created_by="system",
                         updated_by="system",
                     )
@@ -163,7 +172,7 @@ async def init_mcp_servers() -> None:
                             sse_read_timeout=config.get("sse_read_timeout"),
                             tags=config.get("tags"),
                             icon=config.get("icon"),
-                            enabled=1,
+                            enabled=config.get("enabled", 1),
                             created_by="system",
                             updated_by="system",
                         )

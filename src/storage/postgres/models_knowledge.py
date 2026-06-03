@@ -266,6 +266,163 @@ class WikiPage(Base):
     updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
 
 
+class KnowledgeEntity(Base):
+    """Evidence-bound extracted entity for the local Worldline graph."""
+
+    __tablename__ = "knowledge_entities"
+    __table_args__ = (
+        UniqueConstraint("entity_id", name="uq_knowledge_entities_entity_id"),
+        Index("idx_knowledge_entities_db_name", "db_id", "name"),
+        Index("idx_knowledge_entities_db_type", "db_id", "entity_type"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    entity_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(512), nullable=False, index=True)
+    entity_type = Column(String(64), nullable=False, default="concept", index=True)
+    aliases = Column(JSON_VALUE)
+    evidence_ids = Column(JSON_VALUE)
+    source_chunk_ids = Column(JSON_VALUE)
+    status = Column(String(32), nullable=False, default="active", index=True)
+    entity_metadata = Column("metadata", JSON_VALUE)
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
+class KnowledgeRelationship(Base):
+    """Evidence-bound relationship between extracted entities."""
+
+    __tablename__ = "knowledge_relationships"
+    __table_args__ = (
+        UniqueConstraint("relationship_id", name="uq_knowledge_relationships_relationship_id"),
+        Index("idx_knowledge_relationships_db_type", "db_id", "relation_type"),
+        Index("idx_knowledge_relationships_source", "source_entity_id"),
+        Index("idx_knowledge_relationships_target", "target_entity_id"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    relationship_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    source_entity_id = Column(
+        String(96),
+        ForeignKey("knowledge_entities.entity_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    target_entity_id = Column(
+        String(96),
+        ForeignKey("knowledge_entities.entity_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    relation_type = Column(String(64), nullable=False, default="co_mentions", index=True)
+    weight = Column(Float, nullable=False, default=1.0)
+    evidence_ids = Column(JSON_VALUE)
+    source_chunk_ids = Column(JSON_VALUE)
+    status = Column(String(32), nullable=False, default="active", index=True)
+    relationship_metadata = Column("metadata", JSON_VALUE)
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
+class TemporalFact(Base):
+    """Evidence-bound temporal fact for timelines and freshness checks."""
+
+    __tablename__ = "temporal_facts"
+    __table_args__ = (
+        UniqueConstraint("fact_id", name="uq_temporal_facts_fact_id"),
+        Index("idx_temporal_facts_db_time", "db_id", "occurred_at"),
+        Index("idx_temporal_facts_subject", "db_id", "subject"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    fact_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    subject = Column(String(512), nullable=False, index=True)
+    predicate = Column(String(128), nullable=False, default="mentioned_on")
+    object = Column(Text, nullable=False)
+    occurred_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    source_entity_id = Column(String(96), ForeignKey("knowledge_entities.entity_id", ondelete="SET NULL"), index=True)
+    evidence_ids = Column(JSON_VALUE)
+    source_chunk_ids = Column(JSON_VALUE)
+    confidence = Column(Float, nullable=False, default=1.0)
+    fact_metadata = Column("metadata", JSON_VALUE)
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+
+
+class GoldenSetItem(Base):
+    """Deterministic golden item used by Worldline quality gates."""
+
+    __tablename__ = "golden_set_items"
+    __table_args__ = (
+        UniqueConstraint("item_id", name="uq_golden_set_items_item_id"),
+        Index("idx_golden_set_items_db_status", "db_id", "status"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    item_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    query = Column(Text, nullable=False)
+    expected_evidence_ids = Column(JSON_VALUE)
+    expected_entity_ids = Column(JSON_VALUE)
+    coverage_tags = Column(JSON_VALUE)
+    status = Column(String(32), nullable=False, default="active", index=True)
+    item_metadata = Column("metadata", JSON_VALUE)
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
+class QualityGateRun(Base):
+    """Worldline evaluation and production-readiness gate run."""
+
+    __tablename__ = "quality_gate_runs"
+    __table_args__ = (
+        UniqueConstraint("gate_id", name="uq_quality_gate_runs_gate_id"),
+        Index("idx_quality_gate_runs_db_status", "db_id", "status"),
+        Index("idx_quality_gate_runs_created", "db_id", "created_at"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    gate_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    status = Column(String(32), nullable=False, default="running", index=True)
+    thresholds = Column(JSON_VALUE)
+    metrics = Column(JSON_VALUE)
+    coverage_map = Column(JSON_VALUE)
+    failure_replay = Column(JSON_VALUE)
+    tracing = Column(JSON_VALUE)
+    cost_stats = Column(JSON_VALUE)
+    latency_stats = Column(JSON_VALUE)
+    permission_checks = Column(JSON_VALUE)
+    created_by = Column(String(128))
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    completed_at = Column(DateTime(timezone=True))
+
+
+class WorldlineWorkflowRun(Base):
+    """LangGraph-shaped workflow plan with ARQ dispatch metadata."""
+
+    __tablename__ = "worldline_workflow_runs"
+    __table_args__ = (
+        UniqueConstraint("workflow_id", name="uq_worldline_workflow_runs_workflow_id"),
+        Index("idx_worldline_workflow_runs_db_status", "db_id", "status"),
+    )
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    workflow_id = Column(String(96), unique=True, nullable=False, index=True)
+    db_id = Column(String(80), ForeignKey("knowledge_bases.db_id", ondelete="CASCADE"), nullable=False, index=True)
+    workflow_type = Column(String(64), nullable=False, default="knowledge_refresh", index=True)
+    status = Column(String(32), nullable=False, default="planned", index=True)
+    orchestrator = Column(String(64), nullable=False, default="langgraph")
+    dispatch_backend = Column(String(64), nullable=False, default="arq")
+    steps = Column(JSON_VALUE)
+    trace = Column(JSON_VALUE)
+    created_by = Column(String(128))
+    created_at = Column(DateTime(timezone=True), default=utc_now_naive, index=True)
+    updated_at = Column(DateTime(timezone=True), default=utc_now_naive, onupdate=utc_now_naive)
+
+
 class EvaluationBenchmark(Base):
     """评估基准模型"""
 

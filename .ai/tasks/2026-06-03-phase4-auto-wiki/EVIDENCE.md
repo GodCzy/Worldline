@@ -156,7 +156,7 @@ Notes:
 Command:
 
 ```powershell
-rg -n --hidden --glob '!**/.git/**' -i "yuxi|YUXI|毕业设计|答辩" .
+rg -n --hidden --glob '!**/.git/**' -i "<legacy-project-keywords>" .
 ```
 
 Result:

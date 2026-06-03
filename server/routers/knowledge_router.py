@@ -1093,6 +1093,214 @@ async def get_wiki_page(
         raise HTTPException(status_code=500, detail=f"查询 Auto-Wiki 页面失败: {e}")
 
 
+@knowledge.get("/databases/{db_id}/wiki/stale-pages")
+async def detect_stale_wiki_pages(
+    db_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """检测 Auto-Wiki 页面 freshness 是否落后于当前 chunks。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().detect_stale_pages(db_id)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"检测 Wiki stale pages 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"检测 Wiki stale pages 失败: {e}")
+
+
+@knowledge.post("/databases/{db_id}/graph/rebuild")
+async def rebuild_worldline_graph(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """重建 evidence-bound 本地图谱和 timeline。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        payload = payload or {}
+        return await KnowledgeGraphService().rebuild_graph(db_id, max_entities=payload.get("max_entities", 40))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"重建 Worldline graph 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"重建 Worldline graph 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/graph/entities")
+async def list_worldline_entities(
+    db_id: str,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 evidence-bound entities。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().list_entities(db_id, limit=limit, offset=offset)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline entities 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline entities 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/graph/relationships")
+async def list_worldline_relationships(
+    db_id: str,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 evidence-bound relationships。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().list_relationships(db_id, limit=limit, offset=offset)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline relationships 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline relationships 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/timeline")
+async def list_worldline_timeline(
+    db_id: str,
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_admin_user),
+):
+    """分页查询 evidence-bound TemporalFact timeline。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.knowledge_graph_service import KnowledgeGraphService
+
+        return await KnowledgeGraphService().list_timeline(db_id, limit=limit, offset=offset)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline timeline 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline timeline 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/worldline-mcp/manifest")
+async def get_worldline_mcp_manifest(
+    db_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """获取受控 Worldline MCP Server manifest。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_agent_workflow_service import WorldlineAgentWorkflowService
+
+        manifest = WorldlineAgentWorkflowService().tool_manifest()
+        return {"db_id": db_id, **manifest}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline MCP manifest 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline MCP manifest 失败: {e}")
+
+
+@knowledge.post("/databases/{db_id}/worldline-workflows/plan")
+async def plan_worldline_workflow(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """生成 LangGraph-shaped workflow plan，并记录 ARQ dispatch 元数据。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_agent_workflow_service import WorldlineAgentWorkflowService
+
+        payload = payload or {}
+        return await WorldlineAgentWorkflowService().plan_workflow(
+            db_id,
+            workflow_type=payload.get("workflow_type", "knowledge_refresh"),
+            requested_steps=payload.get("requested_steps"),
+            created_by=current_user.username,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"规划 Worldline workflow 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"规划 Worldline workflow 失败: {e}")
+
+
+@knowledge.post("/databases/{db_id}/golden-set/build")
+async def build_worldline_golden_set(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """构建 deterministic golden set。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_quality_gate_service import WorldlineQualityGateService
+
+        payload = payload or {}
+        return await WorldlineQualityGateService().build_golden_set(db_id, limit=payload.get("limit", 20))
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"构建 Worldline golden set 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"构建 Worldline golden set 失败: {e}")
+
+
+@knowledge.post("/databases/{db_id}/quality-gates/run")
+async def run_worldline_quality_gate(
+    db_id: str,
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """运行阶段七质量门禁，输出 coverage map 和 failure replay。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_quality_gate_service import WorldlineQualityGateService
+
+        payload = payload or {}
+        return await WorldlineQualityGateService().run_gate(
+            db_id,
+            thresholds=payload.get("thresholds") or {},
+            created_by=current_user.username,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"运行 Worldline quality gate 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"运行 Worldline quality gate 失败: {e}")
+
+
+@knowledge.get("/databases/{db_id}/quality-gates/{gate_id}")
+async def get_worldline_quality_gate(
+    db_id: str,
+    gate_id: str,
+    current_user: User = Depends(get_admin_user),
+):
+    """查询单次 quality gate run。"""
+    try:
+        await _ensure_database_exists(db_id)
+        from src.services.worldline_quality_gate_service import WorldlineQualityGateService
+
+        run = await WorldlineQualityGateService().get_gate_run(db_id, gate_id)
+        if run is None:
+            raise HTTPException(status_code=404, detail=f"Quality gate {gate_id} 不存在")
+        return run
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"查询 Worldline quality gate 失败 {e}, {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"查询 Worldline quality gate 失败: {e}")
+
+
 @knowledge.put("/databases/{db_id}/query-params")
 async def update_knowledge_base_query_params(
     db_id: str, params: dict = Body(...), current_user: User = Depends(get_admin_user)
