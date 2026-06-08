@@ -57,6 +57,7 @@ class KnowledgeGraphService:
         relationships = self._extract_relationships(db_id, source_chunks, entity_by_name)
         temporal_facts = self._extract_temporal_facts(db_id, source_chunks, entity_by_name)
         conflicts = self._detect_conflicts_from_facts(temporal_facts)
+        self._annotate_temporal_fact_conflicts(temporal_facts, conflicts)
 
         await self.repository.insert_entities(entities)
         await self.repository.insert_relationships(relationships)
@@ -419,10 +420,12 @@ class KnowledgeGraphService:
                 continue
             conflicts.append(
                 {
+                    "conflict_key": f"{subject}|{predicate}|{occurred_at}",
                     "subject": subject,
                     "predicate": predicate,
                     "occurred_at": occurred_at,
                     "object_count": len(objects),
+                    "objects": sorted(objects),
                     "fact_ids": [item["fact_id"] for item in group],
                     "evidence_ids": self._collect_fact_evidence_ids(group),
                     "status": "needs_review",
@@ -448,10 +451,12 @@ class KnowledgeGraphService:
                 continue
             conflicts.append(
                 {
+                    "conflict_key": f"{subject}|{predicate}|{occurred_at}",
                     "subject": subject,
                     "predicate": predicate,
                     "occurred_at": occurred_at,
                     "object_count": len(objects),
+                    "objects": sorted(objects),
                     "fact_ids": [item["fact_id"] for item in group],
                     "evidence_ids": self._collect_serialized_fact_evidence_ids(group),
                     "status": "needs_review",
@@ -463,6 +468,28 @@ class KnowledgeGraphService:
             "conflict_count": len(conflicts),
             "items": conflicts,
         }
+
+    def _annotate_temporal_fact_conflicts(
+        self,
+        facts: list[dict[str, Any]],
+        conflict_report: dict[str, Any],
+    ) -> None:
+        conflict_by_fact_id: dict[str, dict[str, Any]] = {}
+        for conflict in conflict_report.get("items") or []:
+            for fact_id in conflict.get("fact_ids") or []:
+                conflict_by_fact_id[fact_id] = {
+                    "status": "needs_review",
+                    "conflict_key": conflict.get("conflict_key"),
+                    "related_fact_ids": list(conflict.get("fact_ids") or []),
+                    "evidence_ids": list(conflict.get("evidence_ids") or []),
+                    "object_count": conflict.get("object_count", 0),
+                    "objects": list(conflict.get("objects") or []),
+                }
+
+        for fact in facts:
+            metadata = dict(fact.get("fact_metadata") or {})
+            metadata["conflict"] = conflict_by_fact_id.get(fact["fact_id"], {"status": "clean"})
+            fact["fact_metadata"] = metadata
 
     def _collect_fact_evidence_ids(self, facts: list[dict[str, Any]]) -> list[str]:
         evidence_ids: list[str] = []

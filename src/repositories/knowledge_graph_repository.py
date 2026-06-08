@@ -244,6 +244,8 @@ class KnowledgeGraphRepository:
         }
 
     def serialize_temporal_fact(self, fact: TemporalFact) -> dict[str, Any]:
+        metadata = fact.fact_metadata or {}
+        conflict = metadata.get("conflict") or {}
         return {
             "fact_id": fact.fact_id,
             "db_id": fact.db_id,
@@ -255,7 +257,8 @@ class KnowledgeGraphRepository:
             "evidence_ids": fact.evidence_ids or [],
             "source_chunk_ids": fact.source_chunk_ids or [],
             "confidence": fact.confidence,
-            "metadata": fact.fact_metadata or {},
+            "conflict_status": conflict.get("status", "clean"),
+            "metadata": metadata,
             "created_at": fact.created_at.isoformat() if fact.created_at else None,
         }
 

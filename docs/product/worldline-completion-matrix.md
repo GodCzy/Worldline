@@ -32,7 +32,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Slice | Current Status | Still Needed | Recommended Plugins / Tools |
 |---|---|---|---|
 | P3-1 Evidence-backed LLM Wiki | Done | Keep expanding stale/review workflow in later slices; current reading surface is implemented and QA evidence exists. | Browser, OpenAI Developers as needed |
-| P3-2 Temporal Knowledge Graph | Partial | DB-level graph/timeline entities, relationships, conflicts, Neo4j projection, timeline fact regression, and UI focus. | Build Web Data Visualization, Browser |
+| P3-2 Temporal Knowledge Graph | Partial | Temporal conflict review backend is done; still needs `/graph` UI conflict surface, Worldline graph/timeline focus links, and screenshots. | Build Web Data Visualization, Browser |
 | P3-3 Worldline Branch Canvas | Partial | RouteTrace, quality status, insufficient-evidence hints, and mobile interaction regression. | Browser, Product Design, Data Visualization |
 | P3-4 Agent Run Ledger And Replay | Verified Baseline | Continue productizing replay, pagination, artifact registry, and cross-run knowledge reads. | GitHub, Browser |
 | P3-5 MCP And Skill Governance | Partial | Tool manifest governance report, disabled-tool release gate, connector rollback evidence. | GitHub, OpenAI Developers |

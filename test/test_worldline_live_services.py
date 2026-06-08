@@ -109,6 +109,84 @@ async def _seed_live_chunks(db_id: str = "kb_live", file_id: str = "file_live") 
     )
 
 
+async def _seed_conflicting_temporal_chunks(db_id: str = "kb_conflict", file_id: str = "file_conflict") -> None:
+    first = "Graph shipped on 2026-06-03 with evidence path A."
+    second = "Graph paused on 2026-06-03 because review path B was unresolved."
+    text = "\n\n".join(["# Conflicting Graph Notes", first, second])
+
+    async with pg_manager.get_async_session_context() as session:
+        session.add(KnowledgeBase(db_id=db_id, name="Conflicting Graph KB", kb_type="milvus"))
+        session.add(KnowledgeFile(file_id=file_id, db_id=db_id, filename="conflicting-graph-notes.md"))
+
+    compiled = CompiledDocument(
+        source_uri="conflicting-graph-notes.md",
+        title="conflicting-graph-notes.md",
+        asset_type="file",
+        markdown_content=text,
+        parser="legacy_markdown",
+        parser_version=None,
+        status="success",
+        content_hash="hash_conflicting_content",
+        ast_hash="hash_conflicting_ast",
+        parse_config={"db_id": db_id},
+        parser_trace=[{"parser": "legacy_markdown", "status": "success"}],
+        stats={"node_count": 3, "evidence_anchor_count": 3},
+        nodes=[
+            CompiledNode(key="n0", node_type="heading", node_order=0, text="# Conflicting Graph Notes"),
+            CompiledNode(key="n1", node_type="paragraph", node_order=1, text=first),
+            CompiledNode(key="n2", node_type="paragraph", node_order=2, text=second),
+        ],
+        evidence_anchors=[
+            CompiledEvidenceAnchor(
+                node_key="n0",
+                anchor_type="text",
+                source_uri="conflicting-graph-notes.md",
+                text_excerpt="# Conflicting Graph Notes",
+                confidence=1.0,
+            ),
+            CompiledEvidenceAnchor(
+                node_key="n1",
+                anchor_type="text",
+                source_uri="conflicting-graph-notes.md",
+                text_excerpt=first,
+                confidence=0.98,
+            ),
+            CompiledEvidenceAnchor(
+                node_key="n2",
+                anchor_type="text",
+                source_uri="conflicting-graph-notes.md",
+                text_excerpt=second,
+                confidence=0.98,
+            ),
+        ],
+    )
+    await KnowledgeObjectRepository().persist_compiled_document(db_id, file_id, compiled)
+    await KnowledgeObjectRepository().bind_chunks_to_latest_evidence(
+        db_id,
+        file_id,
+        [
+            {
+                "id": f"{file_id}_chunk_0",
+                "chunk_id": f"{file_id}_chunk_0",
+                "file_id": file_id,
+                "filename": "conflicting-graph-notes.md",
+                "source": "conflicting-graph-notes.md",
+                "chunk_index": 0,
+                "content": first,
+            },
+            {
+                "id": f"{file_id}_chunk_1",
+                "chunk_id": f"{file_id}_chunk_1",
+                "file_id": file_id,
+                "filename": "conflicting-graph-notes.md",
+                "source": "conflicting-graph-notes.md",
+                "chunk_index": 1,
+                "content": second,
+            },
+        ],
+    )
+
+
 @pytest.mark.asyncio
 async def test_live_graph_timeline_and_stale_detector(sqlite_pg_manager) -> None:
     await _seed_live_chunks()
@@ -152,6 +230,48 @@ async def test_live_graph_timeline_and_stale_detector(sqlite_pg_manager) -> None
     stale = await KnowledgeGraphService().detect_stale_pages("kb_live")
     assert stale["stale_count"] == 0
     assert stale["fresh_pages"] >= 4
+
+
+@pytest.mark.asyncio
+async def test_temporal_conflicts_are_reviewable_in_timeline_and_projection(sqlite_pg_manager) -> None:
+    await _seed_conflicting_temporal_chunks()
+
+    service = KnowledgeGraphService()
+    result = await service.rebuild_graph("kb_conflict", max_entities=8)
+
+    assert result["status"] == "success"
+    assert result["counts"]["temporal_facts"] == 2
+    assert result["conflicts"]["status"] == "needs_review"
+    assert result["conflicts"]["conflict_count"] == 1
+
+    conflicts = await service.detect_temporal_conflicts("kb_conflict")
+    assert conflicts["status"] == "needs_review"
+    assert conflicts["conflict_count"] == 1
+    conflict = conflicts["items"][0]
+    assert conflict["conflict_key"].endswith("|mentioned_on|2026-06-03")
+    assert conflict["object_count"] == 2
+    assert len(conflict["fact_ids"]) == 2
+    assert conflict["evidence_ids"]
+    assert len(conflict["objects"]) == 2
+
+    timeline = await service.list_timeline("kb_conflict")
+    reviewable = [item for item in timeline["items"] if item["conflict_status"] == "needs_review"]
+    assert len(reviewable) == 2
+    for item in reviewable:
+        conflict_metadata = item["metadata"]["conflict"]
+        assert conflict_metadata["status"] == "needs_review"
+        assert set(conflict_metadata["related_fact_ids"]) == set(conflict["fact_ids"])
+        assert conflict_metadata["object_count"] == 2
+        assert conflict_metadata["evidence_ids"]
+
+    projection = await service.build_neo4j_projection("kb_conflict")
+    projected = [
+        item
+        for item in projection["temporal_facts"]
+        if item["properties"].get("conflict", {}).get("status") == "needs_review"
+    ]
+    assert len(projected) == 2
+    assert projection["storage"]["write_enabled"] is False
 
 
 @pytest.mark.asyncio
