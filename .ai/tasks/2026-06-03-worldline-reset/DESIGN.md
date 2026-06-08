@@ -6,7 +6,7 @@
 
 - 删除旧 Markdown 内容来源，再重建 `README.md`、`AGENTS.md`、`docs/index.md` 和本任务目录。
 - 删除旧项目内记忆与归档：`.ai/tasks`、`.codex`、`docs/archive`、`docs/context-cache`。
-- 删除旧证据与演示残留：`artifacts`、`data/poe`、旧 PoE/Worldline demo adapter。
+- 删除旧证据与演示残留：`artifacts`、legacy demo data、旧 Worldline demo adapter。
 - 保留工程边界：`server`、`src`、`web`、`test`、`docker`、`scripts`。
 
 ## 文档设计

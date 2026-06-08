@@ -38,7 +38,7 @@ It checks:
 - Local Codex Worldline skills.
 - MCP governance report.
 - Worldline manifest contract.
-- Phase 5 screenshot report coverage.
+- Current Worldline UI screenshot report coverage.
 
 `scripts/worldline_phase6_7_release_gate.py` writes a JSON report into this task directory.
 

@@ -3,7 +3,7 @@
   "phase": "phase6_7_release",
   "project_root": "/mnt/d/dev/Worldline",
   "codex_skills_root": "/mnt/c/Users/Joy/.codex/skills",
-  "generated_at": "2026-06-03T12:39:29.206518",
+  "generated_at": "2026-06-03T14:35:29.872182",
   "summary": {
     "check_count": 6,
     "passed_count": 6,
@@ -41,7 +41,7 @@
           ".ai/tasks/2026-06-03-worldline-frontier-stack",
           ".ai/tasks/2026-06-03-knowledge-compiler-v1",
           ".ai/tasks/2026-06-03-phase3-4-wiki-graph",
-          ".ai/tasks/2026-06-03-phase5-worldline-ui",
+          ".ai/tasks/2026-06-03-home-theme-auth-fix",
           ".ai/tasks/2026-06-03-phase6-7-governance-release"
         ],
         "missing": [],
@@ -102,12 +102,12 @@
       }
     },
     {
-      "name": "phase5_screenshot_report",
+      "name": "worldline_ui_screenshot_report",
       "passed": true,
       "severity": "required",
       "details": {
-        "path": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/phase5-screenshot-report.json",
-        "screenshot_count": 9,
+        "path": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/ui-screenshot-report.json",
+        "screenshot_count": 15,
         "failure_count": 0,
         "missing_pages": [],
         "missing_viewports": [],

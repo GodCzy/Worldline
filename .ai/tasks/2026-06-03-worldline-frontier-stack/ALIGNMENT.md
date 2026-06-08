@@ -21,7 +21,7 @@
 ## Boundaries
 
 - 不重写 Git 历史，不删除 `.git`。
-- 不恢复旧 PoE/demo/旧规划内容。
+- 不恢复旧 demo/旧规划内容。
 - 不破坏现有 `/api/knowledge/databases/{db_id}/worldline/*`、wiki、graph、timeline、quality-gate、MCP tool contract 和前端 `/worldline` 路由。
 - 不默认安装数据库直连写入 MCP，不把 token/API key 写进仓库或 Markdown。
 

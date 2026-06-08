@@ -6,7 +6,7 @@
 
 - 已确认目标根目录：`D:\dev\Worldline`、`D:\document\Worldline`。
 - 已删除旧 Markdown 内容来源。
-- 已删除旧 `.ai/tasks`、旧 `.codex`、旧 artifacts、旧 docs archive/context-cache、旧 product/agent-workflow docs 和 `data/poe`。
+- 已删除旧 `.ai/tasks`、旧 `.codex`、旧 artifacts、旧 docs archive/context-cache、旧 product/agent-workflow docs 和 legacy demo data。
 - 已重建最小事实源：`README.md`、`AGENTS.md`、`docs/index.md`、本任务目录。
 
 ## Verification
@@ -31,10 +31,10 @@
 命令：
 
 ```powershell
-rg --hidden -n 'poePhase1|poeWorldlineAdapter|worldlineOpsAdapter|worldlineSandboxAdapter|context-cache|PROJECT_BOOK|WORLDLINE_PROJECT_PLAN|CODEX_WORKFLOW|docs/archive|docs/product|docs/agent-workflow|\.codex' -g '!node_modules/**' -g '!.git/**' -g '!uv.lock' -g '!package-lock.json'
+rg --hidden -n 'legacyDemoAdapter|worldlineOpsAdapter|worldlineSandboxAdapter|context-cache|PROJECT_BOOK|WORLDLINE_PROJECT_PLAN|CODEX_WORKFLOW|docs/archive|docs/product|docs/agent-workflow|\.codex' -g '!node_modules/**' -g '!.git/**' -g '!uv.lock' -g '!package-lock.json'
 ```
 
-结果：仅命中新 README/AGENTS/任务证据中声明旧内容失效的文本；没有代码继续导入旧 PoE adapter 或旧规划文件。
+结果：仅命中新 README/AGENTS/任务证据中声明旧内容失效的文本；没有代码继续导入旧 legacy demo adapter 或旧规划文件。
 
 ### 构建与配置
 
@@ -44,7 +44,7 @@ rg --hidden -n 'poePhase1|poeWorldlineAdapter|worldlineOpsAdapter|worldlineSandb
 
 ### 未通过项
 
-- `wsl.exe -d Debian -- bash -lc 'cd /mnt/d/dev/Worldline && uv run --group test pytest test/test_knowledge_object_models.py test/test_worldline_phase5_7_services.py'`：未通过。失败点不是测试断言，而是依赖下载阶段网络错误。
+- `wsl.exe -d Debian -- bash -lc 'cd /mnt/d/dev/Worldline && uv run --group test pytest test/test_knowledge_object_models.py test/test_worldline_live_services.py'`：未通过。失败点不是测试断言，而是依赖下载阶段网络错误。
 - 两次失败分别卡在 `pycryptodome==3.23.0` 和 `shapely==2.1.2`，错误为 Tsinghua PyPI 镜像 `tls handshake eof`。
 
 ## Residual Risk

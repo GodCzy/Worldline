@@ -23,7 +23,7 @@ RAG remains an auxiliary retrieval layer. The release surface must emphasize evi
 - Public demo document.
 - Focused backend tests.
 - Frontend build, docs build, docker compose config.
-- Screenshot QA reuse/rerun for `/worldline`, `/worldline/phase5-preview`, and `/graph`.
+- Screenshot QA reuse/rerun for the current home, theme, Worldline, Agent redirect, and authenticated sidebar surfaces.
 
 ## Out Of Scope
 

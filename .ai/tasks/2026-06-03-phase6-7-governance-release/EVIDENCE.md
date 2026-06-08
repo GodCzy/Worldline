@@ -43,7 +43,7 @@ Report:
 Command:
 
 ```powershell
-wsl -d Debian -- /usr/bin/env UV_DEFAULT_INDEX=https://pypi.org/simple PYTHONPATH=/mnt/d/dev/Worldline WORLDLINE_SKIP_APP_INIT=1 SAVE_DIR=/tmp/worldline-phase67-test-save SILICONFLOW_API_KEY=dummy UV_PROJECT_ENVIRONMENT=/tmp/worldline-phase67-test-env /home/joy/.local/bin/uv run --no-project --with pytest --with pytest-asyncio --with sqlalchemy --with aiosqlite --with python-dotenv --with colorlog --with pydantic --with pyyaml --with tomli --with tomli-w --with httpx --with fastapi --with loguru --with aiofiles --with langchain-mcp-adapters --with mcp python -m pytest -p no:cacheprovider /mnt/d/dev/Worldline/test/test_knowledge_object_models.py /mnt/d/dev/Worldline/test/test_evidence_service.py /mnt/d/dev/Worldline/test/test_worldline_phase6_7_release_gate.py /mnt/d/dev/Worldline/test/test_worldline_phase5_7_services.py
+wsl -d Debian -- /usr/bin/env UV_DEFAULT_INDEX=https://pypi.org/simple PYTHONPATH=/mnt/d/dev/Worldline WORLDLINE_SKIP_APP_INIT=1 SAVE_DIR=/tmp/worldline-release-test-save SILICONFLOW_API_KEY=dummy UV_PROJECT_ENVIRONMENT=/tmp/worldline-release-test-env /home/joy/.local/bin/uv run --no-project --with pytest --with pytest-asyncio --with sqlalchemy --with aiosqlite --with python-dotenv --with colorlog --with pydantic --with pyyaml --with tomli --with tomli-w --with httpx --with fastapi --with loguru --with aiofiles --with langchain-mcp-adapters --with mcp python -m pytest -p no:cacheprovider /mnt/d/dev/Worldline/test/test_knowledge_object_models.py /mnt/d/dev/Worldline/test/test_evidence_service.py /mnt/d/dev/Worldline/test/test_worldline_phase6_7_release_gate.py /mnt/d/dev/Worldline/test/test_worldline_live_services.py
 ```
 
 Result:
@@ -94,14 +94,14 @@ Result:
 Command:
 
 ```powershell
-wsl -d Debian -- /bin/bash -lc 'cd /mnt/d/dev/Worldline && rm -rf .ai/tasks/2026-06-03-phase5-worldline-ui/screenshots && node .ai/tasks/2026-06-03-phase5-worldline-ui/screenshot-phase5.cjs'
+wsl -d Debian -- /bin/bash -lc 'cd /mnt/d/dev/Worldline && node .ai/tasks/2026-06-03-home-theme-auth-fix/screenshot-ui.cjs'
 ```
 
 Result:
 
 ```json
 {
-  "reportPath": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/phase5-screenshot-report.json",
+  "reportPath": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/ui-screenshot-report.json",
   "screenshotCount": 9,
   "failureCount": 0
 }
@@ -109,9 +109,9 @@ Result:
 
 Visual spot-check:
 
-- `.ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/worldline-hub-1440x900.png`
-- `.ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/worldline-workbench-1440x900.png`
-- `.ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/graph-1440x900.png`
+- `.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/home-1440x900.png`
+- `.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/themes-1440x900.png`
+- `.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/worldline-hub-1440x900.png`
 
 ## Static Checks
 

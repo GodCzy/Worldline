@@ -33,7 +33,7 @@
 - Neo4j 承载实体关系和时间事实，Milvus/LightRAG 辅助检索。
 - KAG/HippoRAG 进入评估实验，不作为平台迁移。
 
-## Phase 5 - Worldline UI
+## Worldline UI Workbench
 
 - 重做 `/worldline` 和 `/worldline/:themeId` 为全屏世界线工作台。
 - 实现青金发光线束、证据轨联动、时间 scrubber、图谱聚焦和 Agent handoff。

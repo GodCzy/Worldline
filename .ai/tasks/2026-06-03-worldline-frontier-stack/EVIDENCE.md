@@ -26,10 +26,10 @@
 - `npm run docs:build`：通过，VitePress 输出 `build complete`，bash 内部确认 `DOCS_EXIT:0`。
 - `npm --prefix web run build`：通过，输出 `WEB_EXIT:0`；保留 Vite 大 chunk 警告，主要来自 G6、Ant Design Vue、mindmap、ECharts vendors。
 - `docker compose config`：通过，Compose 配置可解析。
-- Focused pytest：通过。使用 `/tmp` 临时 uv 环境和最小依赖运行 `test_knowledge_object_models.py`、`test_worldline_phase5_7_services.py`、`test_evidence_service.py`，结果 `18 passed, 1 warning in 4.60s`。
+- Focused pytest：通过。使用 `/tmp` 临时 uv 环境和最小依赖运行 `test_knowledge_object_models.py`、`test_worldline_live_services.py`、`test_evidence_service.py`，结果 `18 passed, 1 warning in 4.60s`。
 
 ## Validation Notes
 
 - 直接使用项目全量 `uv run --group test ...` 会解析 Docling/LlamaIndex/Torch 等重依赖，清华 PyPI 镜像出现 TLS EOF；为避免污染 `uv.lock`，最终采用 `uv run --no-project` + `PYTHONPATH` + 最小依赖的聚焦测试方式验证本次触及面。
 - 一次官方 PyPI 索引尝试曾意外改写 `uv.lock` 的 registry URL；已终止残留进程并恢复 `uv.lock`，未保留该副作用。
-- 本轮没有执行浏览器截图，因为没有实施 Phase 5 UI 视觉重做；截图门禁已写入文档和 skill，留给后续 UI 实现阶段。
+- 本轮没有执行浏览器截图，因为没有实施 UI 视觉重做；截图门禁已写入文档和 skill，留给后续 UI 实现阶段。

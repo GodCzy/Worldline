@@ -10,7 +10,7 @@
 
 - `D:\dev\Worldline` 只保留新的最小 Markdown 事实源。
 - `D:\document\Worldline` 只保留指向活跃工程的轻量说明。
-- 旧 `.ai/tasks`、`docs/archive`、`docs/context-cache`、旧 `.codex`、旧 artifacts 和 PoE demo 残留被清理。
+- 旧 `.ai/tasks`、`docs/archive`、`docs/context-cache`、旧 `.codex`、旧 artifacts 和 legacy demo 残留被清理。
 - 核心代码、测试、Docker、锁文件、环境模板和 `LICENSE` 保留。
 - 不改变后端 API、数据库 schema、MCP tool contract 或前端路由 contract。
 

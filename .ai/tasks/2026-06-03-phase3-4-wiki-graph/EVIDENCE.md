@@ -20,7 +20,7 @@ python3 -m py_compile src/services/auto_wiki_service.py src/repositories/wiki_re
 命令：
 
 ```bash
-PYTHONPATH=/mnt/d/dev/Worldline WORLDLINE_SKIP_APP_INIT=1 SAVE_DIR=/tmp/worldline-test-save SILICONFLOW_API_KEY=dummy UV_PROJECT_ENVIRONMENT=/tmp/worldline-min-test-env uv run --no-project --with pytest --with pytest-asyncio --with sqlalchemy --with aiosqlite --with python-dotenv --with colorlog --with pydantic --with pyyaml --with tomli --with tomli-w --with httpx --with fastapi --with loguru --with aiofiles python -m pytest -p no:cacheprovider /mnt/d/dev/Worldline/test/test_auto_wiki_service.py /mnt/d/dev/Worldline/test/test_worldline_phase5_7_services.py
+PYTHONPATH=/mnt/d/dev/Worldline WORLDLINE_SKIP_APP_INIT=1 SAVE_DIR=/tmp/worldline-test-save SILICONFLOW_API_KEY=dummy UV_PROJECT_ENVIRONMENT=/tmp/worldline-min-test-env uv run --no-project --with pytest --with pytest-asyncio --with sqlalchemy --with aiosqlite --with python-dotenv --with colorlog --with pydantic --with pyyaml --with tomli --with tomli-w --with httpx --with fastapi --with loguru --with aiofiles python -m pytest -p no:cacheprovider /mnt/d/dev/Worldline/test/test_auto_wiki_service.py /mnt/d/dev/Worldline/test/test_worldline_live_services.py
 ```
 
 结果：`6 passed, 1 warning in 4.03s`。

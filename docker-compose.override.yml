@@ -7,3 +7,8 @@ services:
   postgres:
     ports: !override
       - "5433:5432"
+    volumes: !override
+      - worldline_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  worldline_postgres_data:
