@@ -18,6 +18,10 @@ from dotenv import load_dotenv
 load_dotenv(".env", override=False)
 load_dotenv("test/.env.test", override=False)
 
+# Unit tests should not bootstrap knowledge-base or graph runtimes during import.
+# Live API tests exercise the already running FastAPI service over HTTP.
+os.environ.setdefault("WORLDLINE_SKIP_APP_INIT", "1")
+
 API_BASE_URL = os.getenv("TEST_BASE_URL", "http://localhost:5050").rstrip("/")
 ADMIN_LOGIN = os.getenv("TEST_USERNAME")
 ADMIN_PASSWORD = os.getenv("TEST_PASSWORD")

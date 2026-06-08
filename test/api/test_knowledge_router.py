@@ -8,6 +8,9 @@ import uuid
 
 import pytest
 
+from src.repositories.knowledge_base_repository import KnowledgeBaseRepository
+from src.storage.postgres.manager import pg_manager
+
 pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 
@@ -183,6 +186,54 @@ async def test_admin_can_create_vector_db_with_reranker(test_client, admin_heade
     use_reranker_option2 = next((opt for opt in options2 if opt.get("key") == "use_reranker"), None)
     assert use_reranker_option2 is not None
     assert use_reranker_option2.get("default") is True  # 保存的值
+
+
+async def test_query_params_persist_without_instance_metadata(test_client, admin_headers):
+    db_id = f"pytest_query_params_{uuid.uuid4().hex[:8]}"
+    pg_manager.initialize()
+    await pg_manager.ensure_knowledge_schema()
+    kb_repo = KnowledgeBaseRepository()
+    await kb_repo.create(
+        {
+            "db_id": db_id,
+            "name": db_id,
+            "description": "Query params persistence fallback test",
+            "kb_type": "lightrag",
+            "embed_info": {"model": "siliconflow/BAAI/bge-m3"},
+            "llm_info": None,
+            "query_params": None,
+            "additional_params": {},
+            "share_config": {"is_shared": True, "accessible_departments": []},
+        }
+    )
+
+    try:
+        update_params = {"top_k": 7, "retrieval_content_scope": "all"}
+        update_response = await test_client.put(
+            f"/api/knowledge/databases/{db_id}/query-params",
+            json=update_params,
+            headers=admin_headers,
+        )
+        assert update_response.status_code == 200, update_response.text
+
+        kb_row = await kb_repo.get_by_id(db_id)
+        assert kb_row is not None
+        assert kb_row.query_params["options"]["top_k"] == 7
+        assert kb_row.query_params["options"]["retrieval_content_scope"] == "all"
+
+        get_response = await test_client.get(f"/api/knowledge/databases/{db_id}/query-params", headers=admin_headers)
+        assert get_response.status_code == 200, get_response.text
+        options = get_response.json().get("params", {}).get("options", [])
+
+        top_k_option = next((opt for opt in options if opt.get("key") == "top_k"), None)
+        assert top_k_option is not None
+        assert top_k_option.get("default") == 7
+
+        scope_option = next((opt for opt in options if opt.get("key") == "retrieval_content_scope"), None)
+        assert scope_option is not None
+        assert scope_option.get("default") == "all"
+    finally:
+        await kb_repo.delete(db_id)
 
 
 async def test_create_dify_database_success(test_client, admin_headers):

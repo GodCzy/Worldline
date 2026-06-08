@@ -28,7 +28,7 @@ class WorldlineReleaseGateService:
         ".ai/tasks/2026-06-03-worldline-frontier-stack",
         ".ai/tasks/2026-06-03-knowledge-compiler-v1",
         ".ai/tasks/2026-06-03-phase3-4-wiki-graph",
-        ".ai/tasks/2026-06-03-phase5-worldline-ui",
+        ".ai/tasks/2026-06-03-home-theme-auth-fix",
         ".ai/tasks/2026-06-03-phase6-7-governance-release",
     )
     REQUIRED_SKILLS = (
@@ -39,7 +39,7 @@ class WorldlineReleaseGateService:
         "worldline-mcp-governance",
         "worldline-eval-release",
     )
-    REQUIRED_SCREENSHOT_PAGES = {"worldline-hub", "worldline-workbench", "graph"}
+    REQUIRED_SCREENSHOT_PAGES = {"home", "themes", "worldline-hub", "agent-login-redirect", "authenticated-sidebar"}
     REQUIRED_SCREENSHOT_VIEWPORTS = {"1920x1080", "1440x900", "390x844"}
 
     def __init__(
@@ -211,11 +211,11 @@ class WorldlineReleaseGateService:
     def _screenshot_check(self) -> dict[str, Any]:
         report_path = (
             self.project_root
-            / ".ai/tasks/2026-06-03-phase5-worldline-ui/screenshots/phase5-screenshot-report.json"
+            / ".ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/ui-screenshot-report.json"
         )
         if not report_path.is_file():
             return {
-                "name": "phase5_screenshot_report",
+                "name": "worldline_ui_screenshot_report",
                 "passed": False,
                 "severity": "required",
                 "details": {"missing": str(report_path)},
@@ -225,7 +225,7 @@ class WorldlineReleaseGateService:
             payload = json.loads(report_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
             return {
-                "name": "phase5_screenshot_report",
+                "name": "worldline_ui_screenshot_report",
                 "passed": False,
                 "severity": "required",
                 "details": {"error": str(exc), "path": str(report_path)},
@@ -244,7 +244,7 @@ class WorldlineReleaseGateService:
         ]
         passed = not failures and not missing_pages and not missing_viewports and not missing_files
         return {
-            "name": "phase5_screenshot_report",
+            "name": "worldline_ui_screenshot_report",
             "passed": passed,
             "severity": "required",
             "details": {

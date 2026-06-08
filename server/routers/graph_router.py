@@ -1,9 +1,10 @@
 import traceback
+from importlib import import_module
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 from server.utils.auth_middleware import get_admin_user
-from src import graph_base, knowledge_base
+from src import graph_base as _initial_graph_base, knowledge_base
 from src.knowledge.graphs.adapters.base import GraphAdapter
 from src.knowledge.graphs.adapters.factory import GraphAdapterFactory
 from src.storage.postgres.models_business import User
@@ -11,11 +12,113 @@ from src.storage.minio.client import StorageError
 from src.utils.logging_config import logger
 
 graph = APIRouter(prefix="/graph", tags=["graph"])
+graph_base = _initial_graph_base
 
 
 # =============================================================================
 # === 统一图谱接口 (Unified Graph API) ===
 # =============================================================================
+
+
+def _empty_graph_payload(db_id: str, reason: str) -> dict:
+    return {
+        "nodes": [],
+        "edges": [],
+        "available": False,
+        "degraded": True,
+        "degraded_reason": reason,
+        "database_id": db_id,
+        "graph_type": "upload" if db_id == "neo4j" else "lightrag",
+    }
+
+
+def _empty_stats_payload(db_id: str, reason: str) -> dict:
+    return {
+        "total_nodes": 0,
+        "total_edges": 0,
+        "entity_types": [],
+        "available": False,
+        "degraded": True,
+        "degraded_reason": reason,
+        "database_id": db_id,
+    }
+
+
+def _neo4j_unavailable_info(reason: str) -> dict:
+    return {
+        "graph_name": "neo4j",
+        "entity_count": 0,
+        "relationship_count": 0,
+        "triples_count": 0,
+        "labels": [],
+        "status": "unavailable",
+        "available": False,
+        "degraded": True,
+        "degraded_reason": reason,
+        "embed_model_name": None,
+        "embed_model_configurable": False,
+        "unindexed_node_count": 0,
+    }
+
+
+def _set_global_graph_base(candidate) -> None:
+    global graph_base
+    graph_base = candidate
+    try:
+        import src as src_module
+        import src.knowledge as knowledge_module
+
+        src_module.graph_base = candidate
+        knowledge_module.graph_base = candidate
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Failed to sync recovered graph_base: {exc}")
+
+
+def _get_graph_base(recover: bool = False):
+    if graph_base is not None:
+        return graph_base
+
+    if not recover:
+        return None
+
+    try:
+        import src as src_module
+        import src.knowledge as knowledge_module
+
+        candidate = getattr(src_module, "graph_base", None) or getattr(knowledge_module, "graph_base", None)
+        if candidate is not None:
+            _set_global_graph_base(candidate)
+            return candidate
+
+        upload_service_cls = getattr(knowledge_module, "UploadGraphService", None)
+        if upload_service_cls is None:
+            graph_module = import_module("src.knowledge.graphs.upload_graph_service")
+            upload_service_cls = getattr(graph_module, "UploadGraphService")
+
+        candidate = upload_service_cls()
+        _set_global_graph_base(candidate)
+        logger.info("Recovered graph_base after delayed Neo4j availability")
+        return candidate
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Neo4j graph service is unavailable: {exc}")
+        return None
+
+
+def _ensure_graph_base_running():
+    candidate = _get_graph_base(recover=True)
+    if candidate is None:
+        return None, "Neo4j graph service is not initialized"
+
+    try:
+        if candidate.is_running():
+            return candidate, None
+        candidate.start()
+        if candidate.is_running():
+            return candidate, None
+        return None, f"Neo4j graph service status is {getattr(candidate, 'status', 'unknown')}"
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Neo4j graph service is not running: {exc}")
+        return None, str(exc)
 
 
 async def _get_graph_adapter(db_id: str) -> GraphAdapter:
@@ -28,17 +131,27 @@ async def _get_graph_adapter(db_id: str) -> GraphAdapter:
     Returns:
         GraphAdapter: 对应的图谱适配器实例
     """
-    # 检查图数据库服务状态 (仅对 Upload 类型需要)
-    if not graph_base.is_running():
-        # 先尝试检测图谱类型，如果是不需要 graph_base 的类型则允许
-        graph_type = await GraphAdapterFactory.detect_graph_type(db_id, knowledge_base)
-        if graph_type == "upload":
-            raise HTTPException(status_code=503, detail="Graph database service is not running")
+    graph_type = await GraphAdapterFactory.detect_graph_type(db_id, knowledge_base)
+    running_graph_base = None
 
-    # 使用工厂方法自动创建适配器
-    return await GraphAdapterFactory.create_adapter_by_db_id(
-        db_id=db_id, knowledge_base_manager=knowledge_base, graph_db_instance=graph_base
-    )
+    if graph_type == "upload":
+        running_graph_base, reason = _ensure_graph_base_running()
+        if running_graph_base is None:
+            raise HTTPException(status_code=503, detail=f"Graph database service is unavailable: {reason}")
+
+    try:
+        if graph_type == "lightrag":
+            return GraphAdapterFactory.create_adapter("lightrag", config={"kb_id": db_id})
+        return GraphAdapterFactory.create_adapter(
+            "upload",
+            graph_db_instance=running_graph_base,
+            config={"kgdb_name": db_id},
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.warning(f"Graph adapter unavailable for {db_id}: {exc}")
+        raise HTTPException(status_code=503, detail=f"Graph adapter is unavailable: {exc}") from exc
 
 
 def _get_capabilities_from_metadata(metadata) -> dict:
@@ -61,7 +174,13 @@ async def get_graphs(current_user: User = Depends(get_admin_user)):
         graphs = []
 
         # 1. 获取默认 Neo4j 图谱信息 (Upload 类型)
-        neo4j_info = graph_base.get_graph_info()
+        running_graph_base, neo4j_reason = _ensure_graph_base_running()
+        if running_graph_base is not None:
+            neo4j_info = running_graph_base.get_graph_info() or _neo4j_unavailable_info(
+                "Neo4j graph info is unavailable"
+            )
+        else:
+            neo4j_info = _neo4j_unavailable_info(neo4j_reason or "Neo4j graph service is unavailable")
         if neo4j_info:
             # 直接使用 Upload 适配器的默认 metadata
             from src.knowledge.graphs.adapters.upload import UploadGraphAdapter
@@ -75,6 +194,9 @@ async def get_graphs(current_user: User = Depends(get_admin_user)):
                     "type": "upload",
                     "description": "Default graph database for uploaded documents",
                     "status": neo4j_info.get("status", "unknown"),
+                    "available": neo4j_info.get("available", neo4j_info.get("status") == "open"),
+                    "degraded": neo4j_info.get("degraded", False),
+                    "degraded_reason": neo4j_info.get("degraded_reason"),
                     "created_at": neo4j_info.get("last_updated"),
                     "node_count": neo4j_info.get("entity_count", 0),
                     "edge_count": neo4j_info.get("relationship_count", 0),
@@ -149,7 +271,14 @@ async def get_subgraph(
             "data": result_data,
         }
 
-    except HTTPException:
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            return {
+                "success": True,
+                "data": _empty_graph_payload(db_id, str(exc.detail)),
+                "degraded": True,
+                "message": str(exc.detail),
+            }
         raise
     except Exception as e:
         logger.error(f"Failed to get subgraph: {e}")
@@ -170,6 +299,21 @@ async def get_graph_labels(
         labels = await adapter.get_labels()
         return {"success": True, "data": {"labels": labels}}
 
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            return {
+                "success": True,
+                "data": {
+                    "labels": [],
+                    "available": False,
+                    "degraded": True,
+                    "degraded_reason": str(exc.detail),
+                    "database_id": db_id,
+                },
+                "degraded": True,
+                "message": str(exc.detail),
+            }
+        raise
     except Exception as e:
         logger.error(f"Failed to get labels: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get labels: {str(e)}")
@@ -190,7 +334,16 @@ async def get_graph_stats(
             return {"success": True, "data": stats_data}
         else:
             # Neo4j stats (直接管理的图谱)
-            info = graph_base.get_graph_info(graph_name=db_id)
+            running_graph_base, reason = _ensure_graph_base_running()
+            if running_graph_base is None:
+                return {
+                    "success": True,
+                    "data": _empty_stats_payload(db_id, reason or "Neo4j graph service is unavailable"),
+                    "degraded": True,
+                    "message": reason,
+                }
+
+            info = running_graph_base.get_graph_info(graph_name=db_id)
             if not info:
                 raise HTTPException(status_code=404, detail="Graph info not found")
 
@@ -205,6 +358,15 @@ async def get_graph_stats(
                 },
             }
 
+    except HTTPException as exc:
+        if exc.status_code == 503:
+            return {
+                "success": True,
+                "data": _empty_stats_payload(db_id, str(exc.detail)),
+                "degraded": True,
+                "message": str(exc.detail),
+            }
+        raise
     except Exception as e:
         logger.error(f"Failed to get stats: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
@@ -235,10 +397,26 @@ async def get_neo4j_node(
 async def get_neo4j_info(current_user: User = Depends(get_admin_user)):
     """获取Neo4j图数据库信息"""
     try:
-        graph_info = graph_base.get_graph_info()
+        running_graph_base, reason = _ensure_graph_base_running()
+        if running_graph_base is None:
+            return {
+                "success": True,
+                "data": _neo4j_unavailable_info(reason or "Neo4j graph service is unavailable"),
+                "degraded": True,
+                "message": reason,
+            }
+
+        graph_info = running_graph_base.get_graph_info()
         if graph_info is None:
-            raise HTTPException(status_code=400, detail="图数据库获取出错")
+            return {
+                "success": True,
+                "data": _neo4j_unavailable_info("Neo4j graph info is unavailable"),
+                "degraded": True,
+                "message": "Neo4j graph info is unavailable",
+            }
         return {"success": True, "data": graph_info}
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取图数据库信息失败: {e}")
         raise HTTPException(status_code=500, detail=f"获取图数据库信息失败: {str(e)}")
@@ -248,11 +426,12 @@ async def get_neo4j_info(current_user: User = Depends(get_admin_user)):
 async def index_neo4j_entities(data: dict = Body(default={}), current_user: User = Depends(get_admin_user)):
     """为Neo4j图谱节点添加嵌入向量索引"""
     try:
-        if not graph_base.is_running():
-            raise HTTPException(status_code=400, detail="图数据库未启动")
+        running_graph_base, reason = _ensure_graph_base_running()
+        if running_graph_base is None:
+            raise HTTPException(status_code=503, detail=f"Graph database service is unavailable: {reason}")
 
         kgdb_name = data.get("kgdb_name", "neo4j")
-        count = await graph_base.add_embedding_to_nodes(kgdb_name=kgdb_name)
+        count = await running_graph_base.add_embedding_to_nodes(kgdb_name=kgdb_name)
 
         return {
             "success": True,
@@ -260,6 +439,8 @@ async def index_neo4j_entities(data: dict = Body(default={}), current_user: User
             "message": f"已成功为{count}个节点添加嵌入向量",
             "indexed_count": count,
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"索引节点失败: {e}")
         raise HTTPException(status_code=500, detail=f"索引节点失败: {str(e)}")
@@ -276,8 +457,14 @@ async def add_neo4j_entities(
     """通过JSONL文件添加图谱实体到Neo4j（只接受 MinIO URL）"""
     try:
         # 服务层会验证 URL 并从 MinIO 下载文件
-        await graph_base.jsonl_file_add_entity(file_path, kgdb_name, embed_model_name, batch_size)
+        running_graph_base, reason = _ensure_graph_base_running()
+        if running_graph_base is None:
+            raise HTTPException(status_code=503, detail=f"Graph database service is unavailable: {reason}")
+
+        await running_graph_base.jsonl_file_add_entity(file_path, kgdb_name, embed_model_name, batch_size)
         return {"success": True, "message": "实体添加成功", "status": "success"}
+    except HTTPException:
+        raise
     except StorageError as e:
         # MinIO 验证或下载错误
         raise HTTPException(status_code=400, detail=str(e))

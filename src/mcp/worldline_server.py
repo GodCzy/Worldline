@@ -31,6 +31,92 @@ def create_server():
         return await WorldlineAgentWorkflowService().plan_workflow(db_id, workflow_type=workflow_type, created_by="mcp")
 
     @server.tool()
+    async def worldline_inspect_run_artifacts(
+        run_id: str,
+        artifact_id: str | None = None,
+        include_content: bool = False,
+        limit: int = 20,
+        audit_db_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read saved Agent run replay artifacts through the controlled service boundary."""
+        return await WorldlineAgentWorkflowService().inspect_run_artifacts(
+            run_id,
+            artifact_id=artifact_id,
+            include_content=include_content,
+            limit=limit,
+            audit_db_id=audit_db_id,
+            actor="mcp",
+        )
+
+    @server.tool()
+    async def worldline_inspect_run_gates(
+        run_id: str,
+        gate_id: str | None = None,
+        limit: int = 20,
+        audit_db_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read Agent run gate results through the controlled service boundary."""
+        return await WorldlineAgentWorkflowService().inspect_run_gates(
+            run_id,
+            gate_id=gate_id,
+            limit=limit,
+            audit_db_id=audit_db_id,
+            actor="mcp",
+        )
+
+    @server.tool()
+    async def worldline_inspect_run_evidence(
+        run_id: str,
+        evidence_id: str | None = None,
+        source_id: str | None = None,
+        limit: int = 20,
+        audit_db_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read Agent run EvidenceAnchor and SourceAsset metadata through the controlled service boundary."""
+        return await WorldlineAgentWorkflowService().inspect_run_evidence(
+            run_id,
+            evidence_id=evidence_id,
+            source_id=source_id,
+            limit=limit,
+            audit_db_id=audit_db_id,
+            actor="mcp",
+        )
+
+    @server.tool()
+    async def worldline_inspect_run_knowledge(
+        run_id: str,
+        kind: str = "all",
+        item_id: str | None = None,
+        limit: int = 20,
+        audit_db_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read Agent run WikiPage, KnowledgeEntity, and TemporalFact metadata through the controlled service boundary."""
+        return await WorldlineAgentWorkflowService().inspect_run_knowledge(
+            run_id,
+            kind=kind,
+            item_id=item_id,
+            limit=limit,
+            audit_db_id=audit_db_id,
+            actor="mcp",
+        )
+
+    @server.tool()
+    async def worldline_inspect_run_manifest(
+        run_id: str,
+        include_resources: bool = True,
+        limit: int = 50,
+        audit_db_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Read a run-scoped manifest of controlled Agent read resources and MCP call args."""
+        return await WorldlineAgentWorkflowService().inspect_run_manifest(
+            run_id,
+            include_resources=include_resources,
+            limit=limit,
+            audit_db_id=audit_db_id,
+            actor="mcp",
+        )
+
+    @server.tool()
     async def worldline_rebuild_wiki(db_id: str, file_id: str | None = None, max_topics: int = 8) -> dict[str, Any]:
         """Rebuild Auto-Wiki pages through the controlled service boundary."""
         result = await AutoWikiService().rebuild_wiki(db_id, file_id=file_id, max_topics=max_topics)

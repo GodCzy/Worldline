@@ -47,7 +47,7 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
 
     _touch(
         tmp_path / "src/services/mcp_service.py",
-        '\n'.join(
+        "\n".join(
             [
                 'WORLDLINE_DEFAULT_ENABLED_MCP_SERVERS = {"worldline"}',
                 '_DEFAULT_MCP_SERVERS["worldline"]["enabled"] = 1',
@@ -60,7 +60,7 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
     )
     _touch(
         tmp_path / "src/services/worldline_agent_workflow_service.py",
-        '\n'.join(
+        "\n".join(
             [
                 'SERVER_NAME = "worldline"',
                 '"external_agents_direct_db_write": False',
@@ -85,7 +85,7 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
     for skill_name in WorldlineReleaseGateService.REQUIRED_SKILLS:
         _touch(skills_root / skill_name / "SKILL.md", f"---\nname: {skill_name}\ndescription: test\n---\n")
 
-    screenshots_dir = tmp_path / ".ai/tasks/2026-06-03-phase5-worldline-ui/screenshots"
+    screenshots_dir = tmp_path / ".ai/tasks/2026-06-03-home-theme-auth-fix/screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     report_items = []
     for page in WorldlineReleaseGateService.REQUIRED_SCREENSHOT_PAGES:
@@ -99,7 +99,7 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
                     "screenshot": str(screenshot),
                 }
             )
-    (screenshots_dir / "phase5-screenshot-report.json").write_text(
+    (screenshots_dir / "ui-screenshot-report.json").write_text(
         json.dumps({"report": report_items, "failures": []}),
         encoding="utf-8",
     )
@@ -116,5 +116,5 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
         "codex_worldline_skills_installed",
         "mcp_default_governance",
         "worldline_manifest_contract",
-        "phase5_screenshot_report",
+                "worldline_ui_screenshot_report",
     } <= check_names

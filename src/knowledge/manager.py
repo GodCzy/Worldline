@@ -457,6 +457,16 @@ class KnowledgeBaseManager:
                 "row_count": 0,
                 "status": "已连接",
             }
+        if db_info is None:
+            db_info = {
+                "db_id": db_id,
+                "name": kb.name,
+                "description": kb.description,
+                "kb_type": kb.kb_type,
+                "files": {},
+                "row_count": 0,
+                "status": "metadata_unavailable",
+            }
 
         # 添加数据库中的附加字段
         db_info["additional_params"] = ensure_chunk_defaults_in_additional_params(kb.additional_params)

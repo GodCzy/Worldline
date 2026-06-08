@@ -1,0 +1,36 @@
+{
+  "createDesktop": {
+    "url": "http://127.0.0.1:5173/themes?new_module=1&db_id=codex_theme_qa_20260608162549&knowledge_db_id=codex_theme_qa_20260608162549&knowledge_name=Codex%20Theme%20Browser%20QA%20KB&knowledge_type=codex_test&knowledge_description=Temporary%20KB%20for%20theme%20module%20browser%20QA.&name=Codex%20Theme%20Browser%20QA%20Draft",
+    "hasObjective": true,
+    "hasEvidence": true,
+    "hasConfigButton": true,
+    "hasKnowledge": true,
+    "overflow": false
+  },
+  "detailDesktop": {
+    "url": "http://127.0.0.1:5173/themes/codex-theme-module-closure-qa",
+    "hasKnowledge": true,
+    "hasObjective": true,
+    "hasCapability": true,
+    "hasWorkbench": true,
+    "overflow": false
+  },
+  "workbenchDesktop": {
+    "url": "http://127.0.0.1:5173/worldline/codex-theme-module-closure-qa?db_id=codex_theme_qa_20260608162549&knowledge_db_id=codex_theme_qa_20260608162549",
+    "hasGenerate": true,
+    "hasEmptyState": false,
+    "overflow": false
+  },
+  "createMobile": {
+    "url": "http://127.0.0.1:5173/themes?new_module=1&db_id=codex_theme_qa_20260608162549&knowledge_db_id=codex_theme_qa_20260608162549&knowledge_name=Codex%20Theme%20Browser%20QA%20KB&knowledge_type=codex_test&knowledge_description=Temporary%20KB%20for%20theme%20module%20browser%20QA.&name=Codex%20Theme%20Browser%20QA%20Draft",
+    "overflow": false
+  },
+  "detailMobile": {
+    "url": "http://127.0.0.1:5173/themes/codex-theme-module-closure-qa",
+    "overflow": false
+  },
+  "workbenchMobile": {
+    "url": "http://127.0.0.1:5173/worldline/codex-theme-module-closure-qa?db_id=codex_theme_qa_20260608162549&knowledge_db_id=codex_theme_qa_20260608162549",
+    "overflow": false
+  }
+}

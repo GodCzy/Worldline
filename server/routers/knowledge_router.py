@@ -14,7 +14,6 @@ from src.services.task_service import TaskContext, tasker
 from server.utils.auth_middleware import get_admin_user, get_required_user
 from src import config, knowledge_base
 from src.knowledge.chunking.ragflow_like.presets import ensure_chunk_defaults_in_additional_params
-from src.knowledge.indexing import SUPPORTED_FILE_EXTENSIONS, is_supported_file_extension, process_file_to_markdown
 from src.knowledge.utils import calculate_content_hash
 from src.models.embed import test_all_embedding_models_status, test_embedding_model_status
 from src.storage.postgres.models_business import User
@@ -24,6 +23,12 @@ from src.utils import logger
 knowledge = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
 DIFY_REQUIRED_PARAMS = ("dify_api_url", "dify_token", "dify_dataset_id")
+
+
+def _knowledge_indexing():
+    from src.knowledge import indexing
+
+    return indexing
 
 media_types = {
     ".pdf": "application/pdf",
@@ -1468,29 +1473,27 @@ async def update_knowledge_base_query_params(
 ):
     """更新知识库查询参数配置"""
     try:
-        # 获取知识库实例
-        kb_instance = await knowledge_base._get_kb_for_database(db_id)
-        if not kb_instance:
+        if not isinstance(params, dict):
+            raise HTTPException(status_code=400, detail="Query params must be a JSON object")
+
+        from src.repositories.knowledge_base_repository import KnowledgeBaseRepository
+
+        del current_user
+        kb_repo = KnowledgeBaseRepository()
+        kb = await kb_repo.get_by_id(db_id)
+        if kb is None:
             raise HTTPException(status_code=404, detail="Knowledge base not found")
 
-        # 更新实例元数据中的查询参数
-        async with knowledge_base._metadata_lock:
-            # 确保 db_id 在实例的 databases_meta 中
-            if db_id not in kb_instance.databases_meta:
-                raise HTTPException(status_code=404, detail="Database not found in instance metadata")
+        saved_options = _extract_query_param_options(kb.query_params)
+        saved_options.update(params)
+        await kb_repo.update(db_id, {"query_params": _build_query_params_payload(kb.query_params, saved_options)})
 
-            # 确保 query_params 不为 None
-            if kb_instance.databases_meta[db_id].get("query_params") is None:
-                kb_instance.databases_meta[db_id]["query_params"] = {}
-
-            options = kb_instance.databases_meta[db_id]["query_params"].setdefault("options", {})
-            options.update(params)
-            await kb_instance._save_metadata()
-
-            logger.info(f"更新知识库 {db_id} 查询参数: {params}")
-
+        await _sync_query_params_to_instance_metadata(db_id, params)
+        logger.info(f"更新知识库 {db_id} 查询参数: {params}")
         return {"message": "success", "data": params}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"更新知识库查询参数失败: {e}")
         raise HTTPException(status_code=500, detail=f"更新查询参数失败: {str(e)}")
@@ -1500,6 +1503,14 @@ async def update_knowledge_base_query_params(
 async def get_knowledge_base_query_params(db_id: str, current_user: User = Depends(get_admin_user)):
     """获取知识库类型特定的查询参数"""
     try:
+        from src.repositories.knowledge_base_repository import KnowledgeBaseRepository
+
+        del current_user
+        kb_repo = KnowledgeBaseRepository()
+        kb = await kb_repo.get_by_id(db_id)
+        if kb is None:
+            raise HTTPException(status_code=404, detail="Knowledge base not found")
+
         # 获取知识库实例
         kb_instance = await knowledge_base._get_kb_for_database(db_id)
 
@@ -1509,16 +1520,68 @@ async def get_knowledge_base_query_params(db_id: str, current_user: User = Depen
             reranker_names=config.reranker_names,  # 传递动态配置
         )
 
-        # 获取用户保存的配置并合并（从实例 metadata 读取）
-        saved_options = kb_instance._get_query_params(db_id)
+        # Postgres is the durable source of truth; instance metadata is an optional fast path.
+        saved_options = _extract_query_param_options(kb.query_params)
+        instance_options = kb_instance._get_query_params(db_id)
+        if instance_options:
+            saved_options = {**instance_options, **saved_options}
         if saved_options:
             params = _merge_saved_options(params, saved_options)
 
         return {"params": params, "message": "success"}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"获取知识库查询参数失败 {e}, {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def _extract_query_param_options(query_params: dict | None) -> dict:
+    """Return saved query option values from supported historical shapes."""
+    if not isinstance(query_params, dict):
+        return {}
+
+    options = query_params.get("options")
+    if isinstance(options, dict):
+        return dict(options)
+
+    if "options" not in query_params:
+        return {key: value for key, value in query_params.items() if key not in {"type"}}
+
+    return {}
+
+
+def _build_query_params_payload(current_query_params: dict | None, options: dict) -> dict:
+    payload = dict(current_query_params or {}) if isinstance(current_query_params, dict) else {}
+    payload["options"] = dict(options)
+    return payload
+
+
+async def _sync_query_params_to_instance_metadata(db_id: str, params: dict) -> None:
+    """Best-effort sync for running KB instances; Postgres remains authoritative."""
+    try:
+        kb_instance = await knowledge_base._get_kb_for_database(db_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(f"Skip query params instance sync for {db_id}: {exc}")
+        return
+
+    async with knowledge_base._metadata_lock:
+        if db_id not in kb_instance.databases_meta:
+            logger.warning(f"Skip query params metadata sync for {db_id}: database missing from instance metadata")
+            return
+
+        query_params_meta = kb_instance.databases_meta[db_id].get("query_params")
+        if not isinstance(query_params_meta, dict):
+            query_params_meta = {}
+
+        options = query_params_meta.get("options")
+        if not isinstance(options, dict):
+            options = {}
+
+        options.update(params)
+        query_params_meta["options"] = options
+        kb_instance.databases_meta[db_id]["query_params"] = query_params_meta
 
 
 def _merge_saved_options(params: dict, saved_options: dict) -> dict:
@@ -1853,7 +1916,7 @@ async def upload_file(
     if ext == ".jsonl":
         if allow_jsonl is not True or db_id is not None:
             raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
-    elif not (is_supported_file_extension(file.filename) or ext == ".zip"):
+    elif not (_knowledge_indexing().is_supported_file_extension(file.filename) or ext == ".zip"):
         raise HTTPException(status_code=400, detail=f"Unsupported file type: {ext}")
 
     basename, ext = os.path.splitext(file.filename)
@@ -1908,7 +1971,7 @@ async def upload_file(
 @knowledge.get("/files/supported-types")
 async def get_supported_file_types(current_user: User = Depends(get_admin_user)):
     """获取当前支持的文件类型"""
-    return {"message": "success", "file_types": sorted(SUPPORTED_FILE_EXTENSIONS)}
+    return {"message": "success", "file_types": sorted(_knowledge_indexing().SUPPORTED_FILE_EXTENSIONS)}
 
 
 @knowledge.post("/files/markdown")
@@ -1916,7 +1979,7 @@ async def mark_it_down(file: UploadFile = File(...), current_user: User = Depend
     """调用 src.knowledge.indexing 下面的 process_file_to_markdown 解析为 markdown，参数是文件，需要管理员权限"""
     try:
         content = await file.read()
-        markdown_content = await process_file_to_markdown(content)
+        markdown_content = await _knowledge_indexing().process_file_to_markdown(content)
         return {"markdown_content": markdown_content, "message": "success"}
     except Exception as e:
         logger.error(f"文件解析失败 {e}, {traceback.format_exc()}")

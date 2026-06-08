@@ -1,60 +1,76 @@
-from collections.abc import Iterable
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Final
 
 from fastapi import APIRouter
 
-from server.routers.auth_router import auth
-from server.routers.chat_router import chat
-from server.routers.dashboard_router import dashboard
-from server.routers.department_router import department
-from server.routers.evaluation_router import evaluation
-from server.routers.graph_router import graph
-from server.routers.knowledge_router import knowledge
-from server.routers.mcp_router import mcp
-from server.routers.mindmap_router import mindmap
-from server.routers.skill_router import skills
-from server.routers.system_router import system
-from server.routers.task_router import tasks
-from server.routers.tool_router import tools
+RouterSpec = tuple[str, str]
 
-PLATFORM_ROUTERS = (
-    system,
-    auth,
-    dashboard,
-    department,
+ROUTER_GROUPS: Final[tuple[tuple[str, tuple[RouterSpec, ...]], ...]] = (
+    (
+        "platform",
+        (
+            ("server.routers.system_router", "system"),
+            ("server.routers.auth_router", "auth"),
+            ("server.routers.dashboard_router", "dashboard"),
+            ("server.routers.department_router", "department"),
+        ),
+    ),
+    (
+        "knowledge",
+        (
+            ("server.routers.chat_router", "chat"),
+            ("server.routers.knowledge_router", "knowledge"),
+            ("server.routers.evaluation_router", "evaluation"),
+            ("server.routers.mindmap_router", "mindmap"),
+            ("server.routers.graph_router", "graph"),
+            ("server.routers.task_router", "tasks"),
+        ),
+    ),
+    (
+        "operations",
+        (
+            ("server.routers.mcp_router", "mcp"),
+            ("server.routers.skill_router", "skills"),
+            ("server.routers.tool_router", "tools"),
+            ("server.routers.worldline_run_router", "worldline_runs"),
+        ),
+    ),
 )
 
-KNOWLEDGE_ROUTERS = (
-    chat,
-    knowledge,
-    evaluation,
-    mindmap,
-    graph,
-    tasks,
-)
+_router_cache: APIRouter | None = None
 
-OPERATIONS_ROUTERS = (
-    mcp,
-    skills,
-    tools,
-)
 
-ROUTER_GROUPS: tuple[tuple[str, Iterable[APIRouter]], ...] = (
-    ("platform", PLATFORM_ROUTERS),
-    ("knowledge", KNOWLEDGE_ROUTERS),
-    ("operations", OPERATIONS_ROUTERS),
-)
+def _load_router(module_name: str, attr_name: str) -> APIRouter:
+    module = import_module(module_name)
+    router = getattr(module, attr_name)
+    if not isinstance(router, APIRouter):
+        raise TypeError(f"{module_name}.{attr_name} is not a FastAPI APIRouter")
+    return router
 
 
 def create_api_router() -> APIRouter:
     api_router = APIRouter()
 
-    for _, routers in ROUTER_GROUPS:
-        for child_router in routers:
-            api_router.include_router(child_router)
+    for _, router_specs in ROUTER_GROUPS:
+        for module_name, attr_name in router_specs:
+            api_router.include_router(_load_router(module_name, attr_name))
 
     return api_router
 
 
-router = create_api_router()
+def get_api_router() -> APIRouter:
+    global _router_cache
+    if _router_cache is None:
+        _router_cache = create_api_router()
+    return _router_cache
 
-__all__ = ["router", "ROUTER_GROUPS", "create_api_router"]
+
+def __getattr__(name: str):
+    if name == "router":
+        return get_api_router()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+__all__ = ["router", "ROUTER_GROUPS", "create_api_router", "get_api_router"]

@@ -31,8 +31,8 @@ class WorldlineWorkbenchService:
     """Facade service for the live Worldline workbench.
 
     The service composes deterministic baseline services and avoids external
-    model calls. The frontend can therefore render the Phase 5 workbench from a
-    stable contract while the deeper LLM workflows continue to evolve.
+    model calls. The frontend can therefore render the Worldline workbench from
+    a stable contract while the deeper LLM workflows continue to evolve.
     """
 
     def __init__(

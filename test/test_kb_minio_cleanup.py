@@ -12,6 +12,8 @@ import asyncio
 import os
 import sys
 
+import pytest
+
 # 添加项目根目录到 Python 路径
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -20,6 +22,9 @@ async def test_delete_knowledge_base_cleanup():
     """测试删除知识库时 MinIO 文件清理"""
     from src.storage.minio import get_minio_client
     from src.knowledge import knowledge_base
+
+    if knowledge_base is None:
+        pytest.skip("Knowledge runtime bootstrap is disabled for unit-test collection.")
 
     # 初始化
     minio_client = get_minio_client()

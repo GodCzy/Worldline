@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 
-load_dotenv(".env", override=True)
+load_dotenv(".env", override=False)
 
 import os  # noqa: E402
 import warnings  # noqa: E402

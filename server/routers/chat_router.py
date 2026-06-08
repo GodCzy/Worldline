@@ -11,30 +11,46 @@ from src.storage.postgres.models_business import User
 from server.routers.auth_router import get_admin_user
 from server.utils.auth_middleware import get_db, get_required_user
 from src import config as conf
-from src.agents import agent_manager
-from src.models import select_model
-from src.services.chat_stream_service import get_agent_state_view, stream_agent_chat, stream_agent_resume
-from src.services.agent_run_service import (
-    cancel_agent_run_view,
-    create_agent_run_view,
-    get_active_run_by_thread,
-    get_agent_run_view,
-    stream_agent_run_events,
-)
-from src.services.conversation_service import (
-    create_thread_view,
-    delete_thread_attachment_view,
-    delete_thread_view,
-    list_thread_attachments_view,
-    list_threads_view,
-    update_thread_view,
-    upload_thread_attachment_view,
-)
 from src.services.feedback_service import get_message_feedback_view, submit_message_feedback_view
-from src.services.history_query_service import get_agent_history_view
 from src.repositories.agent_config_repository import AgentConfigRepository
 from src.utils.logging_config import logger
 from src.utils.image_processor import process_uploaded_image
+
+
+def _agent_manager():
+    from src.agents import agent_manager
+
+    return agent_manager
+
+
+def _select_model(*args, **kwargs):
+    from src.models import select_model
+
+    return select_model(*args, **kwargs)
+
+
+def _chat_stream_service():
+    from src.services import chat_stream_service
+
+    return chat_stream_service
+
+
+def _agent_run_service():
+    from src.services import agent_run_service
+
+    return agent_run_service
+
+
+def _conversation_service():
+    from src.services import conversation_service
+
+    return conversation_service
+
+
+def _history_query_service():
+    from src.services import history_query_service
+
+    return history_query_service
 
 
 # 图片上传响应模型
@@ -89,7 +105,7 @@ async def get_default_agent(current_user: User = Depends(get_required_user)):
         default_agent_id = conf.default_agent_id
         # 如果没有设置默认智能体，尝试获取第一个可用的智能体
         if not default_agent_id:
-            agents = await agent_manager.get_agents_info(include_configurable_items=False)
+            agents = await _agent_manager().get_agents_info(include_configurable_items=False)
             if agents:
                 default_agent_id = agents[0].get("id", "")
 
@@ -108,7 +124,7 @@ async def set_default_agent(request_data: dict = Body(...), current_user=Depends
             raise HTTPException(status_code=422, detail="缺少必需的 agent_id 字段")
 
         # 验证智能体是否存在
-        agents = await agent_manager.get_agents_info(include_configurable_items=False)
+        agents = await _agent_manager().get_agents_info(include_configurable_items=False)
         agent_ids = [agent.get("id", "") for agent in agents]
 
         if agent_id not in agent_ids:
@@ -136,7 +152,7 @@ async def call(query: str = Body(...), meta: dict = Body(None), current_user: Us
     if "request_id" not in meta or not meta.get("request_id"):
         meta["request_id"] = str(uuid.uuid4())
 
-    model = select_model(
+    model = _select_model(
         model_provider=meta.get("model_provider"),
         model_name=meta.get("model_name"),
         model_spec=meta.get("model_spec") or meta.get("model"),
@@ -151,7 +167,7 @@ async def call(query: str = Body(...), meta: dict = Body(None), current_user: Us
 @chat.get("/agent")
 async def get_agent(current_user: User = Depends(get_required_user)):
     """获取所有可用智能体的基本信息（需要登录）"""
-    agents_info = await agent_manager.get_agents_info(include_configurable_items=False)
+    agents_info = await _agent_manager().get_agents_info(include_configurable_items=False)
 
     # Return agents with basic information (without configurable_items for performance)
     agents = [
@@ -174,7 +190,7 @@ async def get_single_agent(agent_id: str, current_user: User = Depends(get_requi
     """获取指定智能体的完整信息（包含配置选项）（需要登录）"""
     try:
         # 检查智能体是否存在
-        if not (agent := agent_manager.get_agent(agent_id)):
+        if not (agent := _agent_manager().get_agent(agent_id)):
             raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
         # 获取智能体的完整信息（包含 configurable_items）
@@ -206,7 +222,7 @@ async def list_agent_configs(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -244,7 +260,7 @@ async def get_agent_config_profile(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -265,7 +281,7 @@ async def create_agent_config_profile(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -298,7 +314,7 @@ async def update_agent_config_profile(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -329,7 +345,7 @@ async def set_agent_config_default(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -351,7 +367,7 @@ async def delete_agent_config_profile(
     if not current_user.department_id:
         raise HTTPException(status_code=400, detail="当前用户未绑定部门")
 
-    if not agent_manager.get_agent(agent_id):
+    if not _agent_manager().get_agent(agent_id):
         raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
     repo = AgentConfigRepository(db)
@@ -395,7 +411,7 @@ async def chat_agent(
         }
     )
     return StreamingResponse(
-        stream_agent_chat(
+        _chat_stream_service().stream_agent_chat(
             agent_id=agent_id,
             query=query,
             config=config,
@@ -416,7 +432,7 @@ async def create_agent_run(
     db: AsyncSession = Depends(get_db),
 ):
     """创建异步 run 任务并入队（需要登录）"""
-    return await create_agent_run_view(
+    return await _agent_run_service().create_agent_run_view(
         agent_id=agent_id,
         query=payload.query,
         config=payload.config or {},
@@ -433,7 +449,7 @@ async def get_agent_run(
     db: AsyncSession = Depends(get_db),
 ):
     """获取 run 状态（需要登录）"""
-    return await get_agent_run_view(run_id=run_id, current_user_id=str(current_user.id), db=db)
+    return await _agent_run_service().get_agent_run_view(run_id=run_id, current_user_id=str(current_user.id), db=db)
 
 
 @chat.post("/runs/{run_id}/cancel")
@@ -443,7 +459,7 @@ async def cancel_agent_run(
     db: AsyncSession = Depends(get_db),
 ):
     """取消 run（需要登录）"""
-    return await cancel_agent_run_view(run_id=run_id, current_user_id=str(current_user.id), db=db)
+    return await _agent_run_service().cancel_agent_run_view(run_id=run_id, current_user_id=str(current_user.id), db=db)
 
 
 @chat.get("/runs/{run_id}/events")
@@ -454,7 +470,7 @@ async def stream_run_events(
 ):
     """SSE 拉取 run 事件（需要登录）"""
     return StreamingResponse(
-        stream_agent_run_events(
+        _agent_run_service().stream_agent_run_events(
             run_id=run_id,
             after_seq=after_seq,
             current_user_id=str(current_user.id),
@@ -475,7 +491,11 @@ async def get_thread_active_run(
     db: AsyncSession = Depends(get_db),
 ):
     """获取当前会话活跃 run（需要登录）"""
-    return await get_active_run_by_thread(thread_id=thread_id, current_user_id=str(current_user.id), db=db)
+    return await _agent_run_service().get_active_run_by_thread(
+        thread_id=thread_id,
+        current_user_id=str(current_user.id),
+        db=db,
+    )
 
 
 # =============================================================================
@@ -486,7 +506,7 @@ async def get_thread_active_run(
 @chat.get("/models")
 async def get_chat_models(model_provider: str, current_user: User = Depends(get_admin_user)):
     """获取指定模型提供商的模型列表（需要登录）"""
-    model = select_model(model_provider=model_provider)
+    model = _select_model(model_provider=model_provider)
     models = await model.get_models()
     return {"models": models}
 
@@ -580,7 +600,7 @@ async def resume_agent_chat(
     if "request_id" not in meta or not meta.get("request_id"):
         meta["request_id"] = str(uuid.uuid4())
     return StreamingResponse(
-        stream_agent_resume(
+        _chat_stream_service().stream_agent_resume(
             agent_id=agent_id,
             thread_id=thread_id,
             resume_input=resume_input,
@@ -603,7 +623,7 @@ async def save_agent_config(
     """保存智能体配置到YAML文件（需要登录）"""
     try:
         # 获取Agent实例和配置类
-        if not (agent := agent_manager.get_agent(agent_id)):
+        if not (agent := _agent_manager().get_agent(agent_id)):
             raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
         # === 校验知识库权限 ===
@@ -639,7 +659,7 @@ async def save_agent_config(
 
         if result:
             if reload_graph:
-                agent_manager.get_agent(agent_id, reload_graph=True)
+                _agent_manager().get_agent(agent_id, reload_graph=True)
             return {"success": True, "message": f"智能体 {agent.name} 配置已保存"}
         else:
             raise HTTPException(status_code=500, detail="保存智能体配置失败")
@@ -657,7 +677,7 @@ async def get_agent_history(
 ):
     """获取智能体历史消息（需要登录）- 包含用户反馈状态"""
     try:
-        return await get_agent_history_view(
+        return await _history_query_service().get_agent_history_view(
             agent_id=agent_id,
             thread_id=thread_id,
             current_user_id=str(current_user.id),
@@ -678,7 +698,7 @@ async def get_agent_state(
 ):
     """获取智能体当前状态（需要登录）"""
     try:
-        return await get_agent_state_view(
+        return await _chat_stream_service().get_agent_state_view(
             agent_id=agent_id,
             thread_id=thread_id,
             current_user_id=str(current_user.id),
@@ -696,7 +716,7 @@ async def get_agent_config(agent_id: str, current_user: User = Depends(get_requi
     """从YAML文件加载智能体配置（需要登录）"""
     try:
         # 检查智能体是否存在
-        if not (agent := agent_manager.get_agent(agent_id)):
+        if not (agent := _agent_manager().get_agent(agent_id)):
             raise HTTPException(status_code=404, detail=f"智能体 {agent_id} 不存在")
 
         config = await agent.get_config()
@@ -757,7 +777,7 @@ async def create_thread(
     thread: ThreadCreate, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_required_user)
 ):
     """创建新对话线程 (使用新存储系统)"""
-    return await create_thread_view(
+    return await _conversation_service().create_thread_view(
         agent_id=thread.agent_id,
         title=thread.title,
         metadata=thread.metadata,
@@ -775,7 +795,7 @@ async def list_threads(
     current_user: User = Depends(get_required_user),
 ):
     """获取用户的所有对话线程 (使用新存储系统)"""
-    return await list_threads_view(
+    return await _conversation_service().list_threads_view(
         agent_id=agent_id, db=db, current_user_id=str(current_user.id), limit=limit, offset=offset
     )
 
@@ -785,7 +805,9 @@ async def delete_thread(
     thread_id: str, db: AsyncSession = Depends(get_db), current_user: User = Depends(get_required_user)
 ):
     """删除对话线程 (使用新存储系统)"""
-    return await delete_thread_view(thread_id=thread_id, db=db, current_user_id=str(current_user.id))
+    return await _conversation_service().delete_thread_view(
+        thread_id=thread_id, db=db, current_user_id=str(current_user.id)
+    )
 
 
 class ThreadUpdate(BaseModel):
@@ -801,7 +823,7 @@ async def update_thread(
     current_user: User = Depends(get_required_user),
 ):
     """更新对话线程信息 (使用新存储系统)"""
-    return await update_thread_view(
+    return await _conversation_service().update_thread_view(
         thread_id=thread_id,
         title=thread_update.title,
         is_pinned=thread_update.is_pinned,
@@ -823,7 +845,7 @@ async def upload_thread_attachment(
     current_user: User = Depends(get_required_user),
 ):
     """上传并解析附件为 Markdown，附加到指定对话线程。"""
-    return await upload_thread_attachment_view(
+    return await _conversation_service().upload_thread_attachment_view(
         thread_id=thread_id,
         file=file,
         db=db,
@@ -838,7 +860,7 @@ async def list_thread_attachments(
     current_user: User = Depends(get_required_user),
 ):
     """列出当前对话线程的所有附件元信息。"""
-    return await list_thread_attachments_view(
+    return await _conversation_service().list_thread_attachments_view(
         thread_id=thread_id,
         db=db,
         current_user_id=str(current_user.id),
@@ -853,7 +875,7 @@ async def delete_thread_attachment(
     current_user: User = Depends(get_required_user),
 ):
     """移除指定附件。"""
-    return await delete_thread_attachment_view(
+    return await _conversation_service().delete_thread_attachment_view(
         thread_id=thread_id,
         file_id=file_id,
         db=db,
