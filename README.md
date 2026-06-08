@@ -1,6 +1,6 @@
 # Worldline
 
-更新时间：2026-06-03
+更新时间：2026-06-08
 
 Worldline 是 Joy 重新开发中的 Evidence-backed LLM Wiki + Temporal Knowledge Graph OS 工程。当前事实源从本文件、项目级 `AGENTS.md`、`docs/index.md`、`.ai/tasks/2026-06-03-worldline-reset/` 和 `.ai/tasks/2026-06-03-worldline-frontier-stack/` 重新开始；旧阶段规划、旧归档、旧演示主题和旧 QA 证据不再作为项目依据。
 
@@ -21,7 +21,7 @@ Worldline 是 Joy 重新开发中的 Evidence-backed LLM Wiki + Temporal Knowled
 
 - 保留核心代码、测试、Docker、锁文件、环境模板和 `LICENSE`。
 - 保留现有后端 API、数据库 schema、MCP tool contract 和前端路由 contract。
-- 清理旧 Markdown 规划、旧 `.ai/tasks`、旧 `.codex` 多 Agent 配置、旧 artifacts 和 PoE demo 残留。
+- 清理旧 Markdown 规划、旧 `.ai/tasks`、旧 `.codex` 多 Agent 配置、旧 artifacts 和旧演示残留。
 
 ## 目录结构
 
@@ -36,10 +36,20 @@ Worldline 是 Joy 重新开发中的 Evidence-backed LLM Wiki + Temporal Knowled
 ## 当前文档
 
 - `docs/product/worldline-project-book.md`：新项目书。
+- `docs/product/worldline-next-roadmap.md`：P3 及后续产品/工程路线图。
 - `docs/architecture/knowledge-compiler.md`：知识编译链。
 - `docs/architecture/worldline-ui.md`：世界线工作台 UI。
+- `docs/architecture/agent-operating-workflow.md`：主控 Agent、子代理、skills、MCP、Browser/GitHub 和提交工作流。
 - `docs/architecture/mcp-skill-governance.md`：MCP 与 skill 治理。
 - `docs/architecture/evaluation-gates.md`：评估门禁。
+
+## 下一阶段启动
+
+P3 默认从 Evidence-backed LLM Wiki 垂直切片开始：
+
+```text
+请读取 D:\dev\Worldline\docs\product\worldline-next-roadmap.md 和 D:\dev\Worldline\docs\architecture\agent-operating-workflow.md，并从 D:\dev\Worldline 继续。先做 P3-1 Evidence-backed LLM Wiki：单个真实内容知识库生成可阅读、可引用、可审查的 Wiki 页面，并完成 focused pytest 与桌面/390px 截图 QA。
+```
 
 ## 启动与验证
 
@@ -52,7 +62,7 @@ pnpm --dir web dev
 ```
 
 ```powershell
-uv run --group test pytest test\test_knowledge_object_models.py test\test_worldline_phase5_7_services.py test\test_evidence_service.py
+uv run --group test pytest test\test_knowledge_object_models.py test\test_worldline_live_services.py test\test_evidence_service.py
 pnpm --dir web build
 npm run docs:build
 ```
