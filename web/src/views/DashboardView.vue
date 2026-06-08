@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard-container">
+  <div class="dashboard-container layout-container wl-ant-dark">
     <!-- 顶部状态条 -->
 
     <!-- 现代化顶部统计栏 -->
@@ -342,7 +342,7 @@ const handleTableChange = (pag) => {
 // 清理函数 - 清理所有子组件的图表实例
 const cleanupCharts = () => {
   if (userStatsRef.value?.cleanup) userStatsRef.value.cleanup()
-  if (toolStatsRef.value?.cleanup) userStatsRef.value.cleanup()
+  if (toolStatsRef.value?.cleanup) toolStatsRef.value.cleanup()
   if (knowledgeStatsRef.value?.cleanup) knowledgeStatsRef.value.cleanup()
   if (agentStatsRef.value?.cleanup) agentStatsRef.value.cleanup()
   if (callStatsRef.value?.cleanup) callStatsRef.value.cleanup()
@@ -363,7 +363,32 @@ onUnmounted(() => {
 <style scoped lang="less">
 .dashboard-container {
   // padding: 0 24px 24px 24px;
-  background-color: var(--gray-25);
+  --gray-0: #061017;
+  --gray-10: #08131c;
+  --gray-15: #091822;
+  --gray-25: #061017;
+  --gray-50: #0a1a24;
+  --gray-100: rgba(124, 246, 255, 0.1);
+  --gray-120: rgba(124, 246, 255, 0.12);
+  --gray-150: rgba(124, 246, 255, 0.15);
+  --gray-200: rgba(124, 246, 255, 0.2);
+  --gray-500: #7f9aa6;
+  --gray-600: var(--wl-muted);
+  --gray-700: var(--wl-text-soft);
+  --gray-800: var(--wl-text);
+  --gray-900: var(--wl-text);
+  --gray-1000: var(--wl-text);
+  --main-color: var(--wl-cyan);
+  --main-0: rgba(var(--wl-cyan-rgb), 0.02);
+  --main-20: rgba(var(--wl-cyan-rgb), 0.08);
+  --main-50: rgba(var(--wl-cyan-rgb), 0.14);
+  --main-300: rgba(var(--wl-cyan-rgb), 0.35);
+  --main-500: var(--wl-cyan);
+  --main-600: var(--wl-cyan);
+  --main-700: var(--wl-text);
+  --main-900: var(--wl-text);
+  background-color: var(--wl-page-bg);
+  color: var(--wl-text);
   min-height: calc(100vh - 64px);
   overflow-x: hidden;
 }
@@ -386,6 +411,188 @@ onUnmounted(() => {
     font-size: 13px;
     line-height: 1.6;
   }
+}
+
+.dashboard-container :deep(.ant-card),
+.dashboard-container :deep(.dashboard-card),
+.conversations-section,
+.call-stats-section {
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  color: var(--wl-text);
+  box-shadow: var(--wl-shadow-soft);
+}
+
+.dashboard-container :deep(.ant-card-head),
+.conversations-section :deep(.ant-card-head),
+.call-stats-section :deep(.ant-card-head) {
+  border-bottom-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.035);
+}
+
+.dashboard-container :deep(.ant-card-head-title),
+.dashboard-container :deep(.ant-card-body),
+.dashboard-container :deep(.ant-table),
+.dashboard-container :deep(.ant-table-cell),
+.dashboard-container :deep(.ant-empty-description) {
+  color: var(--wl-text);
+  background: transparent;
+}
+
+.dashboard-container :deep(.stat-card),
+.dashboard-container :deep(.mini-stat-card),
+.dashboard-container :deep(.summary-card) {
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background:
+    linear-gradient(145deg, rgba(var(--wl-cyan-rgb), 0.07), rgba(var(--wl-gold-rgb), 0.035)),
+    var(--wl-panel);
+  color: var(--wl-text);
+  box-shadow: none;
+}
+
+.dashboard-container :deep(.stat-icon),
+.dashboard-container :deep(.placeholder-icon) {
+  border: 1px solid var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.08) !important;
+  color: var(--wl-cyan) !important;
+}
+
+.dashboard-container :deep(.stat-value),
+.dashboard-container :deep(.mini-stat-value),
+.dashboard-container :deep(.summary-value),
+.dashboard-container :deep(.chart-title),
+.dashboard-container :deep(.placeholder-text) {
+  color: var(--wl-text);
+}
+
+.dashboard-container :deep(.stat-label),
+.dashboard-container :deep(.mini-stat-label),
+.dashboard-container :deep(.summary-label),
+.dashboard-container :deep(.chart-subtitle),
+.dashboard-container :deep(.placeholder-subtitle),
+.dashboard-container :deep(.time-text) {
+  color: var(--wl-muted);
+}
+
+.dashboard-container :deep(.compact-chart-container),
+.dashboard-container :deep(.chart-container) {
+  border-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.025);
+}
+
+.dashboard-container :deep(.stats-overview) {
+  color: var(--wl-text);
+}
+
+.dashboard-container :deep(.ant-statistic-title) {
+  color: var(--wl-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dashboard-container :deep(.ant-statistic-content) {
+  color: var(--wl-text);
+}
+
+.dashboard-container :deep(.ant-divider) {
+  border-color: var(--wl-border);
+}
+
+.dashboard-container :deep(.ant-table-wrapper),
+.dashboard-container :deep(.ant-table-container),
+.dashboard-container :deep(.ant-table-content),
+.dashboard-container :deep(.ant-table-thead > tr > th),
+.dashboard-container :deep(.ant-table-tbody > tr > td) {
+  background: transparent;
+  color: var(--wl-text-soft);
+  border-color: var(--wl-border);
+}
+
+.dashboard-container :deep(.ant-table-thead > tr > th) {
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text);
+  font-weight: 800;
+}
+
+.dashboard-container :deep(.ant-table-tbody > tr:hover > td) {
+  background: rgba(var(--wl-cyan-rgb), 0.055);
+}
+
+.dashboard-container :deep(.ant-table-placeholder:hover > td) {
+  background: transparent;
+}
+
+.dashboard-container :deep(.ant-pagination),
+.dashboard-container :deep(.ant-pagination-total-text),
+.dashboard-container :deep(.ant-pagination-item a) {
+  color: var(--wl-muted);
+}
+
+.dashboard-container :deep(.ant-pagination-item),
+.dashboard-container :deep(.ant-pagination-prev .ant-pagination-item-link),
+.dashboard-container :deep(.ant-pagination-next .ant-pagination-item-link) {
+  border-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-text-soft);
+}
+
+.dashboard-container :deep(.ant-pagination-item-active) {
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
+}
+
+.dashboard-container :deep(.ant-input),
+.dashboard-container :deep(.ant-select-selector),
+.dashboard-container :deep(.ant-btn) {
+  border-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-text-soft);
+}
+
+.dashboard-container :deep(.ant-input::placeholder),
+.dashboard-container :deep(.ant-select-selection-placeholder) {
+  color: rgba(148, 172, 184, 0.72);
+}
+
+.dashboard-container :deep(.ant-input:hover),
+.dashboard-container :deep(.ant-input:focus),
+.dashboard-container :deep(.ant-select-selector:hover),
+.dashboard-container :deep(.ant-btn:hover) {
+  border-color: var(--wl-border-strong);
+  color: var(--wl-text);
+}
+
+.dashboard-container :deep(.ant-btn-link) {
+  border-color: transparent;
+  background: transparent;
+  color: var(--wl-cyan-soft);
+}
+
+.dashboard-container :deep(.ant-card-loading-content),
+.dashboard-container :deep(.ant-card-loading-block) {
+  background: linear-gradient(90deg, rgba(var(--wl-cyan-rgb), 0.05), rgba(var(--wl-cyan-rgb), 0.12), rgba(var(--wl-cyan-rgb), 0.05));
+}
+
+:global(.wl-ant-dark .ant-select-dropdown),
+:global(.wl-ant-dark .ant-dropdown-menu) {
+  border: 1px solid var(--wl-border);
+  background: #07131d;
+  color: var(--wl-text);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.52);
+}
+
+:global(.wl-ant-dark .ant-select-item),
+:global(.wl-ant-dark .ant-dropdown-menu-item) {
+  color: var(--wl-text-soft);
+}
+
+:global(.wl-ant-dark .ant-select-item-option-active),
+:global(.wl-ant-dark .ant-select-item-option-selected),
+:global(.wl-ant-dark .ant-dropdown-menu-item:hover) {
+  background: rgba(var(--wl-cyan-rgb), 0.08);
+  color: var(--wl-text);
 }
 
 // Dashboard 特有的网格布局

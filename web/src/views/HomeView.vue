@@ -1,44 +1,69 @@
 <template>
-  <div class="home-container wl-shell">
+  <div class="home-container">
     <div v-if="isLoading" class="loading-container">
       <a-spin size="large" />
-      <p class="loading-text">正在加载 Worldline...</p>
+      <p>正在载入 Worldline 控制台</p>
     </div>
 
     <template v-else>
-      <header class="topbar wl-shell-topbar">
-        <router-link to="/" class="brand-link wl-brand">
+      <header class="topbar">
+        <router-link to="/" class="brand-link" aria-label="Worldline Home">
           <img
-            v-if="infoStore.organization.logo"
+            v-if="infoStore.organization.logo && !logoFailed"
             :src="infoStore.organization.logo"
             :alt="infoStore.organization.name"
-            class="brand-logo wl-brand-logo"
+            class="brand-logo"
             @error="logoFailed = true"
           />
-          <span v-if="logoFailed || !infoStore.organization.logo" class="brand-mark">W</span>
-          <span class="brand-name wl-brand-text">{{ infoStore.organization.name || 'Worldline' }}</span>
+          <span v-else class="brand-mark">W</span>
+          <span class="brand-name">{{ infoStore.organization.name || 'Worldline' }}</span>
         </router-link>
 
-        <nav class="nav-links wl-nav-pills" aria-label="Primary">
-          <router-link to="/worldline" class="nav-link wl-nav-pill">世界线</router-link>
-          <router-link to="/themes" class="nav-link wl-nav-pill">模块</router-link>
-          <router-link v-if="userStore.isLoggedIn" to="/agent" class="nav-link wl-nav-pill">智能体</router-link>
-          <router-link v-if="userStore.isAdmin" to="/graph" class="nav-link wl-nav-pill">图谱</router-link>
-          <router-link v-if="userStore.isAdmin" to="/database" class="nav-link wl-nav-pill">知识库</router-link>
+        <nav class="nav-links" aria-label="Primary">
+          <button type="button" class="nav-pill" @click="openWorldline">
+            <Waypoints :size="17" />
+            <span>世界线</span>
+          </button>
+          <button type="button" class="nav-pill" @click="openThemes">
+            <LayoutGrid :size="17" />
+            <span>主题分区</span>
+          </button>
+          <button type="button" class="nav-pill" :class="{ locked: !userStore.isLoggedIn }" @click="openAgent">
+            <Bot :size="17" />
+            <span>Agent</span>
+            <LockKeyhole v-if="!userStore.isLoggedIn" class="mini-lock" :size="12" />
+          </button>
+          <button type="button" class="nav-pill" :class="{ locked: !userStore.isAdmin }" @click="openKnowledge">
+            <Database :size="17" />
+            <span>知识库</span>
+            <LockKeyhole v-if="!userStore.isAdmin" class="mini-lock" :size="12" />
+          </button>
+          <button type="button" class="nav-pill" :class="{ locked: !userStore.isAdmin }" @click="openGraph">
+            <Network :size="17" />
+            <span>图谱</span>
+            <LockKeyhole v-if="!userStore.isAdmin" class="mini-lock" :size="12" />
+          </button>
         </nav>
 
         <div class="header-actions">
           <a
             v-if="githubUrl"
-            class="icon-link"
+            class="icon-button"
             :href="githubUrl"
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Repository"
           >
-            <Github :size="20" />
+            <Github :size="19" />
           </a>
-          <UserInfoComponent :show-button="true" />
+          <button v-if="userStore.isLoggedIn" type="button" class="session-button" @click="logout">
+            <ShieldCheck :size="17" />
+            <span>{{ userStore.username || userStore.userIdLogin }}</span>
+          </button>
+          <button v-else type="button" class="session-button" @click="focusLogin('/agent')">
+            <KeyRound :size="17" />
+            <span>登录</span>
+          </button>
         </div>
       </header>
 
@@ -46,10 +71,10 @@
         <div v-if="backendStatus.state !== 'ready'" class="status-banner" role="status">
           <AlertTriangle :size="18" />
           <span>{{ backendStatus.message }}</span>
-          <button type="button" @click="retryLoad">重试连接</button>
+          <button type="button" @click="retryLoad">重试</button>
         </div>
 
-        <section class="hero-section">
+        <section class="hero-section" aria-label="Worldline console">
           <div class="hero-copy">
             <p class="eyebrow">LIVING KNOWLEDGE OS</p>
             <h1>{{ infoStore.branding.title || 'Worldline' }}</h1>
@@ -58,12 +83,12 @@
 
             <div class="hero-actions">
               <button class="primary-button" type="button" @click="openWorldline">
-                <Network :size="18" />
-                进入世界线
+                <Waypoints :size="18" />
+                <span>进入世界线</span>
               </button>
-              <button class="secondary-button" type="button" @click="openKnowledge">
-                <Database :size="18" />
-                知识库
+              <button class="secondary-button" type="button" @click="openThemes">
+                <Plus :size="18" />
+                <span>自定义模块</span>
               </button>
               <a
                 v-if="docsUrl"
@@ -73,91 +98,180 @@
                 rel="noopener noreferrer"
               >
                 <BookOpen :size="18" />
-                文档
+                <span>文档</span>
               </a>
             </div>
-          </div>
 
-          <div class="signal-panel" aria-label="System surfaces">
-            <div v-for="card in featureCards" :key="card.label" class="signal-item">
-              <div class="signal-icon">
-                <component :is="card.icon" :size="22" />
-              </div>
-              <div>
-                <p class="signal-value">{{ card.value }}</p>
-                <h2>{{ card.label }}</h2>
-                <p>{{ card.description }}</p>
-              </div>
+            <div class="signal-grid" aria-label="Worldline surfaces">
+              <article v-for="card in featureCards" :key="card.label" class="signal-item">
+                <div class="signal-icon">
+                  <component :is="card.icon" :size="22" />
+                </div>
+                <div>
+                  <p class="signal-value">{{ card.value }}</p>
+                  <h2>{{ card.label }}</h2>
+                  <p>{{ card.description }}</p>
+                </div>
+              </article>
             </div>
           </div>
+
+          <aside ref="loginPanelRef" class="access-panel" :class="{ highlighted: shouldHighlightLogin }">
+            <div class="panel-header">
+              <p class="eyebrow">ACCESS</p>
+              <h2>{{ userStore.isLoggedIn ? '已进入管理会话' : isFirstRun ? '初始化最高权限账号' : '登录 Worldline' }}</h2>
+              <p>
+                {{
+                  userStore.isLoggedIn
+                    ? `${userStore.username || userStore.userIdLogin} · ${userStore.userRole || 'user'}`
+                    : 'Agent 登录后打开；知识库、图谱和扩展管理需要管理员权限。'
+                }}
+              </p>
+            </div>
+
+            <div v-if="userStore.isLoggedIn" class="access-ready">
+              <div class="ready-grid">
+                <button type="button" @click="openAgent">
+                  <Bot :size="18" />
+                  <span>Agent</span>
+                </button>
+                <button type="button" @click="openKnowledge">
+                  <Database :size="18" />
+                  <span>知识库</span>
+                </button>
+                <button type="button" @click="openGraph">
+                  <Network :size="18" />
+                  <span>图谱</span>
+                </button>
+                <button type="button" @click="openExtensions">
+                  <Blocks :size="18" />
+                  <span>扩展</span>
+                </button>
+              </div>
+              <button class="secondary-button full-width" type="button" @click="logout">退出当前会话</button>
+            </div>
+
+            <form v-else-if="isFirstRun" class="login-form" @submit.prevent="handleInitialize">
+              <label>
+                <span>用户 ID</span>
+                <input v-model.trim="adminForm.userId" autocomplete="username" placeholder="Joy" />
+              </label>
+              <label>
+                <span>密码</span>
+                <input
+                  v-model="adminForm.password"
+                  type="password"
+                  autocomplete="new-password"
+                  placeholder="输入初始化密码"
+                />
+              </label>
+              <button class="primary-button full-width" type="submit" :disabled="authLoading">
+                <KeyRound :size="18" />
+                <span>{{ authLoading ? '正在初始化' : '创建最高权限账号' }}</span>
+              </button>
+            </form>
+
+            <form v-else class="login-form" @submit.prevent="handleLogin">
+              <label>
+                <span>用户 ID / 手机号</span>
+                <input v-model.trim="loginForm.loginId" autocomplete="username" placeholder="Joy" />
+              </label>
+              <label>
+                <span>密码</span>
+                <input
+                  v-model="loginForm.password"
+                  type="password"
+                  autocomplete="current-password"
+                  placeholder="输入密码"
+                />
+              </label>
+              <button class="primary-button full-width" type="submit" :disabled="authLoading">
+                <LogIn :size="18" />
+                <span>{{ authLoading ? '正在登录' : '登录并继续' }}</span>
+              </button>
+            </form>
+
+            <p v-if="authError" class="auth-error">{{ authError }}</p>
+          </aside>
         </section>
 
-        <section class="module-section">
+        <section class="module-section" aria-label="Module entry">
           <div class="section-header">
             <div>
               <p class="eyebrow">MODULES</p>
-              <h2>当前模块</h2>
+              <h2>主题分区</h2>
             </div>
-            <span class="module-count">{{ themes.length ? `${themes.length} 个模块` : '等待接入' }}</span>
+            <span class="module-count">{{ moduleCountText }}</span>
           </div>
 
-          <div v-if="themes.length" class="theme-grid">
-            <article v-for="theme in themes" :key="theme.id" class="theme-card">
-              <p class="theme-status">{{ theme.status || 'active' }}</p>
-              <h3>{{ theme.name }}</h3>
-              <p>{{ theme.description || theme.subtitle }}</p>
-              <button type="button" @click="openTheme(theme)">进入模块</button>
-            </article>
-          </div>
-
-          <div v-else class="empty-module">
-            <h3>主题模块已清空</h3>
-            <p>旧主题和演示模块已不再作为默认入口。下一步应接入真实知识库、证据、Wiki、图谱和工作流。</p>
-            <div class="empty-actions">
-              <button type="button" class="secondary-button" @click="openWorldline">查看世界线入口</button>
-              <button type="button" class="secondary-button" @click="openKnowledge">查看知识库</button>
-            </div>
-          </div>
+          <button class="add-module-card" type="button" @click="openAddModule">
+            <span class="add-icon"><Plus :size="32" /></span>
+            <span class="add-title">添加自定义模块</span>
+            <span class="add-copy">暂不展示旧主题或演示模块，下一阶段接入真实知识库、Wiki、图谱和工作流。</span>
+          </button>
         </section>
       </main>
 
-      <footer class="footer wl-shell-footer">
-        <div class="footer-content wl-shell-footer-inner">
-          <span>{{ infoStore.footer?.copyright || 'Worldline 2026' }}</span>
-        </div>
+      <footer class="footer">
+        <span>{{ infoStore.footer?.copyright || 'Worldline 2026' }}</span>
       </footer>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { nextTick, ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 import { useInfoStore } from '@/stores/info'
 import { healthApi } from '@/apis/system_api'
-import UserInfoComponent from '@/components/UserInfoComponent.vue'
+import { consumeStoredRedirect, normalizeAuthRedirect, setStoredRedirect } from '@/router'
 import {
   AlertTriangle,
+  Blocks,
   BookOpen,
+  Bot,
   Database,
   FileText,
   Github,
+  KeyRound,
+  LayoutGrid,
+  LockKeyhole,
+  LogIn,
   Network,
+  Plus,
   Route,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Waypoints
 } from 'lucide-vue-next'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const infoStore = useInfoStore()
 
 const isLoading = ref(true)
 const logoFailed = ref(false)
+const isFirstRun = ref(false)
+const authLoading = ref(false)
+const authError = ref('')
+const loginPanelRef = ref(null)
+const shouldHighlightLogin = ref(false)
 const backendStatus = ref({
   state: 'checking',
-  message: '正在检查后端服务状态...'
+  message: '正在检查后端服务状态'
+})
+
+const loginForm = ref({
+  loginId: '',
+  password: ''
+})
+
+const adminForm = ref({
+  userId: 'Joy',
+  password: ''
 })
 
 const iconKey = (value) => (typeof value === 'string' ? value.toLowerCase() : '')
@@ -181,36 +295,41 @@ const withTimeout = (promise, timeoutMs, timeoutMessage) =>
 
 const checkHealth = async () => {
   try {
-    const response = await withTimeout(
-      healthApi.checkHealth(),
-      3500,
-      'Backend health check timed out.'
-    )
+    const response = await withTimeout(healthApi.checkHealth(), 3500, 'Backend health check timed out.')
     if (response.status !== 'ok') {
       throw new Error('Backend health response is not ok.')
     }
     backendStatus.value = {
       state: 'ready',
-      message: '后端服务已连接。'
+      message: '后端服务已连接'
     }
   } catch (error) {
     backendStatus.value = {
       state: 'offline',
-      message: '后端暂不可用，当前使用本地配置渲染首页。'
+      message: '后端暂不可用，当前使用本地配置渲染首页'
     }
     console.warn('Backend health check failed; homepage remains available.', error)
   }
 }
 
+const checkFirstRunStatus = async () => {
+  if (userStore.isLoggedIn) {
+    isFirstRun.value = false
+    return
+  }
+
+  isFirstRun.value = await userStore.checkFirstRun()
+}
+
 const refreshRuntimeStatus = async () => {
-  await Promise.allSettled([checkHealth(), infoStore.loadInfoConfig(true)])
+  await Promise.allSettled([checkHealth(), infoStore.loadInfoConfig(true), checkFirstRunStatus()])
 }
 
 const loadData = () => {
   isLoading.value = false
   backendStatus.value = {
     state: 'checking',
-    message: '正在检查后端服务状态...'
+    message: '正在检查后端服务状态'
   }
   refreshRuntimeStatus()
 }
@@ -223,17 +342,157 @@ const openWorldline = () => {
   router.push('/worldline')
 }
 
+const openThemes = () => {
+  router.push('/themes')
+}
+
+const requestAdminAccess = async (redirectPath = '', label = '该能力') => {
+  if (!userStore.isLoggedIn) {
+    await focusLogin(redirectPath)
+    return
+  }
+  message.info(`${label}需要管理员权限`)
+}
+
 const openKnowledge = () => {
-  router.push(userStore.isAdmin ? '/database' : '/login')
+  if (userStore.isAdmin) {
+    router.push('/database')
+    return
+  }
+  requestAdminAccess('/database', '知识库')
 }
 
-const openTheme = (theme) => {
-  router.push(theme.entry_route || `/themes/${theme.id}`)
+const openGraph = () => {
+  if (userStore.isAdmin) {
+    router.push('/graph')
+    return
+  }
+  requestAdminAccess('/graph', '知识图谱')
 }
 
-onMounted(() => {
+const openExtensions = () => {
+  if (userStore.isSuperAdmin) {
+    router.push('/extensions')
+    return
+  }
+  message.info('扩展管理需要最高权限账号')
+}
+
+const openAgent = () => {
+  if (userStore.isLoggedIn) {
+    router.push('/agent')
+    return
+  }
+  focusLogin('/agent')
+}
+
+const openAddModule = () => {
+  const moduleCreatePath = '/themes?new_module=1'
+  if (userStore.isAdmin) {
+    router.push(moduleCreatePath)
+    return
+  }
+  if (!userStore.isLoggedIn) {
+    focusLogin(moduleCreatePath)
+    return
+  }
+  message.info('创建自定义模块需要管理员权限')
+}
+
+const focusLogin = async (redirectPath = '') => {
+  const normalizedRedirect = normalizeAuthRedirect(redirectPath)
+  if (normalizedRedirect) {
+    setStoredRedirect(normalizedRedirect)
+  }
+  shouldHighlightLogin.value = true
+  await router.replace({
+    name: 'Home',
+    query: {
+      ...route.query,
+      login: '1',
+      ...(normalizedRedirect ? { redirect: normalizedRedirect } : {})
+    }
+  })
+  await nextTick()
+  loginPanelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  window.setTimeout(() => {
+    shouldHighlightLogin.value = false
+  }, 1400)
+}
+
+const getRedirectAfterAuth = () => {
+  return normalizeAuthRedirect(route.query.redirect) || consumeStoredRedirect()
+}
+
+const handleLogin = async () => {
+  authError.value = ''
+  if (!loginForm.value.loginId || !loginForm.value.password) {
+    authError.value = '请输入用户 ID 和密码。'
+    return
+  }
+
+  authLoading.value = true
+  try {
+    await userStore.login({
+      loginId: loginForm.value.loginId,
+      password: loginForm.value.password
+    })
+    message.success('登录成功')
+    const redirectPath = getRedirectAfterAuth()
+    await router.push(redirectPath || '/worldline')
+  } catch (error) {
+    authError.value = error?.message || '登录失败，请检查账号或密码。'
+  } finally {
+    authLoading.value = false
+  }
+}
+
+const handleInitialize = async () => {
+  authError.value = ''
+  if (!adminForm.value.userId || !adminForm.value.password) {
+    authError.value = '请输入初始化用户 ID 和密码。'
+    return
+  }
+
+  authLoading.value = true
+  try {
+    await userStore.initialize({
+      user_id: adminForm.value.userId,
+      password: adminForm.value.password,
+      phone_number: null
+    })
+    message.success('最高权限账号已初始化')
+    const redirectPath = getRedirectAfterAuth()
+    await router.push(redirectPath || '/worldline')
+  } catch (error) {
+    authError.value = error?.message || '初始化失败。'
+  } finally {
+    authLoading.value = false
+  }
+}
+
+const logout = () => {
+  userStore.logout()
+  message.success('已退出登录')
+  checkFirstRunStatus()
+}
+
+onMounted(async () => {
   loadData()
+  if (route.query.login === '1') {
+    await nextTick()
+    focusLogin(normalizeAuthRedirect(route.query.redirect) || '')
+  }
 })
+
+watch(
+  () => route.query.login,
+  (value) => {
+    if (value === '1' && !userStore.isLoggedIn) {
+      focusLogin(normalizeAuthRedirect(route.query.redirect) || '')
+    }
+  }
+)
 
 const featureCards = computed(() => {
   const list = Array.isArray(infoStore.features) ? infoStore.features : []
@@ -261,8 +520,11 @@ const featureCards = computed(() => {
 
 const githubUrl = computed(() => infoStore.projectRepoUrl || '')
 const docsUrl = computed(() => infoStore.docsUrl || '')
-const themes = computed(() => infoStore.themes || [])
 const brandingDescription = computed(() => infoStore.branding?.description || '')
+const moduleCountText = computed(() => {
+  const count = Array.isArray(infoStore.themes) ? infoStore.themes.length : 0
+  return count ? `${count} 个模块` : '等待自定义接入'
+})
 </script>
 
 <style lang="less" scoped>
@@ -270,8 +532,8 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  color: var(--gray-1000);
-  background: linear-gradient(180deg, var(--gray-0), var(--main-10));
+  color: var(--wl-text);
+  background: var(--wl-page-bg);
 }
 
 .loading-container {
@@ -281,38 +543,44 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
   align-items: center;
   justify-content: center;
   gap: 14px;
-}
-
-.loading-text {
-  color: var(--gray-600);
+  color: var(--wl-muted);
 }
 
 .topbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 20;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
   padding: 14px 28px;
-  border-bottom: 1px solid var(--gray-100);
-  background: color-mix(in srgb, var(--gray-0) 92%, transparent);
-  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--wl-border);
+  background: rgba(2, 5, 10, 0.78);
+  backdrop-filter: blur(18px);
 }
 
 .brand-link,
-.nav-link,
-.icon-link {
+.nav-pill,
+.icon-button,
+.session-button {
   color: inherit;
   text-decoration: none;
 }
 
-.brand-link {
+.brand-link,
+.nav-pill,
+.header-actions,
+.session-button,
+.hero-actions,
+.ready-grid button {
   display: inline-flex;
   align-items: center;
+}
+
+.brand-link {
   gap: 10px;
-  font-weight: 800;
+  min-width: 0;
+  font-weight: 900;
 }
 
 .brand-logo,
@@ -323,131 +591,233 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
 }
 
 .brand-logo {
-  object-fit: contain;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  object-fit: cover;
 }
 
 .brand-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--main-700);
-  color: var(--gray-0);
+  border-radius: var(--wl-radius-sm);
+  border: 1px solid var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.12);
+  color: var(--wl-gold-soft);
+  font-weight: 900;
 }
 
 .brand-name {
+  color: var(--wl-text);
   white-space: nowrap;
 }
 
-.nav-links,
-.header-actions,
-.hero-actions,
-.empty-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .nav-links {
-  justify-content: center;
+  display: flex;
   flex-wrap: wrap;
-}
-
-.nav-link,
-.icon-link {
-  min-height: 38px;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  color: var(--gray-700);
-  font-weight: 600;
+  gap: 8px;
 }
 
-.nav-link {
-  padding: 0 13px;
+.nav-pill,
+.icon-button,
+.session-button,
+.primary-button,
+.secondary-button,
+.ready-grid button {
+  min-height: 38px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
-.icon-link {
+.nav-pill {
+  gap: 7px;
+  padding: 0 12px;
+}
+
+.nav-pill.locked {
+  border-color: rgba(var(--wl-cyan-rgb), 0.08);
+  color: rgba(148, 172, 184, 0.72);
+}
+
+.nav-pill.locked:hover {
+  border-color: rgba(var(--wl-gold-rgb), 0.35);
+  background: rgba(var(--wl-gold-rgb), 0.06);
+  color: var(--wl-gold-soft);
+}
+
+.mini-lock {
+  color: var(--wl-gold-soft);
+}
+
+.icon-button {
   width: 38px;
+  justify-content: center;
 }
 
-.nav-link:hover,
-.icon-link:hover {
-  color: var(--main-700);
-  background: var(--main-20);
+.session-button {
+  gap: 7px;
+  max-width: 190px;
+  padding: 0 11px;
+}
+
+.session-button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-pill:hover,
+.icon-button:hover,
+.session-button:hover,
+.secondary-button:hover,
+.ready-grid button:hover {
+  border-color: var(--wl-border-strong);
+  background: rgba(var(--wl-cyan-rgb), 0.1);
+  color: var(--wl-text);
+}
+
+.header-actions {
+  gap: 8px;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .home-main {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 56px;
+  padding: 28px 0 52px;
 }
 
 .status-banner {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   padding: 12px 14px;
-  border: 1px solid var(--main-120);
-  border-radius: 8px;
-  background: var(--main-20);
-  color: var(--main-800);
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.28);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-gold-rgb), 0.08);
+  color: var(--wl-gold-soft);
 }
 
 .status-banner button {
   margin-left: auto;
-  border: 1px solid var(--main-200);
-  background: var(--gray-0);
-  color: var(--main-800);
-  border-radius: 8px;
-  padding: 6px 10px;
+  border: 1px solid var(--wl-border-gold);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-gold-rgb), 0.12);
+  color: var(--wl-gold-soft);
+  min-height: 30px;
+  padding: 0 10px;
   cursor: pointer;
+  font-weight: 800;
 }
 
 .hero-section {
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
-  gap: 28px;
-  align-items: center;
-  min-height: 520px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.hero-copy,
+.access-panel {
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
 }
 
 .hero-copy {
+  min-height: 620px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  padding: 30px;
+  overflow: hidden;
+}
+
+.hero-copy::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(var(--wl-cyan-rgb), 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(var(--wl-cyan-rgb), 0.035) 1px, transparent 1px);
+  background-size: 46px 46px;
+  opacity: 0.58;
+  z-index: 0;
+}
+
+.hero-copy::after {
+  content: '';
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 280px;
+  height: 180px;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.78), rgba(var(--wl-gold-rgb), 0.92)),
+    linear-gradient(90deg, transparent, rgba(var(--wl-cyan-rgb), 0.2), transparent);
+  clip-path: polygon(0 49%, 18% 44%, 34% 18%, 50% 52%, 66% 36%, 82% 46%, 100% 49%, 100% 53%, 82% 55%, 66% 62%, 50% 57%, 34% 78%, 18% 56%, 0 53%);
+  filter: drop-shadow(0 0 18px rgba(var(--wl-gold-rgb), 0.35)) drop-shadow(0 0 22px rgba(var(--wl-cyan-rgb), 0.25));
+  opacity: 0.48;
+  z-index: 0;
+}
+
+.hero-copy > * {
+  z-index: 1;
 }
 
 .eyebrow {
-  margin: 0;
-  color: var(--main-700);
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
+  margin: 0 0 9px;
+  color: var(--wl-gold);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .hero-copy h1 {
+  max-width: 780px;
   margin: 0;
-  color: var(--gray-1000);
-  font-size: clamp(3rem, 6vw, 5rem);
-  line-height: 0.98;
+  color: var(--wl-text);
+  font-size: 64px;
+  font-weight: 950;
+  line-height: 1.02;
   letter-spacing: 0;
 }
 
 .subtitle {
-  margin: 0;
-  color: var(--gray-800);
-  font-size: 1.4rem;
-  font-weight: 700;
+  max-width: 780px;
+  margin: 16px 0 0;
+  color: var(--wl-text-soft);
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .description {
-  max-width: 700px;
-  margin: 0;
-  color: var(--gray-600);
+  max-width: 760px;
+  margin: 12px 0 0;
+  color: var(--wl-muted);
   line-height: 1.7;
+}
+
+.hero-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
 }
 
 .primary-button,
@@ -456,51 +826,57 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-height: 44px;
-  padding: 0 16px;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
+  min-height: 42px;
+  padding: 0 15px;
   text-decoration: none;
 }
 
 .primary-button {
-  border: 1px solid var(--main-700);
-  background: var(--main-700);
-  color: var(--gray-0);
+  border-color: var(--wl-border-gold);
+  background: linear-gradient(135deg, rgba(var(--wl-gold-rgb), 0.92), rgba(var(--wl-cyan-rgb), 0.72));
+  color: var(--wl-ink);
 }
 
-.secondary-button {
-  border: 1px solid var(--gray-160);
-  background: var(--gray-0);
-  color: var(--gray-800);
+.primary-button:hover {
+  transform: translateY(-1px);
 }
 
-.signal-panel {
+.primary-button:disabled,
+.secondary-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.signal-grid {
   display: grid;
-  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 250px;
 }
 
 .signal-item {
+  min-height: 148px;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr);
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--gray-120);
-  border-radius: 8px;
-  background: var(--gray-0);
-  box-shadow: 0 14px 32px rgba(20, 32, 44, 0.06);
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(255, 255, 255, 0.035);
 }
 
 .signal-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: var(--main-20);
-  color: var(--main-700);
+  border-radius: var(--wl-radius-sm);
+  border: 1px solid var(--wl-border);
+  color: var(--wl-cyan);
+  background: rgba(var(--wl-cyan-rgb), 0.07);
 }
 
 .signal-item h2,
@@ -509,27 +885,121 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
 }
 
 .signal-value {
-  color: var(--main-700);
+  color: var(--wl-gold-soft);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .signal-item h2 {
   margin-top: 3px;
-  color: var(--gray-1000);
-  font-size: 1.05rem;
+  color: var(--wl-text);
+  font-size: 16px;
+  font-weight: 900;
 }
 
 .signal-item p:last-child {
   margin-top: 6px;
-  color: var(--gray-600);
-  line-height: 1.6;
+  color: var(--wl-muted);
+  line-height: 1.55;
+}
+
+.access-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 620px;
+  padding: 24px;
+}
+
+.access-panel.highlighted {
+  border-color: var(--wl-border-gold);
+  box-shadow: var(--wl-shadow), 0 0 0 3px rgba(var(--wl-gold-rgb), 0.12);
+}
+
+.panel-header h2 {
+  margin: 0;
+  color: var(--wl-text);
+  font-size: 25px;
+  font-weight: 950;
+}
+
+.panel-header p {
+  margin: 9px 0 0;
+  color: var(--wl-muted);
+  line-height: 1.65;
+}
+
+.login-form {
+  display: grid;
+  gap: 14px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 7px;
+  color: var(--wl-gold-soft);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.login-form input {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(2, 5, 10, 0.76);
+  color: var(--wl-text);
+  padding: 0 12px;
+  outline: none;
+}
+
+.login-form input:focus {
+  border-color: var(--wl-border-gold);
+  box-shadow: var(--wl-focus-ring);
+}
+
+.login-form input::placeholder {
+  color: var(--wl-muted-soft);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.auth-error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 123, 123, 0.32);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(255, 123, 123, 0.08);
+  color: var(--wl-red);
+}
+
+.access-ready {
+  display: grid;
+  gap: 14px;
+}
+
+.ready-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.ready-grid button {
+  justify-content: flex-start;
+  gap: 8px;
+  min-height: 54px;
+  padding: 0 13px;
 }
 
 .module-section {
   margin-top: 18px;
-  padding-top: 24px;
-  border-top: 1px solid var(--gray-100);
+  padding: 20px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
 }
 
 .section-header {
@@ -537,86 +1007,96 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .section-header h2 {
-  margin: 6px 0 0;
-  color: var(--gray-1000);
+  margin: 0;
+  color: var(--wl-text);
+  font-size: 24px;
+  font-weight: 950;
 }
 
 .module-count {
-  border: 1px solid var(--gray-160);
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.25);
   border-radius: 999px;
   padding: 7px 11px;
-  color: var(--gray-700);
+  background: rgba(var(--wl-gold-rgb), 0.08);
+  color: var(--wl-gold-soft);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 900;
 }
 
-.theme-grid {
+.add-module-card {
+  width: 100%;
+  min-height: 162px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 14px;
-}
-
-.theme-card,
-.empty-module {
-  border: 1px solid var(--gray-120);
-  border-radius: 8px;
-  background: var(--gray-0);
-  padding: 18px;
-}
-
-.theme-card h3,
-.empty-module h3 {
-  margin: 0;
-  color: var(--gray-1000);
-}
-
-.theme-card p,
-.empty-module p {
-  color: var(--gray-600);
-  line-height: 1.7;
-}
-
-.theme-status {
-  margin: 0 0 8px;
-  color: var(--main-700);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.theme-card button {
-  border: 1px solid var(--main-700);
-  border-radius: 8px;
-  background: var(--main-700);
-  color: var(--gray-0);
-  min-height: 38px;
-  padding: 0 12px;
+  grid-template-columns: 64px minmax(0, 1fr);
+  grid-template-areas:
+    'icon title'
+    'icon copy';
+  align-items: center;
+  column-gap: 18px;
+  padding: 20px;
+  border: 1px dashed var(--wl-border-strong);
+  border-radius: var(--wl-radius);
+  background:
+    linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.06), transparent 28%),
+    rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-text);
   cursor: pointer;
+  text-align: left;
 }
 
-.empty-module {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.add-module-card:hover {
+  border-color: var(--wl-border-gold);
+  background:
+    linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.09), transparent 30%),
+    rgba(var(--wl-cyan-rgb), 0.065);
+}
+
+.add-icon {
+  grid-area: icon;
+  width: 64px;
+  height: 64px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--wl-border-gold);
+  border-radius: var(--wl-radius);
+  color: var(--wl-gold-soft);
+  background: rgba(var(--wl-gold-rgb), 0.1);
+}
+
+.add-title {
+  grid-area: title;
+  color: var(--wl-text);
+  font-size: 20px;
+  font-weight: 950;
+}
+
+.add-copy {
+  grid-area: copy;
+  margin-top: 7px;
+  color: var(--wl-muted);
+  line-height: 1.65;
 }
 
 .footer {
   margin-top: auto;
-  border-top: 1px solid var(--gray-100);
-  background: var(--gray-0);
+  border-top: 1px solid var(--wl-border);
+  background: rgba(2, 5, 10, 0.82);
+  color: var(--wl-muted-soft);
 }
 
-.footer-content {
-  width: min(1180px, calc(100% - 32px));
+.footer span {
+  display: block;
+  width: min(1280px, calc(100% - 32px));
   margin: 0 auto;
   padding: 18px 0;
-  color: var(--gray-600);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1060px) {
   .topbar {
     grid-template-columns: 1fr auto;
   }
@@ -628,22 +1108,50 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
 
   .hero-section {
     grid-template-columns: 1fr;
+  }
+
+  .access-panel,
+  .hero-copy {
     min-height: auto;
-    padding: 36px 0;
+  }
+
+  .signal-grid {
+    padding-top: 230px;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .topbar {
-    padding: 12px 16px;
+    padding: 12px 14px;
   }
 
   .home-main {
-    width: min(100% - 24px, 1180px);
+    width: min(100% - 24px, 1280px);
+    padding-top: 18px;
+  }
+
+  .hero-copy,
+  .access-panel,
+  .module-section {
+    padding: 18px;
+  }
+
+  .hero-copy h1 {
+    font-size: 40px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+  }
+
+  .hero-copy::after {
+    left: 16px;
+    right: 16px;
+    top: 410px;
+    height: 120px;
   }
 
   .hero-actions,
-  .empty-actions,
   .status-banner {
     align-items: stretch;
     flex-direction: column;
@@ -656,6 +1164,28 @@ const brandingDescription = computed(() => infoStore.branding?.description || ''
 
   .status-banner button {
     margin-left: 0;
+  }
+
+  .signal-grid {
+    grid-template-columns: 1fr;
+    padding-top: 190px;
+  }
+
+  .section-header,
+  .add-module-card {
+    align-items: flex-start;
+  }
+
+  .section-header {
+    flex-direction: column;
+  }
+
+  .add-module-card {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'icon'
+      'title'
+      'copy';
   }
 }
 </style>

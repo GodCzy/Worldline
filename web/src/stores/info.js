@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
-import { brandApi } from '@/apis/system_api'
+import { brandApi, themeModuleApi } from '@/apis/system_api'
 
 export const DEFAULT_INFO_CONFIG = {
   organization: {
@@ -11,56 +11,31 @@ export const DEFAULT_INFO_CONFIG = {
   branding: {
     name: 'Worldline',
     title: 'Worldline',
-    subtitle: 'Living Knowledge OS',
+    subtitle: 'Evidence-backed LLM Wiki + Temporal Knowledge Graph OS',
     description:
-      'A local-first knowledge workbench for documents, evidence, wiki pages, graphs, timelines, MCP tools, and repeatable quality gates.'
+      '把文档、证据、Wiki、图谱、时间事实、MCP 工具和质量门禁编译成一个可验证的知识工作台。'
   },
   features: [
     {
-      label: 'Knowledge Workbench',
+      label: 'Knowledge Compiler',
       value: 'Docs + Evidence',
-      description: 'Ingest documents, preserve evidence anchors, and keep source-backed knowledge visible.',
+      description: '解析文档并保留证据锚点，让每个结论都能回到来源。',
       icon: 'docs'
     },
     {
-      label: 'Reasoning Surfaces',
+      label: 'LLM Wiki First',
       value: 'Wiki + Graph',
-      description: 'Rebuild wiki pages, entity graphs, temporal views, and traceable overview data.',
+      description: '以结构化 Wiki 与 Temporal Evidence Graph 为主线，RAG 只做辅助召回。',
       icon: 'route'
     },
     {
-      label: 'Agent Boundary',
-      value: 'MCP + Workflow',
-      description: 'Expose controlled tools through admin-only workflows, audit logs, and quality gates.',
+      label: 'Governed Agents',
+      value: 'MCP + Audit',
+      description: '通过受控 MCP、权限边界和质量门禁把 Agent 操作纳入审计。',
       icon: 'shield'
     }
   ],
-  themes: [
-    {
-      id: 'phase5-preview',
-      name: 'Phase 5 Preview',
-      subtitle: '本地前端验收模块',
-      description:
-        '用于验证 Worldline UI 的当前阶段样本。真实知识库接入后，live bridge 结果优先于本地预览。',
-      featured: true,
-      status: 'preview',
-      tags: ['LLM Wiki', 'Temporal Graph', 'Evidence Gate'],
-      highlights: [
-        '黑底青金发光世界线舞台',
-        '证据轨、Wiki 引用、图谱实体和时间 scrubber 同屏可见',
-        'Agent handoff 保留 branch、evidence、graph 上下文'
-      ],
-      context: {
-        theme: 'phase5-preview',
-        module: 'phase5-preview',
-        scene: 'worldline',
-        version: 'worldline-phase5-preview'
-      },
-      worldline: {
-        preview: true
-      }
-    }
-  ],
+  themes: [],
   actions: [
     {
       name: 'Docs',
@@ -101,6 +76,7 @@ const normalizeTheme = (item) => {
     links: item?.links || {},
     entry_points: Array.isArray(item?.entry_points) ? item.entry_points : [],
     context: {
+      ...context,
       theme: context.theme || themeId,
       module: context.module || themeId,
       scene: context.scene || 'overview',
@@ -259,6 +235,29 @@ export const useInfoStore = defineStore('info', () => {
     return runInfoConfigRequest(() => brandApi.reloadInfoConfig())
   }
 
+  async function loadThemeModules() {
+    const response = await themeModuleApi.list()
+    return Array.isArray(response?.themes) ? response.themes : []
+  }
+
+  async function createThemeModule(payload) {
+    const response = await themeModuleApi.create(payload)
+    await loadInfoConfig(true)
+    return response?.theme || null
+  }
+
+  async function updateThemeModule(themeId, payload) {
+    const response = await themeModuleApi.update(themeId, payload)
+    await loadInfoConfig(true)
+    return response?.theme || null
+  }
+
+  async function deleteThemeModule(themeId) {
+    const response = await themeModuleApi.remove(themeId)
+    await loadInfoConfig(true)
+    return response
+  }
+
   function getThemeById(themeId) {
     return themes.value.find((item) => item.id === themeId) || null
   }
@@ -272,19 +271,23 @@ export const useInfoStore = defineStore('info', () => {
     organization,
     branding,
     features,
-    footer,
-    actions,
     themes,
     primaryTheme,
+    actions,
     docsUrl,
     projectRepoUrl,
-    setInfoConfig,
-    setDebugMode,
-    toggleDebugMode,
+    footer,
     loadInfoConfig,
     reloadInfoConfig,
-    findAction,
-    getThemeById,
-    resolveDocsUrl
+    loadThemeModules,
+    createThemeModule,
+    updateThemeModule,
+    deleteThemeModule,
+    setInfoConfig,
+    useFallbackConfig,
+    setDebugMode,
+    toggleDebugMode,
+    resolveDocsUrl,
+    getThemeById
   }
 })

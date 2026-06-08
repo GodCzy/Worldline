@@ -1,0 +1,42 @@
+[
+  {
+    "name": "database",
+    "bodyBg": "rgb(3, 3, 3)",
+    "overlapCandidateCount": 0,
+    "text": "Worldline\n世界线\n主题分区\nAgent\n登录\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quali",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5173/?login=1&redirect=/database",
+    "visibleElementCount": 121,
+    "whitePanelCount": 0
+  },
+  {
+    "name": "dashboard",
+    "bodyBg": "rgb(3, 3, 3)",
+    "overlapCandidateCount": 0,
+    "text": "Worldline\n世界线\n主题分区\nAgent\n登录\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quali",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5173/?login=1&redirect=/dashboard",
+    "visibleElementCount": 121,
+    "whitePanelCount": 0
+  },
+  {
+    "name": "extensions",
+    "bodyBg": "rgb(3, 3, 3)",
+    "overlapCandidateCount": 0,
+    "text": "Worldline\n世界线\n主题分区\nAgent\n登录\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quali",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5173/?login=1&redirect=/extensions",
+    "visibleElementCount": 121,
+    "whitePanelCount": 0
+  },
+  {
+    "name": "graph",
+    "bodyBg": "rgb(3, 3, 3)",
+    "overlapCandidateCount": 0,
+    "text": "Worldline\n世界线\n主题分区\nAgent\n登录\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quali",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5173/?login=1&redirect=/graph",
+    "visibleElementCount": 121,
+    "whitePanelCount": 0
+  }
+]

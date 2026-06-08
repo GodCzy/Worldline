@@ -1,0 +1,2832 @@
+[
+  {
+    "clientWidth": 1270,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 94,
+          "x": 335,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 109,
+          "x": 438,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 90,
+          "x": 555,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 94,
+          "x": 653,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 79,
+          "x": 755,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "session-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 164,
+          "x": 1078,
+          "y": 14
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 42,
+          "w": 132,
+          "x": 189,
+          "y": 351
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 42,
+          "w": 87,
+          "x": 331,
+          "y": 351
+        },
+        "tag": "a"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "home",
+    "scrollWidth": 1270,
+    "textLength": 780,
+    "textSample": "Worldline\n世界线\n主题分区\nAgent\n知识库\n图谱\ncodex_ui_admin\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quality gates.\n\nACCESS\n\n已进入管理会话\n\ncodex_ui_admin · superadmin\n\nAgent\n知识库\n图谱\n扩展\n退出当前会话\n\n",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/home-desktop-1280x720.jpg",
+    "screenshotBytes": 71642,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 380,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 94,
+          "x": 14,
+          "y": 62
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 109,
+          "x": 116,
+          "y": 62
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 90,
+          "x": 234,
+          "y": 62
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 94,
+          "x": 14,
+          "y": 108
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "nav-pill",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 79,
+          "x": 116,
+          "y": 108
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "session-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 164,
+          "x": 184,
+          "y": 164
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 42,
+          "w": 251,
+          "x": 64,
+          "y": 577
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 42,
+          "w": 251,
+          "x": 64,
+          "y": 629
+        },
+        "tag": "a"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "home",
+    "scrollWidth": 380,
+    "textLength": 780,
+    "textSample": "Worldline\n世界线\n主题分区\nAgent\n知识库\n图谱\ncodex_ui_admin\n\nLIVING KNOWLEDGE OS\n\nWorldline\n\nLiving Knowledge OS\n\nLocal-first knowledge workbench for documents, evidence anchors, wiki pages, graphs, timelines, MCP tools, workflow plans, and repeatable quality gates.\n\n进入世界线\n自定义模块\n文档\n\nDocs + Evidence\n\nKnowledge Workbench\n\nIngest documents, preserve evidence anchors, and keep source-backed knowledge visible.\n\nWiki + Graph\n\nReasoning Surfaces\n\nRebuild wiki pages, entity graphs, temporal views, and traceable overview data.\n\nMCP + Workflow\n\nAgent Boundary\n\nExpose controlled tools through admin-only workflows, audit logs, and quality gates.\n\nACCESS\n\n已进入管理会话\n\ncodex_ui_admin · superadmin\n\nAgent\n知识库\n图谱\n扩展\n退出当前会话\n\n",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/home-mobile-390x844.jpg",
+    "screenshotBytes": 37592,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/themes",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 202
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 72,
+          "x": 1084,
+          "y": 26
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.08)",
+        "cls": "module-count",
+        "luma": 213,
+        "rect": {
+          "h": 36,
+          "w": 112,
+          "x": 966,
+          "y": 213
+        },
+        "tag": "span"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.13)",
+        "cls": "primary-command",
+        "luma": 213,
+        "rect": {
+          "h": 38,
+          "w": 113,
+          "x": 1088,
+          "y": 212
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 29,
+          "w": 103,
+          "x": 355,
+          "y": 561
+        },
+        "tag": "span"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 95,
+          "x": 275,
+          "y": 639
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 80,
+          "x": 381,
+          "y": 639
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "themes",
+    "scrollWidth": 1280,
+    "textLength": 574,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n\nMODULE REGISTRY\n\n主题分区\n\n用真实知识库创建可进入 Wiki、图谱、时间线和质量门禁的 Worldline 模块。\n\n首页\n世界线\n文档\n\nCUSTOM MODULES\n\n知识模块\n1 个已启用模块\n添加模块\n\nLIVE\n\nCodex Content KB Live Chain\nCustom\n\nTemporary theme module bound to the P1-3 content KB full-chain validation database.\n\ncodex_ui_kb_1780918000\nWiki / Graph / Timeline / Quality Gate / MCP / Workflow\n8 组能力 / 18 个接口\ncodex-qa\nworldline-live\ncontent-kb\n世界线\n详情\nEvidence First\n\n模块必须能追溯到来源、页码、片段和证据锚点。\n\nWiki + Graph\n\n优先构建可审查的 LLM Wiki 和 Temporal Evidence Graph。\n\nQuality Gate\n\n公开或交给 Agent 前必须经过引用覆盖率与一致性检查。",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 248,
+        "cls": "",
+        "rect": {
+          "h": 21,
+          "w": 248,
+          "x": 295,
+          "y": 499
+        },
+        "scrollWidth": 330,
+        "tag": "span",
+        "text": "Wiki / Graph / Timeline / Quality Gate / MCP / Workflow"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/themes-desktop-1280x720.jpg",
+    "screenshotBytes": 61802,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/themes",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 72,
+          "x": 169,
+          "y": 200
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.08)",
+        "cls": "module-count",
+        "luma": 213,
+        "rect": {
+          "h": 36,
+          "w": 112,
+          "x": 125,
+          "y": 360
+        },
+        "tag": "span"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.13)",
+        "cls": "primary-command",
+        "luma": 213,
+        "rect": {
+          "h": 38,
+          "w": 113,
+          "x": 125,
+          "y": 406
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 29,
+          "w": 103,
+          "x": 143,
+          "y": 903
+        },
+        "tag": "span"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 95,
+          "x": 143,
+          "y": 981
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "secondary-button",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 80,
+          "x": 143,
+          "y": 1029
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "themes",
+    "scrollWidth": 390,
+    "textLength": 527,
+    "textSample": "后端在线\n\nMODULE REGISTRY\n\n主题分区\n\n用真实知识库创建可进入 Wiki、图谱、时间线和质量门禁的 Worldline 模块。\n\n首页\n世界线\n文档\n\nCUSTOM MODULES\n\n知识模块\n1 个已启用模块\n添加模块\n\nLIVE\n\nCodex Content KB Live Chain\nCustom\n\nTemporary theme module bound to the P1-3 content KB full-chain validation database.\n\ncodex_ui_kb_1780918000\nWiki / Graph / Timeline / Quality Gate / MCP / Workflow\n8 组能力 / 18 个接口\ncodex-qa\nworldline-live\ncontent-kb\n世界线\n详情\nEvidence First\n\n模块必须能追溯到来源、页码、片段和证据锚点。\n\nWiki + Graph\n\n优先构建可审查的 LLM Wiki 和 Temporal Evidence Graph。\n\nQuality Gate\n\n公开或交给 Agent 前必须经过引用覆盖率与一致性检查。",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 187,
+        "cls": "module-grid",
+        "rect": {
+          "h": 673,
+          "w": 187,
+          "x": 125,
+          "y": 460
+        },
+        "scrollWidth": 200,
+        "tag": "div",
+        "text": "LIVE Codex Content KB Live Chain Custom Temporary theme module bound to the P1-3 content KB full-chain validation databa"
+      },
+      {
+        "clientWidth": 140,
+        "cls": "",
+        "rect": {
+          "h": 21,
+          "w": 140,
+          "x": 166,
+          "y": 777
+        },
+        "scrollWidth": 156,
+        "tag": "span",
+        "text": "codex_ui_kb_1780918000"
+      },
+      {
+        "clientWidth": 147,
+        "cls": "",
+        "rect": {
+          "h": 21,
+          "w": 147,
+          "x": 158,
+          "y": 806
+        },
+        "scrollWidth": 330,
+        "tag": "span",
+        "text": "Wiki / Graph / Timeline / Quality Gate / MCP / Workflow"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/themes-mobile-390x844.jpg",
+    "screenshotBytes": 41914,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/themes/codex-ui-1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 202
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "action-button secondary",
+        "luma": 221,
+        "rect": {
+          "h": 44,
+          "w": 157,
+          "x": 245,
+          "y": 266
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.16)",
+        "cls": "action-button primary",
+        "luma": 213,
+        "rect": {
+          "h": 44,
+          "w": 172,
+          "x": 414,
+          "y": 266
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "router-link-active action-button ghost",
+        "luma": 221,
+        "rect": {
+          "h": 44,
+          "w": 127,
+          "x": 598,
+          "y": 266
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "action-button secondary compact",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 107,
+          "x": 1116,
+          "y": 450
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.04)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 103,
+          "w": 240,
+          "x": 235,
+          "y": 569
+        },
+        "tag": "article"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.04)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 103,
+          "w": 240,
+          "x": 484,
+          "y": 569
+        },
+        "tag": "article"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "theme-detail",
+    "scrollWidth": 1280,
+    "textLength": 751,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n返回主题分区\n文档中心\n\nLIVE\n\nCodex Content KB Live Chain\n\nLive evidence-backed Worldline QA\n\n进入世界线工作台\n带当前主题继续深聊\n返回主题分区\n\n进入下一步时会自动带上当前主题上下文，流程不会中断。\n\n查看模块说明\n\nMODULE CONTROL\n\n模块能力控制台\n\n把当前主题绑定到后端 Wiki、图谱、证据、时间线、MCP、Agent 工作流和质量门禁。\n\n能力地图\n绑定知识库\ncodex_ui_kb_1780918000\n启用面\nWiki / 图谱 / 时间线 / 质量门禁 / MCP / 工作流\n后端能力\n8 组 / 18 接口\n接入状态\n已接入\n世界线\n知识库\n知识图谱\n带上下文对话\n世界线总览\n读取当前知识库的世界线状态、资产和下一步建议。\n证据召回\n查询证据候选和证据锚点，支撑可验证分支。\nLLM Wiki\n读取、发现过期页面，并按模块上下文重建 Wiki。\nTemporal Graph\n读取实体、关系、冲突和 Neo4j 投影，必要时重建图谱。\n绑定知识库\nCodex Content KB Full Chain\nmilvus\ncodex_ui_kb_1780918000\nValidate non-empty KB chain from evidence ledger to Worldline UI.\n查看证据来源\n当前模块能力（摘要）\n主题标签（摘要）\ncodex-qa\nworldline",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 212,
+        "cls": "",
+        "rect": {
+          "h": 21,
+          "w": 212,
+          "x": 498,
+          "y": 638
+        },
+        "scrollWidth": 267,
+        "tag": "strong",
+        "text": "Wiki / 图谱 / 时间线 / 质量门禁 / MCP / 工作流"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/theme-detail-desktop-1280x720.jpg",
+    "screenshotBytes": 73424,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/themes/codex-ui-1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "action-button secondary",
+        "luma": 221,
+        "rect": {
+          "h": 44,
+          "w": 251,
+          "x": 93,
+          "y": 280
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.16)",
+        "cls": "action-button primary",
+        "luma": 213,
+        "rect": {
+          "h": 44,
+          "w": 251,
+          "x": 93,
+          "y": 336
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "router-link-active action-button ghost",
+        "luma": 221,
+        "rect": {
+          "h": 44,
+          "w": 251,
+          "x": 93,
+          "y": 392
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "action-button secondary compact",
+        "luma": 221,
+        "rect": {
+          "h": 38,
+          "w": 247,
+          "x": 95,
+          "y": 756
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.04)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 103,
+          "w": 247,
+          "x": 95,
+          "y": 810
+        },
+        "tag": "article"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.04)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 103,
+          "w": 247,
+          "x": 95,
+          "y": 923
+        },
+        "tag": "article"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.04)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 103,
+          "w": 247,
+          "x": 95,
+          "y": 1037
+        },
+        "tag": "article"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "theme-detail",
+    "scrollWidth": 390,
+    "textLength": 704,
+    "textSample": "后端在线\n返回主题分区\n文档中心\n\nLIVE\n\nCodex Content KB Live Chain\n\nLive evidence-backed Worldline QA\n\n进入世界线工作台\n带当前主题继续深聊\n返回主题分区\n\n进入下一步时会自动带上当前主题上下文，流程不会中断。\n\n查看模块说明\n\nMODULE CONTROL\n\n模块能力控制台\n\n把当前主题绑定到后端 Wiki、图谱、证据、时间线、MCP、Agent 工作流和质量门禁。\n\n能力地图\n绑定知识库\ncodex_ui_kb_1780918000\n启用面\nWiki / 图谱 / 时间线 / 质量门禁 / MCP / 工作流\n后端能力\n8 组 / 18 接口\n接入状态\n已接入\n世界线\n知识库\n知识图谱\n带上下文对话\n世界线总览\n读取当前知识库的世界线状态、资产和下一步建议。\n证据召回\n查询证据候选和证据锚点，支撑可验证分支。\nLLM Wiki\n读取、发现过期页面，并按模块上下文重建 Wiki。\nTemporal Graph\n读取实体、关系、冲突和 Neo4j 投影，必要时重建图谱。\n绑定知识库\nCodex Content KB Full Chain\nmilvus\ncodex_ui_kb_1780918000\nValidate non-empty KB chain from evidence ledger to Worldline UI.\n查看证据来源\n当前模块能力（摘要）\n主题标签（摘要）\ncodex-qa\nworldline-live\ncontent-kb\n可用入口\n世界线工作台\n页面入口\n知识库文件\n页面入口\n查看",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 219,
+        "cls": "",
+        "rect": {
+          "h": 21,
+          "w": 219,
+          "x": 108,
+          "y": 992
+        },
+        "scrollWidth": 267,
+        "tag": "strong",
+        "text": "Wiki / 图谱 / 时间线 / 质量门禁 / MCP / 工作流"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/theme-detail-mobile-390x844.jpg",
+    "screenshotBytes": 43112,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 252
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 74,
+          "x": 1034,
+          "y": 24
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.07)",
+        "cls": "module-tile active",
+        "luma": 221,
+        "rect": {
+          "h": 118,
+          "w": 646,
+          "x": 233,
+          "y": 258
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 142,
+          "x": 934,
+          "y": 380
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 142,
+          "x": 1086,
+          "y": 380
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 142,
+          "x": 934,
+          "y": 463
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 142,
+          "x": 1086,
+          "y": 463
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "worldline-hub",
+    "scrollWidth": 1280,
+    "textLength": 700,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n\nWORLDLINE COMMAND\n\n证据驱动的世界线工作台\n\nLLM Wiki 是主线，RAG 只做证据候选召回；Temporal Evidence Graph 用来解释事实如何分叉、变化和收束。\n\n首页\nAgent\n模块\n文档\n\nLAUNCH\n\n选择真实知识模块并生成基础世界线\n1 个模块\nCodex Content KB Live Chain\nLive evidence-backed Worldline QA\nLIVE BRIDGE\n问题起点\n生成世界线\n\nACTIVE MODULE\n\nCodex Content KB Live Chain\n\nTemporary theme module bound to the P1-3 content KB full-chain validation database.\n\ncodex-qa\nworldline-live\ncontent-kb\nLive\nBridge\n-\nBranches\npending\nQuality\nv1.2-alpha\nProtocol\n\nCORE SURFACES\n\nWorldline Stage\n左到右分叉与收束的青金发光世界线舞台\nEvidence Rail\nsource uri、page、line、bbox、Wiki refs 同屏可见\nTemporal Scrubber\nSource、Wiki、Graph、Gate 快照可切换\nAgent Handoff\n将选中分支上下文交给受控 Agent 继续验证",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 294,
+        "cls": "pipeline-list",
+        "rect": {
+          "h": 336,
+          "w": 294,
+          "x": 934,
+          "y": 551
+        },
+        "scrollWidth": 302,
+        "tag": "div",
+        "text": "CORE SURFACES Worldline Stage 左到右分叉与收束的青金发光世界线舞台 Evidence Rail source uri、page、line、bbox、Wiki refs 同屏可见 Temporal Scrubbe"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-hub-desktop-1280x720.jpg",
+    "screenshotBytes": 93259,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 64,
+          "x": 70,
+          "y": 236
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 74,
+          "x": 144,
+          "y": 236
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 64,
+          "x": 228,
+          "y": 236
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "ghost-link",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 64,
+          "x": 302,
+          "y": 236
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.07)",
+        "cls": "module-tile active",
+        "luma": 221,
+        "rect": {
+          "h": 118,
+          "w": 298,
+          "x": 91,
+          "y": 465
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 302,
+          "x": 89,
+          "y": 1077
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 255, 255, 0.035)",
+        "cls": "",
+        "luma": 255,
+        "rect": {
+          "h": 73,
+          "w": 302,
+          "x": 89,
+          "y": 1160
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "worldline-hub",
+    "scrollWidth": 390,
+    "textLength": 653,
+    "textSample": "后端在线\n\nWORLDLINE COMMAND\n\n证据驱动的世界线工作台\n\nLLM Wiki 是主线，RAG 只做证据候选召回；Temporal Evidence Graph 用来解释事实如何分叉、变化和收束。\n\n首页\nAgent\n模块\n文档\n\nLAUNCH\n\n选择真实知识模块并生成基础世界线\n1 个模块\nCodex Content KB Live Chain\nLive evidence-backed Worldline QA\nLIVE BRIDGE\n问题起点\n生成世界线\n\nACTIVE MODULE\n\nCodex Content KB Live Chain\n\nTemporary theme module bound to the P1-3 content KB full-chain validation database.\n\ncodex-qa\nworldline-live\ncontent-kb\nLive\nBridge\n-\nBranches\npending\nQuality\nv1.2-alpha\nProtocol\n\nCORE SURFACES\n\nWorldline Stage\n左到右分叉与收束的青金发光世界线舞台\nEvidence Rail\nsource uri、page、line、bbox、Wiki refs 同屏可见\nTemporal Scrubber\nSource、Wiki、Graph、Gate 快照可切换\nAgent Handoff\n将选中分支上下文交给受控 Agent 继续验证",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 324,
+        "cls": "worldline-hub-view",
+        "rect": {
+          "h": 844,
+          "w": 334,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 353,
+        "tag": "div",
+        "text": "WORLDLINE COMMAND 证据驱动的世界线工作台 LLM Wiki 是主线，RAG 只做证据候选召回；Temporal Evidence Graph 用来解释事实如何分叉、变化和收束。 首页 Agent 模块 文档 LAUNCH "
+      },
+      {
+        "clientWidth": 324,
+        "cls": "hub-shell",
+        "rect": {
+          "h": 1802,
+          "w": 324,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 353,
+        "tag": "section",
+        "text": "WORLDLINE COMMAND 证据驱动的世界线工作台 LLM Wiki 是主线，RAG 只做证据候选召回；Temporal Evidence Graph 用来解释事实如何分叉、变化和收束。 首页 Agent 模块 文档 LAUNCH "
+      },
+      {
+        "clientWidth": 296,
+        "cls": "hub-grid",
+        "rect": {
+          "h": 1474,
+          "w": 296,
+          "x": 70,
+          "y": 294
+        },
+        "scrollWidth": 339,
+        "tag": "main",
+        "text": "LAUNCH 选择真实知识模块并生成基础世界线 1 个模块 Codex Content KB Live Chain Live evidence-backed Worldline QA LIVE BRIDGE 问题起点 生成世界线 ACTIV"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-hub-mobile-390x844.jpg",
+    "screenshotBytes": 50268,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline/codex-ui-1780918000?theme=codex-ui-1780918000&module=codex-ui-1780918000&db_id=codex_ui_kb_1780918000&knowledge_db_id=codex_ui_kb_1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 252
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "header-link",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 72,
+          "x": 1081,
+          "y": 18
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "header-link",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 89,
+          "x": 1161,
+          "y": 18
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "module-pill active",
+        "luma": 213,
+        "rect": {
+          "h": 36,
+          "w": 303,
+          "x": 208,
+          "y": 129
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "handoff-button",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 134,
+          "x": 1103,
+          "y": 216
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.05)",
+        "cls": "status-line ready",
+        "luma": 221,
+        "rect": {
+          "h": 41,
+          "w": 1042,
+          "x": 208,
+          "y": 275
+        },
+        "tag": "section"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "snapshot-step active",
+        "luma": 213,
+        "rect": {
+          "h": 72,
+          "w": 161,
+          "x": 225,
+          "y": 1027
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "worldline-live",
+    "scrollWidth": 1280,
+    "textLength": 3202,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n\nWORLDLINE WORKBENCH\n\nCodex Content KB Live Chain\n\n先检查证据支撑，再把分支带入 Agent、Graph 或 Quality Gate 继续验证。\n\nHub\nGraph\nModules\nCodex Content KB Live Chain\nLive Bridge\n问题起点\n生成真实世界线\nAgent Handoff\n已使用真实 Worldline facade 生成。\npassed\nllm_wiki_primary_rag_auxiliary\n\n真实知识库\n\n基于证据、Wiki、图谱和时间线生成世界线\n\n当前结果来自后端 Worldline facade；静态 adapter 只作为 fallback。\n\n3 条分支\nSource / 5\n起始问题\nHow should the evidence…\nHow should the evidence-backed Wo…\nLive Query\n证据优先世界线\n先确认 EvidenceAnchor 再推进\n先确认 EvidenceAnchor 再推进\nEvidence / 后端证据基线\n继续验证\n把当前分支带入 Agent、Graph 或 Q…\n把当前分支带入 Agent、Graph 或 Quality Gat…\nAgent / Graph / Gate\nLLM Wiki 世界线\n从页面结构进入知识库\nWiki / 后端证据基线\n继续验证\n把当前分支带入 Agent、Graph 或",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-live-desktop-1280x720.jpg",
+    "screenshotBytes": 106635,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline/codex-ui-1780918000?theme=codex-ui-1780918000&module=codex-ui-1780918000&db_id=codex_ui_kb_1780918000&knowledge_db_id=codex_ui_kb_1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "router-link-active header-link",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 95,
+          "x": 68,
+          "y": 176
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "header-link",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 95,
+          "x": 171,
+          "y": 176
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "header-link",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 95,
+          "x": 273,
+          "y": 176
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "module-pill active",
+        "luma": 213,
+        "rect": {
+          "h": 49,
+          "w": 300,
+          "x": 68,
+          "y": 224
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "handoff-button",
+        "luma": 221,
+        "rect": {
+          "h": 36,
+          "w": 275,
+          "x": 81,
+          "y": 417
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.05)",
+        "cls": "status-line ready",
+        "luma": 221,
+        "rect": {
+          "h": 70,
+          "w": 300,
+          "x": 68,
+          "y": 476
+        },
+        "tag": "section"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "snapshot-step active",
+        "luma": 213,
+        "rect": {
+          "h": 72,
+          "w": 129,
+          "x": 85,
+          "y": 1396
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "worldline-live",
+    "scrollWidth": 390,
+    "textLength": 3155,
+    "textSample": "后端在线\n\nWORLDLINE WORKBENCH\n\nCodex Content KB Live Chain\n\n先检查证据支撑，再把分支带入 Agent、Graph 或 Quality Gate 继续验证。\n\nHub\nGraph\nModules\nCodex Content KB Live Chain\nLive Bridge\n问题起点\n生成真实世界线\nAgent Handoff\n已使用真实 Worldline facade 生成。\npassed\nllm_wiki_primary_rag_auxiliary\n\n真实知识库\n\n基于证据、Wiki、图谱和时间线生成世界线\n\n当前结果来自后端 Worldline facade；静态 adapter 只作为 fallback。\n\n3 条分支\nSource / 5\n起始问题\nHow should the evidence…\nHow should the evidence-backed Wo…\nLive Query\n证据优先世界线\n先确认 EvidenceAnchor 再推进\n先确认 EvidenceAnchor 再推进\nEvidence / 后端证据基线\n继续验证\n把当前分支带入 Agent、Graph 或 Q…\n把当前分支带入 Agent、Graph 或 Quality Gat…\nAgent / Graph / Gate\nLLM Wiki 世界线\n从页面结构进入知识库\nWiki / 后端证据基线\n继续验证\n把当前分支带入 Agent、Graph 或 Quality Gat…\nAgent / Graph / Gate\n图谱与时间线世界线\n检查",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 273,
+        "cls": "",
+        "rect": {
+          "h": 38,
+          "w": 275,
+          "x": 81,
+          "y": 323
+        },
+        "scrollWidth": 528,
+        "tag": "input",
+        "text": ""
+      },
+      {
+        "clientWidth": 299,
+        "cls": "canvas-shell",
+        "rect": {
+          "h": 570,
+          "w": 299,
+          "x": 69,
+          "y": 741
+        },
+        "scrollWidth": 980,
+        "tag": "div",
+        "text": "起始问题 How should the evidence… How should the evidence-backed Wo… Live Query 证据优先世界线 先确认 EvidenceAnchor 再推进 先确认 EvidenceA"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-live-mobile-390x844.jpg",
+    "screenshotBytes": 53117,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline/agent",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 252
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 78,
+          "x": 221,
+          "y": 280
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 78,
+          "x": 307,
+          "y": 280
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 78,
+          "x": 393,
+          "y": 280
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "ledger-status is-ready",
+        "luma": 221,
+        "rect": {
+          "h": 86,
+          "w": 251,
+          "x": 221,
+          "y": 372
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "sync-action",
+        "luma": 213,
+        "rect": {
+          "h": 34,
+          "w": 121,
+          "x": 221,
+          "y": 469
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.08)",
+        "cls": "sync-action secondary",
+        "luma": 221,
+        "rect": {
+          "h": 34,
+          "w": 121,
+          "x": 350,
+          "y": 469
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "worldline-agent",
+    "scrollWidth": 1280,
+    "textLength": 7897,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n\nAGENT WORLDLINE\n\nAgent 工作台\n\n把一次 Agent 任务拆成计划、证据、工具、审查和技能候选分支；每条分支都能被回放、审批和验证。\n\n首页\n模块\n图谱\n\n任务账本\n\nagent-workbench-v0.1\nAgent Workbench Stage 2\n\n把 Worldline 升级成证据驱动的 Agent 工作台，并让每一次任务都成为可回放的世界线。\n\n4\n分支\n2\n回合\n2\n技能\n可保存\n本地预览\n\n本地预览中；管理员登录后可保存到后端 run ledger。\n\n保存到后端账本\n事件 0\n\n任务选择\n\n0 个已保存任务\n刷新任务\n\n需要切换上下文时，先刷新后端已保存任务。\n\n全部状态\n就绪\n已审批\n已同步\n失败\n已归档\n应用\n清空\n重命名\n选择任务\n归档\n恢复\n清空\n\nREPLAY EXPORT\n\n4 steps\nDownload JSON\nCopy Markdown\nPreview Artifact\nSave Artifact\nREGISTRY\n2/2\n全部\n2\n回放\n1\n交接\n1\n差异\n0\n其他\n0\nReplay Export: Agent Workbench Stage 2\nReplay / planned\nCopy MCP\nAgent Handoff: Run Preview\nHandoff / planned\nCopy MCP\n\nMCP READABLE\n\nSAVE REQUIRED\nTOOL\nworldline.inspect_ru",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 212,
+        "cls": "",
+        "rect": {
+          "h": 18,
+          "w": 212,
+          "x": 240,
+          "y": 1146
+        },
+        "scrollWidth": 225,
+        "tag": "span",
+        "text": "Replay Export: Agent Workbench Stage 2"
+      },
+      {
+        "clientWidth": 71,
+        "cls": "",
+        "rect": {
+          "h": 18,
+          "w": 71,
+          "x": 265,
+          "y": 2371
+        },
+        "scrollWidth": 84,
+        "tag": "span",
+        "text": "Preview Capsule"
+      },
+      {
+        "clientWidth": 434,
+        "cls": "event-summary",
+        "rect": {
+          "h": 18,
+          "w": 434,
+          "x": 780,
+          "y": 4366
+        },
+        "scrollWidth": 523,
+        "tag": "span",
+        "text": "Branch: 工具执行分支 / Status: needs_approval / Quality: needs_approval / 审批或拒绝工具调用"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-agent-desktop-1280x720.jpg",
+    "screenshotBytes": 95924,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/worldline/agent",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 85,
+          "x": 83,
+          "y": 347
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 85,
+          "x": 176,
+          "y": 347
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "",
+        "luma": 221,
+        "rect": {
+          "h": 81,
+          "w": 85,
+          "x": 268,
+          "y": 347
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.055)",
+        "cls": "ledger-status is-ready",
+        "luma": 221,
+        "rect": {
+          "h": 86,
+          "w": 271,
+          "x": 83,
+          "y": 439
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(255, 211, 111, 0.12)",
+        "cls": "sync-action",
+        "luma": 213,
+        "rect": {
+          "h": 34,
+          "w": 271,
+          "x": 83,
+          "y": 536
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.08)",
+        "cls": "sync-action secondary",
+        "luma": 221,
+        "rect": {
+          "h": 34,
+          "w": 271,
+          "x": 83,
+          "y": 578
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "run-selector",
+        "luma": 221,
+        "rect": {
+          "h": 546,
+          "w": 271,
+          "x": 83,
+          "y": 622
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "worldline-agent",
+    "scrollWidth": 390,
+    "textLength": 7850,
+    "textSample": "后端在线\n\nAGENT WORLDLINE\n\nAgent 工作台\n\n把一次 Agent 任务拆成计划、证据、工具、审查和技能候选分支；每条分支都能被回放、审批和验证。\n\n首页\n模块\n图谱\n\n任务账本\n\nagent-workbench-v0.1\nAgent Workbench Stage 2\n\n把 Worldline 升级成证据驱动的 Agent 工作台，并让每一次任务都成为可回放的世界线。\n\n4\n分支\n2\n回合\n2\n技能\n可保存\n本地预览\n\n本地预览中；管理员登录后可保存到后端 run ledger。\n\n保存到后端账本\n事件 0\n\n任务选择\n\n0 个已保存任务\n刷新任务\n\n需要切换上下文时，先刷新后端已保存任务。\n\n全部状态\n就绪\n已审批\n已同步\n失败\n已归档\n应用\n清空\n重命名\n选择任务\n归档\n恢复\n清空\n\nREPLAY EXPORT\n\n4 steps\nDownload JSON\nCopy Markdown\nPreview Artifact\nSave Artifact\nREGISTRY\n2/2\n全部\n2\n回放\n1\n交接\n1\n差异\n0\n其他\n0\nReplay Export: Agent Workbench Stage 2\nReplay / planned\nCopy MCP\nAgent Handoff: Run Preview\nHandoff / planned\nCopy MCP\n\nMCP READABLE\n\nSAVE REQUIRED\nTOOL\nworldline.inspect_run_artifacts\nURI\nworldline-run-ledger://run-agen",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 324,
+        "cls": "agent-workbench",
+        "rect": {
+          "h": 844,
+          "w": 334,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 441,
+        "tag": "div",
+        "text": "AGENT WORLDLINE Agent 工作台 把一次 Agent 任务拆成计划、证据、工具、审查和技能候选分支；每条分支都能被回放、审批和验证。 首页 模块 图谱 任务账本 agent-workbench-v0.1 Agent Wor"
+      },
+      {
+        "clientWidth": 300,
+        "cls": "agent-shell",
+        "rect": {
+          "h": 10726,
+          "w": 300,
+          "x": 68,
+          "y": 219
+        },
+        "scrollWidth": 429,
+        "tag": "main",
+        "text": "任务账本 agent-workbench-v0.1 Agent Workbench Stage 2 把 Worldline 升级成证据驱动的 Agent 工作台，并让每一次任务都成为可回放的世界线。 4 分支 2 回合 2 技能 可保存 本"
+      },
+      {
+        "clientWidth": 80,
+        "cls": "",
+        "rect": {
+          "h": 18,
+          "w": 80,
+          "x": 128,
+          "y": 2718
+        },
+        "scrollWidth": 84,
+        "tag": "span",
+        "text": "Preview Capsule"
+      },
+      {
+        "clientWidth": 299,
+        "cls": "canvas-shell",
+        "rect": {
+          "h": 570,
+          "w": 299,
+          "x": 69,
+          "y": 4065
+        },
+        "scrollWidth": 980,
+        "tag": "div",
+        "text": "任务目标 Agent Run Agent Run WorldlineRun 规划分支 先把目标拆成可验证 Agent 路线 Plan / planner 质量门 inspectable 82% coverage 证据分支 每个结论先绑定 E"
+      },
+      {
+        "clientWidth": 300,
+        "cls": "inspect-rail",
+        "rect": {
+          "h": 5644,
+          "w": 300,
+          "x": 68,
+          "y": 5301
+        },
+        "scrollWidth": 429,
+        "tag": "aside",
+        "text": "BRANCH INSPECTOR 工具执行分支 Tool 工具调用必须显示权限和审计边界 将 MCP、浏览器、构建、质量门等动作呈现为可审批节点。写操作只能经过 Worldline service/MCP 边界。 需审批 低成本 87% 3"
+      },
+      {
+        "clientWidth": 235,
+        "cls": "",
+        "rect": {
+          "h": 18,
+          "w": 235,
+          "x": 144,
+          "y": 6817
+        },
+        "scrollWidth": 273,
+        "tag": "small",
+        "text": "工具执行分支 / needs_approval / 审批或拒绝工具调用"
+      },
+      {
+        "clientWidth": 235,
+        "cls": "",
+        "rect": {
+          "h": 18,
+          "w": 235,
+          "x": 144,
+          "y": 6929
+        },
+        "scrollWidth": 239,
+        "tag": "small",
+        "text": "工具执行分支 / approval_required / run delta"
+      },
+      {
+        "clientWidth": 263,
+        "cls": "event-summary",
+        "rect": {
+          "h": 18,
+          "w": 263,
+          "x": 113,
+          "y": 7308
+        },
+        "scrollWidth": 523,
+        "tag": "span",
+        "text": "Branch: 工具执行分支 / Status: needs_approval / Quality: needs_approval / 审批或拒绝工具调用"
+      },
+      {
+        "clientWidth": 344,
+        "cls": "rail-panel trace-panel",
+        "rect": {
+          "h": 314,
+          "w": 345,
+          "x": 68,
+          "y": 9452
+        },
+        "scrollWidth": 428,
+        "tag": "section",
+        "text": "TOOL TRACE 2 visible worldline.plan_workflow worldline_service_boundary Plan compile, wiki rebuild, graph update, and qu"
+      },
+      {
+        "clientWidth": 344,
+        "cls": "rail-panel skill-panel",
+        "rect": {
+          "h": 363,
+          "w": 345,
+          "x": 68,
+          "y": 10582
+        },
+        "scrollWidth": 386,
+        "tag": "section",
+        "text": "SKILL GENOME 2 candidates Agent Ledger Review 81% When a WorldlineRun has multiple branches and at least one pending too"
+      },
+      {
+        "clientWidth": 346,
+        "cls": "skill-meta",
+        "rect": {
+          "h": 30,
+          "w": 346,
+          "x": 95,
+          "y": 10743
+        },
+        "scrollWidth": 356,
+        "tag": "div",
+        "text": "worldline:read / worldline:audit_log:write 提交候选"
+      },
+      {
+        "clientWidth": 346,
+        "cls": "skill-meta",
+        "rect": {
+          "h": 30,
+          "w": 346,
+          "x": 95,
+          "y": 10887
+        },
+        "scrollWidth": 356,
+        "tag": "div",
+        "text": "browser:localhost / artifact:write 提交候选"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/worldline-agent-mobile-390x844.jpg",
+    "screenshotBytes": 48377,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/graph?db_id=codex_ui_kb_1780918000&knowledge_db_id=codex_ui_kb_1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 352
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default",
+        "luma": 221,
+        "rect": {
+          "h": 37,
+          "w": 137,
+          "x": 1119,
+          "y": 75
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default",
+        "luma": 221,
+        "rect": {
+          "h": 32,
+          "w": 115,
+          "x": 590,
+          "y": 344
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "graph",
+    "scrollWidth": 1280,
+    "textLength": 190,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n知识图谱\n\n查看当前知识库中的图谱结构，也可结合主题闭环继续探索。\n\n已连接\n当前知识库：\n默认图谱 (upload)\n上传知识文件\n导出当前图谱\n\n当前没有可展示的图谱节点，可以上传 JSONL 图谱文件或调整查询数量后重新读取。\n\n重新读取图谱\n上传 JSONL 图谱文件",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/graph-desktop-1280x720.jpg",
+    "screenshotBytes": 45443,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/graph?db_id=codex_ui_kb_1780918000&knowledge_db_id=codex_ui_kb_1780918000",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default",
+        "luma": 221,
+        "rect": {
+          "h": 37,
+          "w": 137,
+          "x": 149,
+          "y": 301
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default",
+        "luma": 221,
+        "rect": {
+          "h": 32,
+          "w": 115,
+          "x": 74,
+          "y": 594
+        },
+        "tag": "button"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "graph",
+    "scrollWidth": 390,
+    "textLength": 113,
+    "textSample": "后端在线\n知识图谱\n已连接\n当前知识库：\n默认图谱 (upload)\n上传知识文件\n导出当前图谱\n\n当前没有可展示的图谱节点，可以上传 JSONL 图谱文件或调整查询数量后重新读取。\n\n重新读取图谱\n上传 JSONL 图谱文件",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/graph-mobile-390x844.jpg",
+    "screenshotBytes": 33123,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/database",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 402
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "icon",
+        "luma": 221,
+        "rect": {
+          "h": 54,
+          "w": 54,
+          "x": 227,
+          "y": 91
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "database",
+    "scrollWidth": 1280,
+    "textLength": 183,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n文档知识库\n新建知识库\nCodex Content KB Full Chain\n\n1 文件\n今天创建\n\nTemporary QA knowledge base for evidence-bound Worldline validation.\n\nCommonRAG",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/database-desktop-1280x720.jpg",
+    "screenshotBytes": 30853,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/database",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "icon",
+        "luma": 221,
+        "rect": {
+          "h": 54,
+          "w": 54,
+          "x": 95,
+          "y": 91
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "database",
+    "scrollWidth": 390,
+    "textLength": 136,
+    "textSample": "后端在线\n文档知识库\n新建知识库\nCodex Content KB Full Chain\n\n1 文件\n今天创建\n\nTemporary QA knowledge base for evidence-bound Worldline validation.\n\nCommonRAG",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 334,
+        "cls": "database-container layout-container wl-ant-dark",
+        "rect": {
+          "h": 844,
+          "w": 334,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 342,
+        "tag": "div",
+        "text": "文档知识库 新建知识库 Codex Content KB Full Chain 1 文件 今天创建 Temporary QA knowledge base for evidence-bound Worldline validation. C"
+      },
+      {
+        "clientWidth": 334,
+        "cls": "databases",
+        "rect": {
+          "h": 208,
+          "w": 334,
+          "x": 56,
+          "y": 53
+        },
+        "scrollWidth": 342,
+        "tag": "div",
+        "text": "Codex Content KB Full Chain 1 文件 今天创建 Temporary QA knowledge base for evidence-bound Worldline validation. CommonRAG"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "",
+        "rect": {
+          "h": 24,
+          "w": 219,
+          "x": 163,
+          "y": 94
+        },
+        "scrollWidth": 228,
+        "tag": "h3",
+        "text": "Codex Content KB Full Chain"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/database-mobile-390x844.jpg",
+    "screenshotBytes": 20430,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/dashboard",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 502
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 336,
+          "w": 613,
+          "x": 255,
+          "y": 331
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "compact-chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 240,
+          "w": 278,
+          "x": 925,
+          "y": 427
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 291,
+          "w": 278,
+          "x": 255,
+          "y": 874
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 291,
+          "w": 278,
+          "x": 590,
+          "y": 874
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 113,
+          "w": 278,
+          "x": 925,
+          "y": 874
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 341,
+          "w": 278,
+          "x": 925,
+          "y": 1003
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "dashboard",
+    "scrollWidth": 1280,
+    "textLength": 549,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\nWorldline\nLiving Knowledge OS\n2026年06月08日 19:17:36\n晚上好！codex_ui_admin\n任务中心\n0\n总对话数\n0\n活跃对话\n0\n总消息数\n2\n用户数\n0\n总反馈数\n100%\n满意度\n运营总览\n\n这里集中展示平台运行、智能体使用、知识库使用和近期对话概况。\n\n调用统计\n近14小时\n近14天\n近14周\n模型调用\n智能体调用\nToken消耗\n工具调用\n用户活跃度分析\n2\n总用户\n0\n24H活跃\n0\n30天活跃\n活跃度趋势\n最近7天\nAI智能体分析\n智能体总数\n0个\n总对话数\n0次\n工具调用总数\n0次\n对话/工具调用分布 (TOP 3)\n表现最佳智能体 TOP 5\n排名\t智能体ID\t满意度\t对话数\n\n\n暂无数据\n\n工具调用监控\n总调用次数\n0\n失败调用\n0次\n成功率\n0%\n最常用工具 TOP 10\n知识库使用情况\n知识库总数\n1个\n文件总数\n1个\n存储容量\n0 B\n类型分布\nMilvus\n文件类型分布\nMarkdown\n1\n100.0%\n近期对话\n活跃\n重新加载\n查看反馈\n对话标题\t用户编号\t消息数\t状态\t更新时间\t操作\n\n\n暂无数据",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 278,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 66,
+          "w": 278,
+          "x": 255,
+          "y": 759
+        },
+        "scrollWidth": 286,
+        "tag": "div",
+        "text": "智能体总数 0个 总对话数 0次 工具调用总数 0次"
+      },
+      {
+        "clientWidth": 278,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 66,
+          "w": 278,
+          "x": 590,
+          "y": 759
+        },
+        "scrollWidth": 286,
+        "tag": "div",
+        "text": "总调用次数 0 失败调用 0次 成功率 0%"
+      },
+      {
+        "clientWidth": 278,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 66,
+          "w": 278,
+          "x": 925,
+          "y": 759
+        },
+        "scrollWidth": 286,
+        "tag": "div",
+        "text": "知识库总数 1个 文件总数 1个 存储容量 0 B"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/dashboard-desktop-1280x720.jpg",
+    "screenshotBytes": 67167,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/dashboard",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 143,
+          "w": 219,
+          "x": 109,
+          "y": 641
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "compact-chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 180,
+          "w": 219,
+          "x": 109,
+          "y": 1007
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 291,
+          "w": 219,
+          "x": 109,
+          "y": 1410
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 291,
+          "w": 219,
+          "x": 109,
+          "y": 2220
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 113,
+          "w": 219,
+          "x": 109,
+          "y": 2783
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.024)",
+        "cls": "chart-container",
+        "luma": 221,
+        "rect": {
+          "h": 341,
+          "w": 219,
+          "x": 109,
+          "y": 2912
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "dashboard",
+    "scrollWidth": 390,
+    "textLength": 476,
+    "textSample": "后端在线\nWorldline\nLiving Knowledge OS\n晚上好！codex_ui_admin\n0\n总对话数\n0\n活跃对话\n0\n总消息数\n2\n用户数\n0\n总反馈数\n100%\n满意度\n运营总览\n\n这里集中展示平台运行、智能体使用、知识库使用和近期对话概况。\n\n调用统计\n近14小时\n近14天\n近14周\n模型调用\n智能体调用\nToken消耗\n工具调用\n用户活跃度分析\n2\n总用户\n0\n24H活跃\n0\n30天活跃\n活跃度趋势\n最近7天\nAI智能体分析\n智能体总数\n0个\n总对话数\n0次\n工具调用总数\n0次\n对话/工具调用分布 (TOP 3)\n表现最佳智能体 TOP 5\n排名\t智能体ID\t满意度\t对话数\n\n\n暂无数据\n\n工具调用监控\n总调用次数\n0\n失败调用\n0次\n成功率\n0%\n最常用工具 TOP 10\n知识库使用情况\n知识库总数\n1个\n文件总数\n1个\n存储容量\n0 B\n类型分布\nMilvus\n文件类型分布\nMarkdown\n1\n100.0%\n近期对话\n活跃\n重新加载\n查看反馈\n对话标题\t用户编号\t消息数\t状态\t更新时间\t操作\n\n\n暂无数据",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 99,
+        "cls": "user-greeting",
+        "rect": {
+          "h": 14,
+          "w": 99,
+          "x": 211,
+          "y": 31
+        },
+        "scrollWidth": 131,
+        "tag": "span",
+        "text": "晚上好！codex_ui_admin"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 87,
+          "w": 219,
+          "x": 109,
+          "y": 1275
+        },
+        "scrollWidth": 227,
+        "tag": "div",
+        "text": "智能体总数 0个 总对话数 0次 工具调用总数 0次"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 87,
+          "w": 219,
+          "x": 109,
+          "y": 2085
+        },
+        "scrollWidth": 227,
+        "tag": "div",
+        "text": "总调用次数 0 失败调用 0次 成功率 0%"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "stats-overview",
+        "rect": {
+          "h": 87,
+          "w": 219,
+          "x": 109,
+          "y": 2648
+        },
+        "scrollWidth": 227,
+        "tag": "div",
+        "text": "知识库总数 1个 文件总数 1个 存储容量 0 B"
+      },
+      {
+        "clientWidth": 260,
+        "cls": "grid-item conversations",
+        "rect": {
+          "h": 300,
+          "w": 260,
+          "x": 88,
+          "y": 3286
+        },
+        "scrollWidth": 411,
+        "tag": "div",
+        "text": "近期对话 活跃 重新加载 查看反馈 对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      },
+      {
+        "clientWidth": 259,
+        "cls": "ant-card css-dev-only-do-not-override-1q1a2yn ant-card-bordered conversations-section",
+        "rect": {
+          "h": 278,
+          "w": 260,
+          "x": 88,
+          "y": 3286
+        },
+        "scrollWidth": 410,
+        "tag": "div",
+        "text": "近期对话 活跃 重新加载 查看反馈 对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      },
+      {
+        "clientWidth": 259,
+        "cls": "ant-card-head",
+        "rect": {
+          "h": 56,
+          "w": 259,
+          "x": 89,
+          "y": 3287
+        },
+        "scrollWidth": 407,
+        "tag": "div",
+        "text": "近期对话 活跃 重新加载 查看反馈"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "ant-card-head-wrapper",
+        "rect": {
+          "h": 25,
+          "w": 219,
+          "x": 109,
+          "y": 3302
+        },
+        "scrollWidth": 387,
+        "tag": "div",
+        "text": "近期对话 活跃 重新加载 查看反馈"
+      },
+      {
+        "clientWidth": 259,
+        "cls": "ant-card-body",
+        "rect": {
+          "h": 221,
+          "w": 259,
+          "x": 89,
+          "y": 3342
+        },
+        "scrollWidth": 410,
+        "tag": "div",
+        "text": "对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "ant-table-wrapper css-dev-only-do-not-override-1q1a2yn",
+        "rect": {
+          "h": 189,
+          "w": 219,
+          "x": 109,
+          "y": 3358
+        },
+        "scrollWidth": 390,
+        "tag": "div",
+        "text": "对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "ant-spin-nested-loading css-dev-only-do-not-override-1q1a2yn",
+        "rect": {
+          "h": 189,
+          "w": 219,
+          "x": 109,
+          "y": 3358
+        },
+        "scrollWidth": 390,
+        "tag": "div",
+        "text": "对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      },
+      {
+        "clientWidth": 219,
+        "cls": "ant-spin-container",
+        "rect": {
+          "h": 189,
+          "w": 219,
+          "x": 109,
+          "y": 3358
+        },
+        "scrollWidth": 390,
+        "tag": "div",
+        "text": "对话标题 用户编号 消息数 状态 更新时间 操作 暂无数据"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/dashboard-mobile-390x844.jpg",
+    "screenshotBytes": 36443,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 1280,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/extensions",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 30,
+          "w": 171,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.1)",
+        "cls": "active router-link-exact-active nav-item",
+        "luma": 221,
+        "rect": {
+          "h": 40,
+          "w": 171,
+          "x": 8,
+          "y": 452
+        },
+        "tag": "a"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default lucide-icon-btn",
+        "luma": 221,
+        "rect": {
+          "h": 32,
+          "w": 79,
+          "x": 1185,
+          "y": 8
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.08)",
+        "cls": "list-item active",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 245,
+          "x": 200,
+          "y": 159
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 245,
+          "x": 200,
+          "y": 239
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 245,
+          "x": 200,
+          "y": 320
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 245,
+          "x": 200,
+          "y": 401
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 245,
+          "x": 200,
+          "y": 482
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "desktop",
+    "routeKey": "extensions",
+    "scrollWidth": 1280,
+    "textLength": 4824,
+    "textSample": "后端在线\n收起导航\n首页\n主题分区\n世界线\nAgent\n知识图谱\n知识库\n扩展管理\n运营看板\n任务中心\n工具\nSkills 管理\nMCP 服务器\n刷新\n全部分类\nTavily 网页搜索\n内置工具\n搜索\n计算器\n内置工具\n计算\n向用户提问\n内置工具\n交互\n查询知识图谱\n内置工具\n图谱\nQwen-Image\n内置工具\n图片\n生成\n列出MySQL表\nMySQL\n数据库\n查询\n描述MySQL表结构\nMySQL\n数据库\n结构\n执行MySQL查询\nMySQL\n数据库\nSQL\nTavily 网页搜索\ntavily_search\n描述\nA search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. It not only retrieves URLs and snippets, but offers advanced search depths, domain management, time range filters, and image search, this tool delivers real-time, accurate, and citation-backed results.Input should be a search query.\n分类\n内置工具\n标签\n搜索\n参数\n参数名\t类型\t描述\nquery\tstring\tSearch query to look ",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 720,
+      "width": 1280
+    },
+    "visibleOverflow": [],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/extensions-desktop-1280x720.jpg",
+    "screenshotBytes": 125738,
+    "warningOrErrorLogs": []
+  },
+  {
+    "clientWidth": 390,
+    "hasHorizontalOverflow": false,
+    "href": "http://127.0.0.1:5173/extensions",
+    "lightSurfaces": [
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "runtime-status-inner",
+        "luma": 221,
+        "rect": {
+          "h": 78,
+          "w": 39,
+          "x": 8,
+          "y": 56
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.06)",
+        "cls": "css-dev-only-do-not-override-1q1a2yn ant-btn ant-btn-default lucide-icon-btn",
+        "luma": 221,
+        "rect": {
+          "h": 32,
+          "w": 79,
+          "x": 379,
+          "y": 8
+        },
+        "tag": "button"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.08)",
+        "cls": "list-item active",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 159
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 239
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 320
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 401
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 482
+        },
+        "tag": "div"
+      },
+      {
+        "bg": "rgba(124, 246, 255, 0.043)",
+        "cls": "list-item",
+        "luma": 221,
+        "rect": {
+          "h": 68,
+          "w": 255,
+          "x": 68,
+          "y": 562
+        },
+        "tag": "div"
+      }
+    ],
+    "mode": "mobile",
+    "routeKey": "extensions",
+    "scrollWidth": 390,
+    "textLength": 4777,
+    "textSample": "后端在线\n工具\nSkills 管理\nMCP 服务器\n刷新\n全部分类\nTavily 网页搜索\n内置工具\n搜索\n计算器\n内置工具\n计算\n向用户提问\n内置工具\n交互\n查询知识图谱\n内置工具\n图谱\nQwen-Image\n内置工具\n图片\n生成\n列出MySQL表\nMySQL\n数据库\n查询\n描述MySQL表结构\nMySQL\n数据库\n结构\n执行MySQL查询\nMySQL\n数据库\nSQL\nTavily 网页搜索\ntavily_search\n描述\nA search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. It not only retrieves URLs and snippets, but offers advanced search depths, domain management, time range filters, and image search, this tool delivers real-time, accurate, and citation-backed results.Input should be a search query.\n分类\n内置工具\n标签\n搜索\n参数\n参数名\t类型\t描述\nquery\tstring\tSearch query to look up\ninclude_domains\t\tA list of domains to restri",
+    "title": "世界线 - Worldline",
+    "viewport": {
+      "height": 844,
+      "width": 390
+    },
+    "visibleOverflow": [
+      {
+        "clientWidth": 334,
+        "cls": "extensions-view",
+        "rect": {
+          "h": 844,
+          "w": 334,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 403,
+        "tag": "div",
+        "text": "工具 Skills 管理 MCP 服务器 刷新 全部分类 Tavily 网页搜索 内置工具 搜索 计算器 内置工具 计算 向用户提问 内置工具 交互 查询知识图谱 内置工具 图谱 Qwen-Image 内置工具 图片 生成 列出MySQL表"
+      },
+      {
+        "clientWidth": 334,
+        "cls": "extensions-header",
+        "rect": {
+          "h": 49,
+          "w": 334,
+          "x": 56,
+          "y": 0
+        },
+        "scrollWidth": 403,
+        "tag": "div",
+        "text": "工具 Skills 管理 MCP 服务器 刷新"
+      },
+      {
+        "clientWidth": 334,
+        "cls": "tools-manager-container extension-page-root",
+        "rect": {
+          "h": 785,
+          "w": 334,
+          "x": 56,
+          "y": 49
+        },
+        "scrollWidth": 382,
+        "tag": "div",
+        "text": "全部分类 Tavily 网页搜索 内置工具 搜索 计算器 内置工具 计算 向用户提问 内置工具 交互 查询知识图谱 内置工具 图谱 Qwen-Image 内置工具 图片 生成 列出MySQL表 MySQL 数据库 查询 描述MySQL表结构"
+      },
+      {
+        "clientWidth": 334,
+        "cls": "layout-wrapper",
+        "rect": {
+          "h": 785,
+          "w": 334,
+          "x": 56,
+          "y": 49
+        },
+        "scrollWidth": 382,
+        "tag": "div",
+        "text": "全部分类 Tavily 网页搜索 内置工具 搜索 计算器 内置工具 计算 向用户提问 内置工具 交互 查询知识图谱 内置工具 图谱 Qwen-Image 内置工具 图片 生成 列出MySQL表 MySQL 数据库 查询 描述MySQL表结构"
+      },
+      {
+        "clientWidth": 54,
+        "cls": "main-panel",
+        "rect": {
+          "h": 785,
+          "w": 54,
+          "x": 336,
+          "y": 49
+        },
+        "scrollWidth": 102,
+        "tag": "div",
+        "text": "Tavily 网页搜索 tavily_search 描述 A search engine optimized for comprehensive, accurate, and trusted results. Useful for when"
+      },
+      {
+        "clientWidth": 54,
+        "cls": "panel-top-bar",
+        "rect": {
+          "h": 91,
+          "w": 54,
+          "x": 336,
+          "y": 49
+        },
+        "scrollWidth": 102,
+        "tag": "div",
+        "text": "Tavily 网页搜索 tavily_search"
+      },
+      {
+        "clientWidth": 44,
+        "cls": "tool-detail",
+        "rect": {
+          "h": 695,
+          "w": 54,
+          "x": 336,
+          "y": 139
+        },
+        "scrollWidth": 294,
+        "tag": "div",
+        "text": "描述 A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questi"
+      },
+      {
+        "clientWidth": 12,
+        "cls": "detail-section",
+        "rect": {
+          "h": 5497,
+          "w": 12,
+          "x": 352,
+          "y": 155
+        },
+        "scrollWidth": 19,
+        "tag": "div",
+        "text": "描述 A search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questi"
+      },
+      {
+        "clientWidth": 12,
+        "cls": "section-header",
+        "rect": {
+          "h": 42,
+          "w": 12,
+          "x": 352,
+          "y": 155
+        },
+        "scrollWidth": 19,
+        "tag": "div",
+        "text": "描述"
+      },
+      {
+        "clientWidth": 12,
+        "cls": "detail-section",
+        "rect": {
+          "h": 74,
+          "w": 12,
+          "x": 352,
+          "y": 5672
+        },
+        "scrollWidth": 71,
+        "tag": "div",
+        "text": "分类 内置工具"
+      },
+      {
+        "clientWidth": 12,
+        "cls": "section-header",
+        "rect": {
+          "h": 42,
+          "w": 12,
+          "x": 352,
+          "y": 5672
+        },
+        "scrollWidth": 19,
+        "tag": "div",
+        "text": "分类"
+      },
+      {
+        "clientWidth": 12,
+        "cls": "section-content",
+        "rect": {
+          "h": 25,
+          "w": 12,
+          "x": 352,
+          "y": 5722
+        },
+        "scrollWidth": 71,
+        "tag": "div",
+        "text": "内置工具"
+      }
+    ],
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/extensions-mobile-390x844.jpg",
+    "screenshotBytes": 40790,
+    "warningOrErrorLogs": []
+  }
+]

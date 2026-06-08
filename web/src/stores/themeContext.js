@@ -18,6 +18,8 @@ const normalizeContext = (value = {}) => {
   const build = normalizePart(value.build)
   const branch = normalizePart(value.branch)
   const entry = normalizePart(value.entry)
+  const dbId = normalizePart(value.db_id || value.dbId)
+  const knowledgeDbId = normalizePart(value.knowledge_db_id || value.knowledgeDbId || dbId)
 
   const context = {
     theme,
@@ -50,6 +52,14 @@ const normalizeContext = (value = {}) => {
     context.entry = entry
   }
 
+  if (dbId) {
+    context.db_id = dbId
+  }
+
+  if (knowledgeDbId) {
+    context.knowledge_db_id = knowledgeDbId
+  }
+
   return context
 }
 
@@ -69,7 +79,9 @@ const toRouteQuery = (value) => {
     ...(context.graph ? { graph: context.graph } : {}),
     ...(context.build ? { build: context.build } : {}),
     ...(context.branch ? { branch: context.branch } : {}),
-    ...(context.entry ? { entry: context.entry } : {})
+    ...(context.entry ? { entry: context.entry } : {}),
+    ...(context.db_id ? { db_id: context.db_id } : {}),
+    ...(context.knowledge_db_id ? { knowledge_db_id: context.knowledge_db_id } : {})
   }
 }
 
@@ -115,6 +127,10 @@ export const useThemeContextStore = defineStore('themeContext', () => {
 
     if (activeContext.value.focus) {
       parts.push(`focus=${activeContext.value.focus}`)
+    }
+
+    if (activeContext.value.knowledge_db_id || activeContext.value.db_id) {
+      parts.push(`db=${activeContext.value.knowledge_db_id || activeContext.value.db_id}`)
     }
 
     return parts.join(', ')

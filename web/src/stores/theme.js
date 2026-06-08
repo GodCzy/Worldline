@@ -4,14 +4,19 @@ import { theme } from 'ant-design-vue'
 
 export const useThemeStore = defineStore('theme', () => {
   // 从 localStorage 读取保存的主题，默认为浅色
-  const isDark = ref(localStorage.getItem('theme') === 'dark')
+  const storedTheme = localStorage.getItem('theme')
+  const isDark = ref(storedTheme === null ? true : storedTheme === 'dark')
 
   // 公共主题配置
   const commonTheme = {
     token: {
       fontFamily:
         "'HarmonyOS Sans SC', Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;",
-      colorPrimary: '#198cb2',
+      colorPrimary: '#7cf6ff',
+      colorInfo: '#7cf6ff',
+      colorSuccess: '#70f0bb',
+      colorWarning: '#ffd36f',
+      colorError: '#ff7b7b',
       borderRadius: 8,
       wireframe: false
     }
@@ -25,7 +30,17 @@ export const useThemeStore = defineStore('theme', () => {
   // 深色主题配置
   const darkTheme = {
     ...commonTheme,
-    algorithm: theme.darkAlgorithm
+    algorithm: theme.darkAlgorithm,
+    token: {
+      ...commonTheme.token,
+      colorBgBase: '#02050a',
+      colorBgContainer: '#07111b',
+      colorBgElevated: '#0b1621',
+      colorBorder: 'rgba(124, 246, 255, 0.16)',
+      colorText: '#f6fbff',
+      colorTextSecondary: 'rgba(216, 251, 255, 0.68)',
+      colorTextTertiary: 'rgba(216, 251, 255, 0.52)'
+    }
   }
 
   // 当前主题配置

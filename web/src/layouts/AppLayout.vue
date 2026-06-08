@@ -1,59 +1,57 @@
 <script setup>
-import { ref, reactive, onMounted, computed, provide } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { computed, onMounted, provide, reactive, ref } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { GithubOutlined } from '@ant-design/icons-vue'
+import { message } from 'ant-design-vue'
 import {
+  AlertTriangle,
+  BarChart3,
+  Blocks,
+  Bot,
+  ChevronsLeft,
+  ChevronsRight,
+  CircleCheck,
   House,
   LayoutGrid,
-  Bot,
-  Waypoints,
   LibraryBig,
-  BarChart3,
-  CircleCheck,
-  Blocks,
-  ChevronsLeft,
-  ChevronsRight
+  LockKeyhole,
+  Waypoints
 } from 'lucide-vue-next'
+import { storeToRefs } from 'pinia'
 
 import { useConfigStore } from '@/stores/config'
 import { useDatabaseStore } from '@/stores/database'
 import { useInfoStore } from '@/stores/info'
 import { useTaskerStore } from '@/stores/tasker'
 import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
-import UserInfoComponent from '@/components/UserInfoComponent.vue'
 import DebugComponent from '@/components/DebugComponent.vue'
-import TaskCenterDrawer from '@/components/TaskCenterDrawer.vue'
 import SettingsModal from '@/components/SettingsModal.vue'
+import TaskCenterDrawer from '@/components/TaskCenterDrawer.vue'
+import UserInfoComponent from '@/components/UserInfoComponent.vue'
 
 const configStore = useConfigStore()
 const databaseStore = useDatabaseStore()
 const infoStore = useInfoStore()
 const taskerStore = useTaskerStore()
 const userStore = useUserStore()
+const route = useRoute()
+const router = useRouter()
 const { activeCount: activeCountRef, isDrawerOpen } = storeToRefs(taskerStore)
 
 const layoutSettings = reactive({
   showDebug: false,
-  useTopBar: false // 是否使用顶栏
+  useTopBar: false
 })
 
-// Add state for GitHub stars
 const githubStars = ref(0)
 const isLoadingStars = ref(false)
-
-// Add state for debug modal
 const showDebugModal = ref(false)
-
-// Add state for settings modal
 const showSettingsModal = ref(false)
 
-// Provide settings modal methods to child components
 const openSettingsModal = () => {
   showSettingsModal.value = true
 }
 
-// Handle debug modal close
 const handleDebugModalClose = () => {
   showDebugModal.value = false
 }
@@ -63,42 +61,34 @@ const getRemoteConfig = async () => {
   try {
     await configStore.refreshConfig()
   } catch (error) {
-    console.warn('加载系统配置失败:', error)
+    console.warn('Load config failed:', error)
   }
 }
 
 const getRemoteDatabase = async () => {
-  if (!userStore.isLoggedIn) {
-    return
-  }
+  if (!userStore.isLoggedIn) return
   try {
     await databaseStore.loadDatabases()
   } catch (error) {
-    console.warn('加载知识库列表失败:', error)
+    console.warn('Load databases failed:', error)
   }
 }
 
 const projectRepoUrl = computed(() => infoStore.projectRepoUrl || '')
 
 const extractGithubRepoPath = (repoUrl) => {
-  if (!repoUrl) {
-    return ''
-  }
+  if (!repoUrl) return ''
 
   try {
     const parsed = new URL(repoUrl)
-    if (parsed.hostname !== 'github.com') {
-      return ''
-    }
+    if (parsed.hostname !== 'github.com') return ''
 
     const segments = parsed.pathname.split('/').filter(Boolean)
-    if (segments.length < 2) {
-      return ''
-    }
+    if (segments.length < 2) return ''
 
     return `${segments[0]}/${segments[1].replace(/\.git$/, '')}`
   } catch (error) {
-    console.warn('无法解析项目仓库地址:', error)
+    console.warn('Cannot parse repository url:', error)
     return ''
   }
 }
@@ -112,26 +102,21 @@ const fetchGithubStars = async (repoUrl) => {
 
   try {
     isLoadingStars.value = true
-    // 公共API，可以直接使用fetch
     const response = await fetch(`https://api.github.com/repos/${repoPath}`)
-    if (!response.ok) {
-      throw new Error(`GitHub API ${response.status}`)
-    }
+    if (!response.ok) throw new Error(`GitHub API ${response.status}`)
     const data = await response.json()
     githubStars.value = data.stargazers_count
   } catch (error) {
-    console.error('获取GitHub stars失败:', error)
+    console.warn('Load GitHub stars failed:', error)
   } finally {
     isLoadingStars.value = false
   }
 }
 
 onMounted(async () => {
-  // 加载信息配置
   await infoStore.loadInfoConfig()
-  // 加载知识库数据（普通用户加载可访问知识库）
   await getRemoteDatabase()
-  // 仅管理员加载系统配置和任务中心数据
+
   if (userStore.isAdmin) {
     await getRemoteConfig()
     taskerStore.loadTasks()
@@ -141,92 +126,147 @@ onMounted(async () => {
   }
 })
 
-const route = useRoute()
 const isEmbed = computed(() => route.query.embed === '1')
 const NAV_EXPANDED_STORAGE_KEY = 'worldline_app_nav_expanded'
 const isNavExpanded = ref(localStorage.getItem(NAV_EXPANDED_STORAGE_KEY) === '1')
 const showNavLabel = computed(() => !layoutSettings.useTopBar && isNavExpanded.value)
+const activeTaskCount = computed(() => activeCountRef.value || 0)
 
 const toggleNavExpanded = () => {
   isNavExpanded.value = !isNavExpanded.value
   localStorage.setItem(NAV_EXPANDED_STORAGE_KEY, isNavExpanded.value ? '1' : '0')
 }
 
-const activeTaskCount = computed(() => activeCountRef.value || 0)
-
 const isNavItemActive = (path) => {
-  if (path === '/') {
-    return route.path === '/'
-  }
+  if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
 }
 
-// 下面是导航菜单部分，添加智能体项
+const ACCESS_LABELS = {
+  login: '登录后可用',
+  admin: '管理员权限',
+  superadmin: '最高权限'
+}
+
+const runtimeStatus = computed(() => {
+  if (infoStore.error) {
+    return {
+      state: 'fallback',
+      label: '本地配置',
+      title: '后端暂不可用，当前使用本地配置渲染页面',
+      icon: AlertTriangle
+    }
+  }
+
+  return {
+    state: 'ready',
+    label: '后端在线',
+    title: '后端配置已连接',
+    icon: CircleCheck
+  }
+})
+
+const isNavItemLocked = (item = {}) => {
+  if (item.access === 'login') return !userStore.isLoggedIn
+  if (item.access === 'admin') return !userStore.isAdmin
+  if (item.access === 'superadmin') return !userStore.isSuperAdmin
+  return false
+}
+
+const navItemTitle = (item = {}) => {
+  const accessLabel = ACCESS_LABELS[item.access]
+  if (!isNavItemLocked(item) || !accessLabel) return item.name
+  return `${item.name} · ${accessLabel}`
+}
+
+const handleLockedNavItem = async (item = {}) => {
+  if (!item.path) return
+
+  if (!userStore.isLoggedIn) {
+    await router.push({
+      name: 'Home',
+      query: {
+        login: '1',
+        redirect: item.path
+      }
+    })
+    return
+  }
+
+  if (item.access === 'superadmin') {
+    message.info(`${item.name}需要最高权限账号`)
+    return
+  }
+
+  message.info(`${item.name}需要管理员权限`)
+}
+
 const mainList = computed(() => {
   const items = [
     {
       name: '首页',
       path: '/',
       icon: House,
-      activeIcon: House
+      activeIcon: House,
+      access: 'public'
     },
     {
       name: '主题分区',
       path: '/themes',
       icon: LayoutGrid,
-      activeIcon: LayoutGrid
+      activeIcon: LayoutGrid,
+      access: 'public'
     },
     {
       name: '世界线',
       path: '/worldline',
       icon: Waypoints,
-      activeIcon: Waypoints
+      activeIcon: Waypoints,
+      access: 'public'
     },
     {
-      name: '智能体',
+      name: 'Agent',
       path: '/agent',
       icon: Bot,
-      activeIcon: Bot
+      activeIcon: Bot,
+      access: 'login'
     }
   ]
 
-    if (userStore.isAdmin) {
-      items.push(
-        {
-          name: '知识图谱',
-          path: '/graph',
-        icon: Waypoints,
-        activeIcon: Waypoints
-      },
-      {
-        name: '知识库',
-        path: '/database',
-        icon: LibraryBig,
-        activeIcon: LibraryBig
-      }
-    )
-
-    if (userStore.isSuperAdmin) {
-      items.push({
-        name: '扩展管理',
-        path: '/extensions',
-        icon: Blocks,
-        activeIcon: Blocks
-      })
+  items.push(
+    {
+      name: '知识图谱',
+      path: '/graph',
+      icon: Waypoints,
+      activeIcon: Waypoints,
+      access: 'admin'
+    },
+    {
+      name: '知识库',
+      path: '/database',
+      icon: LibraryBig,
+      activeIcon: LibraryBig,
+      access: 'admin'
+    },
+    {
+      name: '扩展管理',
+      path: '/extensions',
+      icon: Blocks,
+      activeIcon: Blocks,
+      access: 'superadmin'
+    },
+    {
+      name: '运营看板',
+      path: '/dashboard',
+      icon: BarChart3,
+      activeIcon: BarChart3,
+      access: 'admin'
     }
-
-      items.push({
-        name: '运营看板',
-        path: '/dashboard',
-        icon: BarChart3,
-        activeIcon: BarChart3
-      })
-    }
+  )
 
   return items
 })
 
-// Provide settings modal methods to child components
 provide('settingsModal', {
   openSettingsModal
 })
@@ -234,18 +274,25 @@ provide('settingsModal', {
 
 <template>
   <div class="app-layout" :class="{ 'use-top-bar': layoutSettings.useTopBar, 'embed-mode': isEmbed }">
-    <div
-      v-if="!isEmbed"
-      class="header"
-      :class="{ 'top-bar': layoutSettings.useTopBar, 'is-expanded': showNavLabel }"
-    >
-      <div class="logo circle">
-        <router-link to="/">
+    <aside v-if="!isEmbed" class="header" :class="{ 'top-bar': layoutSettings.useTopBar, 'is-expanded': showNavLabel }">
+      <div class="logo">
+        <router-link to="/" aria-label="Worldline Home">
           <img v-if="infoStore.organization.avatar" :src="infoStore.organization.avatar" alt="Worldline" />
           <Waypoints v-else class="logo-fallback-icon" size="22" aria-hidden="true" />
         </router-link>
       </div>
-      <div class="nav">
+
+      <div class="runtime-status" :class="runtimeStatus.state">
+        <a-tooltip :disabled="showNavLabel" placement="right">
+          <template #title>{{ runtimeStatus.title }}</template>
+          <div class="runtime-status-inner" :title="runtimeStatus.title">
+            <component :is="runtimeStatus.icon" size="15" />
+            <span v-if="showNavLabel">{{ runtimeStatus.label }}</span>
+          </div>
+        </a-tooltip>
+      </div>
+
+      <nav class="nav" aria-label="Application">
         <button
           v-if="!layoutSettings.useTopBar"
           class="nav-item nav-expand-toggle"
@@ -253,69 +300,84 @@ provide('settingsModal', {
           :title="showNavLabel ? '收起导航' : '展开导航'"
           @click="toggleNavExpanded()"
         >
-          <component :is="showNavLabel ? ChevronsLeft : ChevronsRight" class="icon" size="20" />
-          <span v-if="showNavLabel" class="nav-label">{{ showNavLabel ? '收起导航' : '展开导航' }}</span>
+          <div class="nav-item-inner">
+            <component :is="showNavLabel ? ChevronsLeft : ChevronsRight" class="icon" size="20" />
+            <span v-if="showNavLabel" class="nav-label">{{ showNavLabel ? '收起导航' : '展开导航' }}</span>
+          </div>
         </button>
-        <!-- 使用mainList渲染导航项 -->
-        <RouterLink
-          v-for="(item, index) in mainList"
-          :key="index"
-          :to="item.path"
-          v-show="!item.hidden"
-          class="nav-item"
-          active-class="active"
-        >
-          <a-tooltip :disabled="showNavLabel" placement="right">
-            <template #title>{{ item.name }}</template>
-            <div class="nav-item-inner">
-              <component
-                class="icon"
-                :is="isNavItemActive(item.path) ? item.activeIcon : item.icon"
-                size="22"
-              />
-              <span v-if="showNavLabel" class="nav-label">{{ item.name }}</span>
-            </div>
-          </a-tooltip>
-        </RouterLink>
-        <div
+
+        <template v-for="item in mainList" :key="item.path">
+          <RouterLink
+            v-if="!isNavItemLocked(item)"
+            :to="item.path"
+            class="nav-item"
+            active-class="active"
+          >
+            <a-tooltip :disabled="showNavLabel" placement="right">
+              <template #title>{{ navItemTitle(item) }}</template>
+              <div class="nav-item-inner">
+                <component class="icon" :is="isNavItemActive(item.path) ? item.activeIcon : item.icon" size="22" />
+                <span v-if="showNavLabel" class="nav-label">{{ item.name }}</span>
+              </div>
+            </a-tooltip>
+          </RouterLink>
+
+          <button
+            v-else
+            class="nav-item locked"
+            type="button"
+            :aria-label="navItemTitle(item)"
+            @click="handleLockedNavItem(item)"
+          >
+            <a-tooltip :disabled="showNavLabel" placement="right">
+              <template #title>{{ navItemTitle(item) }}</template>
+              <div class="nav-item-inner">
+                <component class="icon" :is="item.icon" size="22" />
+                <span v-if="showNavLabel" class="nav-label">{{ item.name }}</span>
+                <LockKeyhole class="lock-icon" size="12" />
+              </div>
+            </a-tooltip>
+          </button>
+        </template>
+
+        <button
           v-if="userStore.isAdmin"
           class="nav-item task-center"
           :class="{ active: isDrawerOpen }"
+          type="button"
           @click="taskerStore.openDrawer()"
         >
           <a-tooltip :disabled="showNavLabel" placement="right">
             <template #title>任务中心</template>
             <div class="nav-item-inner">
-              <a-badge
-                :count="activeTaskCount"
-                :overflow-count="99"
-                class="task-center-badge"
-                size="small"
-              >
+              <a-badge :count="activeTaskCount" :overflow-count="99" class="task-center-badge" size="small">
                 <CircleCheck class="icon" size="22" />
               </a-badge>
               <span v-if="showNavLabel" class="nav-label">任务中心</span>
             </div>
           </a-tooltip>
-        </div>
-      </div>
+        </button>
+      </nav>
+
       <div class="fill"></div>
+
       <div v-if="projectRepoUrl" class="github nav-item">
         <a-tooltip placement="right">
           <template #title>项目仓库</template>
           <a :href="projectRepoUrl" target="_blank" rel="noopener noreferrer" class="github-link">
             <GithubOutlined class="icon" />
-            <span v-if="githubStars > 0" class="github-stars">
+            <span v-if="githubStars > 0 && !isLoadingStars" class="github-stars">
               <span class="star-count">{{ (githubStars / 1000).toFixed(1) }}k</span>
             </span>
           </a>
         </a-tooltip>
       </div>
-      <!-- 用户信息组件 -->
+
       <div class="nav-item user-info">
         <UserInfoComponent />
       </div>
-    </div>
+    </aside>
+
     <router-view v-slot="{ Component, route }" id="app-router-view">
       <keep-alive v-if="route.meta.keepAlive !== false">
         <component :is="Component" />
@@ -323,16 +385,15 @@ provide('settingsModal', {
       <component :is="Component" v-else />
     </router-view>
 
-    <!-- Debug Modal -->
     <a-modal
       v-model:open="showDebugModal"
-      title="调试面板（非生产环境）"
+      title="调试面板"
       width="90%"
       :footer="null"
-      @cancel="handleDebugModalClose"
-      :maskClosable="true"
-      :destroyOnClose="true"
+      :mask-closable="true"
+      :destroy-on-close="true"
       class="debug-modal"
+      @cancel="handleDebugModalClose"
     >
       <DebugComponent />
     </a-modal>
@@ -342,7 +403,6 @@ provide('settingsModal', {
 </template>
 
 <style lang="less" scoped>
-// Less 变量定义
 @header-width-collapsed: 56px;
 @header-width-expanded: 188px;
 
@@ -365,7 +425,7 @@ provide('settingsModal', {
   height: 100vh;
 }
 
-div.header,
+.header,
 #app-router-view {
   height: 100%;
   max-width: 100%;
@@ -383,239 +443,227 @@ div.header,
   display: flex;
   flex-direction: column;
   flex: 0 0 @header-width-collapsed;
-  justify-content: flex-start;
   align-items: center;
   background:
     radial-gradient(circle at 50% 0%, rgba(var(--wl-gold-rgb), 0.12), transparent 32%),
     linear-gradient(180deg, rgba(7, 15, 24, 0.96), rgba(2, 5, 10, 0.98));
-  height: 100%;
   width: @header-width-collapsed;
   border-right: 1px solid var(--wl-border);
   box-shadow: 8px 0 36px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
   transition:
     width 0.2s ease,
-    flex-basis 0.2s ease,
-    padding 0.2s ease;
+    flex-basis 0.2s ease;
+}
+
+.nav {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.fill {
+  flex-grow: 1;
+}
+
+.logo {
+  width: 38px;
+  height: 38px;
+  margin: 8px 0 18px;
+}
+
+.logo img {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  object-fit: cover;
+  box-shadow: 0 0 18px rgba(var(--wl-cyan-rgb), 0.16);
+}
+
+.logo a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--wl-cyan);
+  text-decoration: none;
+}
+
+.runtime-status {
+  width: calc(100% - 16px);
+  margin: -8px 8px 12px;
+}
+
+.runtime-status-inner {
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.runtime-status.ready .runtime-status-inner {
+  color: var(--wl-cyan-soft);
+}
+
+.runtime-status.fallback .runtime-status-inner {
+  border-color: rgba(var(--wl-gold-rgb), 0.28);
+  background: rgba(var(--wl-gold-rgb), 0.08);
+  color: var(--wl-gold-soft);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: var(--wl-radius-sm);
+  background-color: transparent;
+  color: var(--wl-muted);
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  gap: 10px;
+  appearance: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.nav-item-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.icon {
+  flex: 0 0 auto;
+}
+
+.nav-label {
+  display: none;
+  align-items: center;
   overflow: hidden;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .nav {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    position: relative;
-    gap: 10px;
-    width: 100%;
-    padding: 0 8px;
-  }
+.nav-item.active {
+  border-color: var(--wl-border-strong);
+  background:
+    linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.14), transparent 34%),
+    rgba(var(--wl-cyan-rgb), 0.1);
+  color: var(--wl-text);
+  box-shadow: inset 2px 0 0 var(--wl-gold);
+}
 
-  .fill {
-    flex-grow: 1;
-  }
+.nav-item:hover {
+  border-color: var(--wl-border-strong);
+  background: rgba(var(--wl-cyan-rgb), 0.065);
+  color: var(--wl-cyan-soft);
+}
 
-  .logo {
-    width: 38px;
-    height: 38px;
-    margin: 8px 0 18px 0;
+.nav-item.locked {
+  border-color: rgba(var(--wl-cyan-rgb), 0.08);
+  color: rgba(148, 172, 184, 0.72);
+}
 
-    img {
-      width: 100%;
-      height: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--wl-border);
-      box-shadow: 0 0 18px rgba(var(--wl-cyan-rgb), 0.16);
-    }
+.nav-item.locked:hover {
+  border-color: rgba(var(--wl-gold-rgb), 0.35);
+  background: rgba(var(--wl-gold-rgb), 0.06);
+  color: var(--wl-gold-soft);
+}
 
-    .logo-fallback-icon {
-      color: var(--wl-cyan);
-    }
+.lock-icon {
+  margin-left: auto;
+  color: var(--wl-gold-soft);
+  opacity: 0.9;
+}
 
-    & > a {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-    }
-  }
+.nav-expand-toggle {
+  margin-bottom: 4px;
+  border-color: var(--wl-border);
+  border-style: dashed;
+}
 
-  .nav-item {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 40px;
-    padding: 0 10px;
-    border: 1px solid transparent;
-    border-radius: var(--wl-radius-sm);
-    background-color: transparent;
-    color: var(--wl-muted);
-    font-size: 14px;
-    transition:
-      background-color 0.2s ease-in-out,
-      border-color 0.2s ease-in-out,
-      color 0.2s ease-in-out,
-      box-shadow 0.2s ease-in-out;
-    margin: 0;
-    text-decoration: none;
-    cursor: pointer;
-    outline: none;
-    gap: 10px;
-    appearance: none;
+.task-center-badge {
+  display: flex;
+  justify-content: center;
+}
 
-    .nav-item-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-      min-width: 0;
-    }
+.github.nav-item {
+  margin-bottom: 12px;
+}
 
-    .icon {
-      flex: 0 0 auto;
-    }
+.github-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  color: inherit;
+}
 
-    .nav-label {
-      display: none;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-weight: 600;
-      font-size: 13px;
-      color: inherit;
-    }
+.github-stars {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
 
-    & > svg:focus,
-    .icon:focus {
-      outline: none;
-    }
+.star-count {
+  font-weight: 700;
+}
 
-    & > svg:focus-visible,
-    .icon:focus-visible {
-      outline: none;
-    }
-
-    &.active {
-      border-color: var(--wl-border-strong);
-      background:
-        linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.14), transparent 34%),
-        rgba(var(--wl-cyan-rgb), 0.1);
-      color: var(--wl-text);
-      box-shadow: inset 2px 0 0 var(--wl-gold);
-    }
-
-    &.warning {
-      color: var(--wl-red);
-    }
-
-    &:hover {
-      border-color: var(--wl-border-strong);
-      background: rgba(var(--wl-cyan-rgb), 0.065);
-      color: var(--wl-cyan-soft);
-    }
-
-    &.nav-expand-toggle {
-      margin-bottom: 4px;
-      border-style: dashed;
-      border-color: var(--wl-border);
-    }
-
-    &.github {
-      padding: 8px 10px;
-      margin-bottom: 16px;
-      &:hover {
-        background-color: transparent;
-        border: 1px solid transparent;
-      }
-
-      .github-link {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        gap: 8px;
-        color: inherit;
-        width: 100%;
-        justify-content: center;
-      }
-
-      .github-stars {
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-        margin-top: 0;
-
-        .star-icon {
-          color: var(--wl-gold);
-          font-size: 12px;
-          margin-right: 2px;
-        }
-
-        .star-count {
-          font-weight: 600;
-        }
-      }
-    }
-
-    &.api-docs {
-      padding: 10px 12px;
-    }
-    &.docs {
-      display: none;
-    }
-    &.task-center {
-      .task-center-badge {
-        display: flex;
-        justify-content: center;
-      }
-    }
-
-    &.theme-toggle-nav {
-      .theme-toggle-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        color: var(--wl-muted);
-        transition: color 0.2s ease-in-out;
-
-        &:hover {
-          color: var(--wl-cyan);
-        }
-      }
-    }
-    &.user-info {
-      margin-bottom: 8px;
-    }
-  }
+.user-info {
+  margin-bottom: 8px;
 }
 
 .header.is-expanded {
   flex-basis: @header-width-expanded;
   width: @header-width-expanded;
   align-items: stretch;
+}
 
-  .logo {
-    margin: 8px 0 18px 12px;
-  }
+.header.is-expanded .logo {
+  margin-left: 12px;
+}
 
-  .nav-item {
-    justify-content: flex-start;
+.header.is-expanded .runtime-status-inner {
+  justify-content: flex-start;
+  padding: 0 10px;
+}
 
-    .nav-item-inner {
-      justify-content: flex-start;
-    }
+.header.is-expanded .nav-item,
+.header.is-expanded .nav-item-inner,
+.header.is-expanded .github-link {
+  justify-content: flex-start;
+}
 
-    .nav-label {
-      display: inline-flex;
-      align-items: center;
-    }
-  }
-
-  .github.nav-item .github-link {
-    justify-content: flex-start;
-  }
+.header.is-expanded .nav-label {
+  display: inline-flex;
 }
 
 .app-layout.use-top-bar {
@@ -627,131 +675,36 @@ div.header,
   flex: 0 0 50px;
   width: 100%;
   height: 50px;
+  padding: 0 20px;
+  gap: 24px;
   border-right: none;
   border-bottom: 1px solid var(--wl-border);
   background:
     radial-gradient(circle at 0% 0%, rgba(var(--wl-gold-rgb), 0.1), transparent 28%),
     linear-gradient(90deg, rgba(7, 15, 24, 0.96), rgba(2, 5, 10, 0.98));
-  padding: 0 20px;
-  gap: 24px;
+}
 
-  .logo {
-    width: fit-content;
-    height: 28px;
-    margin-right: 16px;
-    display: flex;
-    align-items: center;
+.header.top-bar .logo {
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
 
-    a {
-      display: flex;
-      align-items: center;
-      text-decoration: none;
-      color: inherit;
-    }
+.header.top-bar .nav {
+  flex-direction: row;
+  gap: 20px;
+  width: auto;
+  padding: 0;
+}
 
-    img {
-      width: 28px;
-      height: 28px;
-      margin-right: 8px;
-    }
-  }
+.header.top-bar .nav-item {
+  width: auto;
+  padding: 4px 16px;
+}
 
-  .nav {
-    flex-direction: row;
-    height: auto;
-    gap: 20px;
-  }
-
-  .nav-item {
-    flex-direction: row;
-    width: auto;
-    padding: 4px 16px;
-    margin: 0;
-    gap: 0;
-
-    .nav-item-inner {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .nav-label {
-      display: inline-flex;
-      align-items: center;
-      font-size: 14px;
-    }
-
-    .icon {
-      margin-right: 8px;
-      font-size: 15px; // 减小图标大小
-      border: none;
-      outline: none;
-
-      &:focus,
-      &:active {
-        border: none;
-        outline: none;
-      }
-    }
-
-    .text {
-      margin-top: 0;
-      font-size: 15px;
-    }
-
-    &.github {
-      padding: 8px 12px;
-
-      .icon {
-        margin-right: 0;
-        font-size: 18px;
-      }
-
-      &.active {
-        color: var(--wl-cyan);
-      }
-
-      a {
-        display: flex;
-        align-items: center;
-      }
-
-      .github-stars {
-        display: flex;
-        align-items: center;
-        margin-left: 6px;
-
-        .star-icon {
-          color: var(--wl-gold);
-          font-size: 14px;
-          margin-right: 2px;
-        }
-      }
-    }
-
-    &.theme-toggle-nav {
-      padding: 8px 12px;
-
-      .theme-toggle-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--wl-muted);
-        transition: color 0.2s ease-in-out;
-        cursor: pointer;
-
-        &:hover {
-          color: var(--wl-cyan);
-        }
-      }
-
-      &.active {
-        .theme-toggle-icon {
-          color: var(--wl-cyan);
-        }
-      }
-    }
-  }
+.header.top-bar .nav-label {
+  display: inline-flex;
+  font-size: 14px;
 }
 
 @media (max-width: 720px) {
@@ -763,26 +716,25 @@ div.header,
     flex-basis: @header-width-collapsed;
     width: @header-width-collapsed;
     align-items: center;
+  }
 
-    .logo {
-      margin: 8px 0 18px;
-    }
+  .header.is-expanded .logo {
+    margin: 8px 0 18px;
+  }
 
-    .nav-item {
-      justify-content: center;
+  .header.is-expanded .runtime-status-inner {
+    justify-content: center;
+    padding: 0;
+  }
 
-      .nav-item-inner {
-        justify-content: center;
-      }
+  .header.is-expanded .nav-item,
+  .header.is-expanded .nav-item-inner,
+  .header.is-expanded .github-link {
+    justify-content: center;
+  }
 
-      .nav-label {
-        display: none;
-      }
-    }
-
-    .github.nav-item .github-link {
-      justify-content: center;
-    }
+  .header.is-expanded .nav-label {
+    display: none;
   }
 }
 </style>

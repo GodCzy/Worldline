@@ -102,6 +102,20 @@ const router = createRouter({
           meta: { keepAlive: true, requiresAuth: false }
         },
         {
+          path: 'agent',
+          name: 'WorldlineAgentWorkbench',
+          component: () => import('../views/worldline/WorldlineAgentWorkbenchView.vue'),
+          meta: {
+            keepAlive: false,
+            requiresAuth: false,
+            themeContext: {
+              scene: 'agent_worldline',
+              version: 'worldline-agent-workbench-v0.1',
+              entry: 'worldline-agent'
+            }
+          }
+        },
+        {
           path: ':themeId',
           name: 'WorldlineWorkbench',
           component: () => import('../views/worldline/WorldlineWorkbenchView.vue'),
@@ -242,6 +256,23 @@ router.beforeEach(async (to, from, next) => {
   const isAdmin = userStore.isAdmin
   const isSuperAdmin = userStore.isSuperAdmin
 
+  if (to.path === '/login') {
+    const redirectPath = normalizeAuthRedirect(to.query.redirect) || getStoredRedirect()
+    if (isLoggedIn) {
+      next(redirectPath || '/')
+      return
+    }
+
+    next({
+      name: 'Home',
+      query: {
+        login: '1',
+        ...(redirectPath ? { redirect: redirectPath } : {})
+      }
+    })
+    return
+  }
+
   if (to.name === 'AgentComp' && isLoggedIn) {
     try {
       const fallbackAgentId = await resolveFallbackAgentId()
@@ -262,8 +293,11 @@ router.beforeEach(async (to, from, next) => {
     const redirectPath = normalizeAuthRedirect(to.fullPath)
     setStoredRedirect(redirectPath)
     next({
-      name: 'login',
-      query: redirectPath ? { redirect: redirectPath } : undefined
+      name: 'Home',
+      query: {
+        login: '1',
+        ...(redirectPath ? { redirect: redirectPath } : {})
+      }
     })
     return
   }
@@ -295,18 +329,6 @@ router.beforeEach(async (to, from, next) => {
       console.error('获取智能体信息失败:', error)
       next('/agent')
     }
-    return
-  }
-
-  if (to.path === '/login' && isLoggedIn) {
-    const redirectPath =
-      normalizeAuthRedirect(to.query.redirect) || consumeStoredRedirect()
-    if (redirectPath) {
-      next(redirectPath)
-      return
-    }
-
-    next('/')
     return
   }
 

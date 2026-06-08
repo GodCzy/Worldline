@@ -1,0 +1,38 @@
+[
+  {
+    "name": "database",
+    "filePath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-04-frontend-backend-audit\\screenshots\\auth-qa\\database-1440x900.png",
+    "url": "http://127.0.0.1:5173/database",
+    "title": "世界线 - Worldline",
+    "text": "文档知识库\n新建知识库\n暂无知识库\n\n创建您的第一个知识库，开始管理文档和知识\n\n创建知识库",
+    "bodyBg": "rgb(3, 3, 3)",
+    "whitePanels": 0
+  },
+  {
+    "name": "dashboard",
+    "filePath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-04-frontend-backend-audit\\screenshots\\auth-qa\\dashboard-1440x900.png",
+    "url": "http://127.0.0.1:5173/dashboard",
+    "title": "世界线 - Worldline",
+    "text": "Worldline\nLiving Knowledge OS\n2026年06月04日 18:53:02\n晚上好！Codex QA Admin\n任务中心\n0\n总对话数\n0\n活跃对话\n0\n总消息数\n2\n用户数\n0\n总反馈数\n100%\n满意度\n运营总览\n\n这里集中展示平台运行、智能体使用、知识库使用和近期对话概况。\n\n调用统计\n近14小时\n近14天\n近14周\n模型调用\n智能体调用\nToken消耗\n工具调用\n用户活跃度分析\n2\n总用户\n0\n24H活跃\n0\n30天活跃\n活跃度趋势\n最近7天\nAI智能体分析\n智能体总数\n0个\n总对话数\n0次\n工具调用总数\n0次\n对话/工具调用分布 (TOP 3)\n表现最佳智能体 TOP 5\n排名\t智能体ID\t满意度\t对话数\n\n\n暂无数据\n\n工具调用监控\n总调用次数\n0\n失败调用\n0次\n成功率\n0%\n最常用工具 TOP 10\n知识库使用情况\n知识库总数\n0个\n文件总数\n0个\n存储容量\n0 B\n类型分布\n文件类型分布\n近期对话\n活跃\n重新加载\n查看反馈\n对话标题\t用户编号\t消息数\t状态\t更新时间\t操作\n\n\n暂无数据",
+    "bodyBg": "rgb(3, 3, 3)",
+    "whitePanels": 0
+  },
+  {
+    "name": "extensions",
+    "filePath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-04-frontend-backend-audit\\screenshots\\auth-qa\\extensions-1440x900.png",
+    "url": "http://127.0.0.1:5173/extensions",
+    "title": "世界线 - Worldline",
+    "text": "",
+    "bodyBg": "rgb(3, 3, 3)",
+    "whitePanels": 0
+  },
+  {
+    "name": "graph",
+    "filePath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-04-frontend-backend-audit\\screenshots\\auth-qa\\graph-1440x900.png",
+    "url": "http://127.0.0.1:5173/graph",
+    "title": "世界线 - Worldline",
+    "text": "知识图谱\n\n查看当前知识库中的图谱结构，也可结合主题闭环继续探索。\n\n已连接\n当前知识库：\n默认图谱 (upload)\n上传知识文件\n导出当前图谱\n\n当前没有可展示的图谱节点，请先切换知识库或上传知识文件后再继续浏览。",
+    "bodyBg": "rgb(3, 3, 3)",
+    "whitePanels": 0
+  }
+]

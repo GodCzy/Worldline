@@ -1,26 +1,21 @@
 <template>
   <div class="user-info-component">
     <a-dropdown v-if="userStore.isLoggedIn" :trigger="['hover']">
-      <div class="user-info-dropdown" :data-align="showRole ? 'left' : 'center'">
-        <div class="user-avatar">
-          <img
-            v-if="userStore.avatar"
-            :src="userStore.avatar"
-            :alt="userStore.username"
-            class="avatar-image"
-          />
-          <CircleUser v-else />
-        </div>
-        <div v-if="showRole">{{ userStore.username }}</div>
-      </div>
+      <button class="user-trigger" type="button" :data-align="showRole ? 'left' : 'center'">
+        <span class="user-avatar">
+          <img v-if="userStore.avatar" :src="userStore.avatar" :alt="userStore.username" class="avatar-image" />
+          <CircleUser v-else :size="20" />
+        </span>
+        <span v-if="showRole" class="trigger-name">{{ userStore.username || userStore.userIdLogin }}</span>
+      </button>
       <template #overlay>
-        <a-menu>
-          <a-menu-item key="user-info" @click="openProfile">
+        <a-menu class="user-menu">
+          <a-menu-item key="profile" @click="openProfile">
             <div class="user-info-display">
-              <div class="user-menu-username">{{ userStore.username }}</div>
+              <div class="user-menu-username">{{ userStore.username || 'Worldline User' }}</div>
               <div class="user-menu-details">
-                <span class="user-menu-info">ID: {{ userStore.userIdLogin }}</span>
-                <span class="user-menu-role">{{ userRoleText }}</span>
+                <span>ID: {{ userStore.userIdLogin }}</span>
+                <span>{{ userRoleText }}</span>
               </div>
             </div>
           </a-menu-item>
@@ -31,30 +26,14 @@
           <a-menu-item key="docs" @click="openDocs" :icon="BookOpenIcon">
             <span class="menu-text">文档中心</span>
           </a-menu-item>
-          <a-menu-item
-            key="theme"
-            @click="toggleTheme"
-            :icon="themeStore.isDark ? SunIcon : MoonIcon"
-          >
-            <span class="menu-text">{{
-              themeStore.isDark ? '切换到浅色模式' : '切换到深色模式'
-            }}</span>
+          <a-menu-item key="theme" @click="toggleTheme" :icon="themeStore.isDark ? SunIcon : MoonIcon">
+            <span class="menu-text">{{ themeStore.isDark ? '切换浅色模式' : '切换深色模式' }}</span>
           </a-menu-item>
           <a-menu-divider v-if="userStore.isAdmin" />
-          <a-menu-item
-            v-if="userStore.isSuperAdmin"
-            key="debug"
-            @click="showDebug = true"
-            :icon="TerminalIcon"
-          >
-            <span class="menu-text">调试面板（非生产环境）</span>
+          <a-menu-item v-if="userStore.isSuperAdmin" key="debug" @click="showDebug = true" :icon="TerminalIcon">
+            <span class="menu-text">调试面板</span>
           </a-menu-item>
-          <a-menu-item
-            v-if="userStore.isAdmin"
-            key="setting"
-            @click="goToSetting"
-            :icon="SettingsIcon"
-          >
+          <a-menu-item v-if="userStore.isAdmin" key="setting" @click="goToSetting" :icon="SettingsIcon">
             <span class="menu-text">系统设置</span>
           </a-menu-item>
           <a-menu-item key="logout" @click="logout" :icon="LogOutIcon">
@@ -63,7 +42,8 @@
         </a-menu>
       </template>
     </a-dropdown>
-    <a-button v-else-if="showButton" type="primary" @click="goToLogin">登录</a-button>
+
+    <button v-else-if="showButton" class="login-button" type="button" @click="goToLogin">登录</button>
 
     <a-modal
       v-model:open="profileModalVisible"
@@ -74,99 +54,47 @@
     >
       <div class="profile-content">
         <div class="avatar-section">
-          <div class="avatar-container">
-            <div class="avatar-display">
-              <img
-                v-if="userStore.avatar"
-                :src="userStore.avatar"
-                :alt="userStore.username"
-                class="large-avatar"
-              />
-              <div v-else class="default-avatar">
-                <CircleUser :size="60" />
-              </div>
-            </div>
-            <div class="avatar-actions">
-              <a-upload
-                :show-upload-list="false"
-                :before-upload="beforeUpload"
-                @change="handleAvatarChange"
-                accept="image/*"
-              >
-                <a-button type="primary" size="small" :loading="avatarUploading">
-                  <template #icon><Upload size="14" /></template>
-                  {{ userStore.avatar ? '更换头像' : '上传头像' }}
-                </a-button>
-              </a-upload>
-              <div class="avatar-tips">支持 JPG、PNG 格式，文件不超过 5MB</div>
+          <div class="avatar-display">
+            <img v-if="userStore.avatar" :src="userStore.avatar" :alt="userStore.username" class="large-avatar" />
+            <div v-else class="default-avatar">
+              <CircleUser :size="58" />
             </div>
           </div>
+          <a-upload :show-upload-list="false" :before-upload="beforeUpload" @change="handleAvatarChange" accept="image/*">
+            <a-button type="primary" size="small" :loading="avatarUploading">
+              <template #icon><Upload size="14" /></template>
+              {{ userStore.avatar ? '更换头像' : '上传头像' }}
+            </a-button>
+          </a-upload>
+          <div class="avatar-tips">支持 JPG、PNG，文件不超过 5MB。</div>
         </div>
 
         <div class="info-section">
           <div class="info-item">
-            <div class="info-label">用户名</div>
-            <div v-if="!profileEditing" class="info-value">
-              {{ userStore.username || '未设置' }}
-            </div>
-            <div v-else class="info-value">
-              <a-input
-                v-model:value="editedProfile.username"
-                placeholder="请输入用户名（2-20 个字符）"
-                :max-length="20"
-                style="width: 240px"
-              />
-            </div>
+            <span class="info-label">用户名</span>
+            <span class="info-value">{{ userStore.username || '未设置' }}</span>
           </div>
           <div class="info-item">
-            <div class="info-label">用户ID</div>
-            <div v-if="!profileEditing" class="info-value user-id">
-              {{ userStore.userIdLogin || '未设置' }}
-            </div>
-            <div v-else class="info-value">
-              <a-input :value="userStore.userIdLogin || ''" disabled style="width: 240px" />
-            </div>
+            <span class="info-label">用户 ID</span>
+            <span class="info-value mono">{{ userStore.userIdLogin || '未设置' }}</span>
           </div>
           <div class="info-item">
-            <div class="info-label">手机号</div>
-            <div v-if="!profileEditing" class="info-value">
-              {{ userStore.phoneNumber || '未设置' }}
-            </div>
-            <div v-else class="info-value">
-              <a-input
-                v-model:value="editedProfile.phone_number"
-                placeholder="请输入手机号"
-                :max-length="11"
-                style="width: 200px"
-              />
-            </div>
+            <span class="info-label">手机号</span>
+            <span class="info-value">{{ userStore.phoneNumber || '未设置' }}</span>
           </div>
           <div class="info-item">
-            <div class="info-label">角色</div>
-            <div class="info-value">
-              <a-tag :color="getRoleColor(userStore.userRole)" class="role-tag">
-                {{ userRoleText }}
-              </a-tag>
-            </div>
+            <span class="info-label">角色</span>
+            <a-tag :color="getRoleColor(userStore.userRole)" class="role-tag">{{ userRoleText }}</a-tag>
           </div>
           <div v-if="userStore.departmentId" class="info-item">
-            <div class="info-label">部门</div>
-            <div class="info-value">{{ userStore.departmentName || '默认部门' }}</div>
+            <span class="info-label">部门</span>
+            <span class="info-value">{{ userStore.departmentName || '默认部门' }}</span>
           </div>
         </div>
 
         <div class="actions-section">
           <a-space>
-            <template v-if="!profileEditing">
-              <a-button type="primary" @click="startEdit">编辑资料</a-button>
-              <a-button @click="profileModalVisible = false">关闭</a-button>
-            </template>
-            <template v-else>
-              <a-button type="primary" @click="saveProfile" :loading="avatarUploading">
-                保存
-              </a-button>
-              <a-button @click="cancelEdit">取消</a-button>
-            </template>
+            <a-button @click="profileModalVisible = false">关闭</a-button>
           </a-space>
         </div>
       </div>
@@ -183,25 +111,26 @@
 </template>
 
 <script setup>
-import { computed, ref, inject, h } from 'vue'
+import { computed, h, inject, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { message } from 'ant-design-vue'
 import { useUserStore } from '@/stores/user'
 import { useInfoStore } from '@/stores/info'
 import { useThemeStore } from '@/stores/theme'
 import DebugComponent from '@/components/DebugComponent.vue'
 import SettingsModal from '@/components/SettingsModal.vue'
-import { message } from 'ant-design-vue'
-import {
-  CircleUser,
-  BookOpen,
-  LayoutGrid,
-  Sun,
-  Moon,
-  LogOut,
-  Upload,
-  Settings,
-  Terminal
-} from 'lucide-vue-next'
+import { BookOpen, CircleUser, LayoutGrid, LogOut, Moon, Settings, Sun, Terminal, Upload } from 'lucide-vue-next'
+
+defineProps({
+  showRole: {
+    type: Boolean,
+    default: false
+  },
+  showButton: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -221,27 +150,11 @@ const settingsModalApi = inject('settingsModal', null)
 const showLocalSettingsModal = ref(false)
 const profileModalVisible = ref(false)
 const avatarUploading = ref(false)
-const profileEditing = ref(false)
-const editedProfile = ref({
-  username: '',
-  phone_number: ''
-})
-
-defineProps({
-  showRole: {
-    type: Boolean,
-    default: false
-  },
-  showButton: {
-    type: Boolean,
-    default: false
-  }
-})
 
 const userRoleText = computed(() => {
   switch (userStore.userRole) {
     case 'superadmin':
-      return '超级管理员'
+      return '最高权限'
     case 'admin':
       return '管理员'
     case 'user':
@@ -256,11 +169,11 @@ const docsUrl = computed(() => infoStore.docsUrl || '')
 const logout = () => {
   userStore.logout()
   message.success('已退出登录')
-  router.push('/login')
+  router.push({ name: 'Home', query: { login: '1' } })
 }
 
 const goToLogin = () => {
-  router.push('/login')
+  router.push({ name: 'Home', query: { login: '1' } })
 }
 
 const openThemes = () => {
@@ -295,82 +208,24 @@ const goToSetting = () => {
 
 const openProfile = async () => {
   profileModalVisible.value = true
-  profileEditing.value = false
 
   try {
     await userStore.getCurrentUser()
-    editedProfile.value = {
-      username: userStore.username || '',
-      phone_number: userStore.phoneNumber || ''
-    }
   } catch (error) {
-    console.error('刷新用户信息失败:', error)
+    console.warn('Refresh user profile failed:', error)
   }
 }
 
 const getRoleColor = (role) => {
   switch (role) {
     case 'superadmin':
-      return 'red'
+      return 'gold'
     case 'admin':
       return 'blue'
     case 'user':
       return 'green'
     default:
       return 'default'
-  }
-}
-
-const startEdit = () => {
-  profileEditing.value = true
-  editedProfile.value = {
-    username: userStore.username || '',
-    phone_number: userStore.phoneNumber || ''
-  }
-}
-
-const cancelEdit = () => {
-  profileEditing.value = false
-  editedProfile.value = {
-    username: userStore.username || '',
-    phone_number: userStore.phoneNumber || ''
-  }
-}
-
-const validatePhoneNumber = (phone) => {
-  if (!phone) return true
-  const phoneRegex = /^1[3-9]\d{9}$/
-  return phoneRegex.test(phone)
-}
-
-const saveProfile = async () => {
-  try {
-    if (
-      editedProfile.value.username &&
-      (editedProfile.value.username.trim().length < 2 ||
-        editedProfile.value.username.trim().length > 20)
-    ) {
-      message.error('用户名长度必须在 2-20 个字符之间')
-      return
-    }
-
-    if (
-      editedProfile.value.phone_number &&
-      !validatePhoneNumber(editedProfile.value.phone_number)
-    ) {
-      message.error('请输入正确的手机号格式')
-      return
-    }
-
-    await userStore.updateProfile({
-      username: editedProfile.value.username?.trim() || undefined,
-      phone_number: editedProfile.value.phone_number || undefined
-    })
-    message.success('个人资料更新成功')
-    profileEditing.value = false
-  } catch (error) {
-    console.error('更新个人资料失败:', error)
-    message.error('更新失败：' + (error.message || '请稍后重试'))
   }
 }
 
@@ -391,23 +246,13 @@ const beforeUpload = (file) => {
 }
 
 const handleAvatarChange = async (info) => {
-  if (info.file.status === 'uploading') {
-    avatarUploading.value = true
-    return
-  }
-
-  if (info.file.status === 'done') {
-    avatarUploading.value = false
-    return
-  }
-
   try {
     avatarUploading.value = true
     await userStore.uploadAvatar(info.file.originFileObj || info.file)
     message.success('头像上传成功')
   } catch (error) {
-    console.error('头像上传失败:', error)
-    message.error('头像上传失败：' + (error.message || '请稍后重试'))
+    console.warn('Upload avatar failed:', error)
+    message.error(`头像上传失败：${error.message || '请稍后重试'}`)
   } finally {
     avatarUploading.value = false
   }
@@ -419,213 +264,180 @@ const handleAvatarChange = async (info) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--gray-800);
+  color: var(--wl-text);
 }
 
-.user-info-dropdown {
-  width: 100%;
-  display: flex;
+.user-trigger,
+.login-button {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.user-trigger {
+  width: 100%;
   gap: 8px;
+  padding: 2px 8px;
+}
 
-  &[data-align='center'] {
-    justify-content: center;
-  }
+.user-trigger[data-align='center'] {
+  justify-content: center;
+}
 
-  &[data-align='left'] {
-    justify-content: flex-start;
-  }
+.user-trigger[data-align='left'] {
+  justify-content: flex-start;
+}
+
+.login-button {
+  padding: 0 12px;
 }
 
 .user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
-  position: relative;
+  border: 1px solid var(--wl-border);
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 2px 8px var(--shadow-2);
+  color: var(--wl-cyan);
+  background: rgba(var(--wl-cyan-rgb), 0.07);
+}
 
-  &:hover {
-    opacity: 0.9;
-  }
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
-  .avatar-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    border-radius: 50%;
-    border: 2px solid var(--gray-150);
-  }
+.trigger-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-info-display {
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .user-menu-username {
-  font-weight: 600;
-  color: var(--gray-900);
+  color: var(--wl-ink);
   font-size: 14px;
-  display: block;
-  margin-bottom: 2px;
+  font-weight: 800;
 }
 
 .user-menu-details {
   display: flex;
   gap: 12px;
-  align-items: center;
-}
-
-.user-menu-info {
+  color: rgba(6, 16, 24, 0.68);
   font-size: 12px;
-  color: var(--gray-600);
-}
-
-.user-menu-role {
-  font-size: 12px;
-  color: var(--gray-500);
-}
-
-.profile-modal {
-  :deep(.ant-modal-header) {
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--gray-150);
-
-    .ant-modal-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--gray-900);
-    }
-  }
-
-  :deep(.ant-modal-body) {
-    padding: 24px;
-  }
-}
-
-.profile-content {
-  .avatar-section {
-    text-align: center;
-    margin-bottom: 32px;
-    padding-bottom: 24px;
-    border-bottom: 1px solid var(--gray-150);
-
-    .avatar-container {
-      display: inline-block;
-
-      .avatar-display {
-        margin-bottom: 16px;
-
-        .large-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          object-fit: cover;
-          border: 3px solid var(--gray-150);
-          box-shadow: 0 2px 8px var(--shadow-2);
-        }
-
-        .default-avatar {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background: var(--gray-50);
-          display: flex;
-          margin: 0 auto;
-          align-items: center;
-          justify-content: center;
-          border: 3px solid var(--gray-150);
-          box-shadow: 0 2px 8px var(--shadow-2);
-
-          :deep(svg) {
-            color: var(--gray-400);
-          }
-        }
-      }
-
-      .avatar-actions {
-        .avatar-tips {
-          margin-top: 8px;
-          font-size: 12px;
-          color: var(--gray-500);
-          line-height: 1.4;
-        }
-      }
-    }
-  }
-
-  .info-section {
-    margin-bottom: 24px;
-
-    .info-item {
-      display: flex;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--gray-50);
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      .info-label {
-        width: 80px;
-        font-weight: 500;
-        color: var(--gray-500);
-        flex-shrink: 0;
-      }
-
-      .info-value {
-        flex: 1;
-        color: var(--gray-900);
-        font-size: 14px;
-
-        &.user-id {
-          font-family: 'Monaco', 'Consolas', monospace;
-          border-radius: 4px;
-          display: inline-block;
-        }
-      }
-
-      .role-tag {
-        font-weight: 500;
-        border-radius: 4px;
-        padding: 4px 12px;
-      }
-    }
-  }
-
-  .actions-section {
-    text-align: center;
-    padding-top: 16px;
-    border-top: 1px solid var(--gray-150);
-  }
-}
-
-:deep(.ant-dropdown-menu) {
-  padding: 8px 0;
-}
-
-:deep(.ant-dropdown-menu-title-content) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--gray-900);
-}
-
-:deep(.ant-dropdown-menu-item svg) {
-  margin-right: 4px;
-  color: var(--gray-900);
-  vertical-align: middle;
 }
 
 .menu-text {
   line-height: 20px;
+}
+
+.profile-content {
+  display: grid;
+  gap: 20px;
+}
+
+.avatar-section {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--wl-border);
+}
+
+.avatar-display,
+.large-avatar,
+.default-avatar {
+  width: 80px;
+  height: 80px;
+}
+
+.large-avatar,
+.default-avatar {
+  border: 1px solid var(--wl-border);
+  border-radius: 50%;
+}
+
+.large-avatar {
+  object-fit: cover;
+}
+
+.default-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wl-cyan);
+  background: rgba(var(--wl-cyan-rgb), 0.07);
+}
+
+.avatar-tips {
+  color: var(--wl-muted);
+  font-size: 12px;
+}
+
+.info-section {
+  display: grid;
+  gap: 10px;
+}
+
+.info-item {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(var(--wl-cyan-rgb), 0.1);
+}
+
+.info-label {
+  color: var(--wl-muted-soft);
+  font-weight: 800;
+}
+
+.info-value {
+  color: var(--wl-text);
+}
+
+.mono {
+  font-family: Monaco, Consolas, monospace;
+}
+
+.actions-section {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+:deep(.ant-modal-content),
+:deep(.ant-modal-header) {
+  background: var(--wl-panel-solid);
+  color: var(--wl-text);
+}
+
+:deep(.ant-modal-title) {
+  color: var(--wl-text);
+  font-weight: 900;
+}
+
+:deep(.ant-modal-close) {
+  color: var(--wl-muted);
+}
+
+:deep(.ant-dropdown-menu-item svg) {
+  margin-right: 4px;
+  vertical-align: middle;
 }
 </style>

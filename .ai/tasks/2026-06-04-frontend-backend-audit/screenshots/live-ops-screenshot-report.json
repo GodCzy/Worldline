@@ -1,0 +1,79 @@
+{
+  "generatedAt": "2026-06-04T05:49:42.109Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "report": [
+    {
+      "page": "worldline-hub-live",
+      "route": "/worldline",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-hub-live-1920x1080.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-workbench-live",
+      "route": "/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-workbench-live-1920x1080.png",
+      "url": "http://127.0.0.1:5173/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "status": "passed"
+    },
+    {
+      "page": "graph-live-db",
+      "route": "/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/graph-live-db-1920x1080.png",
+      "url": "http://127.0.0.1:5173/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-hub-live",
+      "route": "/worldline",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-hub-live-1440x900.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-workbench-live",
+      "route": "/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-workbench-live-1440x900.png",
+      "url": "http://127.0.0.1:5173/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "status": "passed"
+    },
+    {
+      "page": "graph-live-db",
+      "route": "/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/graph-live-db-1440x900.png",
+      "url": "http://127.0.0.1:5173/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-hub-live",
+      "route": "/worldline",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-hub-live-390x844.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-workbench-live",
+      "route": "/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/worldline-workbench-live-390x844.png",
+      "url": "http://127.0.0.1:5173/worldline/live-kb?knowledge_db_id=kb_live&question=How%20should%20this%20live%20bridge%20be%20verified%3F",
+      "status": "passed"
+    },
+    {
+      "page": "graph-live-db",
+      "route": "/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-04-frontend-backend-audit/screenshots/graph-live-db-390x844.png",
+      "url": "http://127.0.0.1:5173/graph?theme=live-kb&module=live-kb&scene=graph_timeline&db_id=kb_live&knowledge_db_id=kb_live",
+      "status": "passed"
+    }
+  ],
+  "failures": []
+}

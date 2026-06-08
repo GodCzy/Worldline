@@ -1,0 +1,18 @@
+{
+  "name": "extensions",
+  "filePath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-04-frontend-backend-audit\\screenshots\\auth-qa\\extensions-1440x900.png",
+  "role": "superadmin",
+  "screenshotLength": 403490,
+  "domState": {
+    "url": "http://127.0.0.1:5173/extensions",
+    "title": "世界线 - Worldline",
+    "text": "工具\nSkills 管理\nMCP 服务器\n刷新\n全部分类\nTavily 网页搜索\n内置工具\n搜索\n计算器\n内置工具\n计算\n向用户提问\n内置工具\n交互\n查询知识图谱\n内置工具\n图谱\nQwen-Image\n内置工具\n图片\n生成\n列出MySQL表\nMySQL\n数据库\n查询\n描述MySQL表结构\nMySQL\n数据库\n结构\n执行MySQL查询\nMySQL\n数据库\nSQL\nTavily 网页搜索\ntavily_search\n描述\nA search engine optimized for comprehensive, accurate, and trusted results. Useful for when you need to answer questions about current events. It not only retrieves URLs and snippets, but offers advanced search depths, domain management, time range filters, and image search, this tool delivers real-time, accurate, and citation-backed results.Input should be a search query.\n分类\n内置工具\n标签\n搜索\n参数\n参数名\t类型\t描述\nquery\tstring\tSearch query to look up\ninclude_domains\t\tA list of domains to restrict search results to. Use this parameter when: 1. The user explicitly requests information from specific websites (e.g., \"Find climate data from nasa.gov\") 2. The user mentions an organization or company without specifying the domain (e.g., \"Find information about iPhones from Apple\") In both cases, you should determine the appropriate domains (e.g., [\"nasa.gov\"] or [\"apple.com\"]) and set this parameter. Results will ONLY come from the specified domains - no other sources will be included. Default is None (no domain restriction).\nexclude_domains\t\tA list of domains to exclude from search results. Use this parameter when: 1. The user explicitly requests to avoid certain websites (e.g., \"Find information about climate change but not from twitter.com\") 2. The user mentions not wanting results from ",
+    "textLength": 4772,
+    "hasExtensionsView": true,
+    "cards": 11,
+    "tabs": 7,
+    "bg": "rgb(3, 3, 3)",
+    "appChildren": 1,
+    "errors": []
+  }
+}

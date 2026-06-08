@@ -80,6 +80,17 @@ export const brandApi = {
   reloadInfoConfig: async () => apiPost('/api/system/info/reload', {}, {}, false)
 }
 
+export const themeModuleApi = {
+  list: () => apiGet('/api/system/themes', {}, false),
+
+  create: (payload) => apiAdminPost('/api/system/themes', payload),
+
+  update: (themeId, payload) =>
+    apiAdminPut(`/api/system/themes/${encodeURIComponent(themeId)}`, payload),
+
+  remove: (themeId) => apiAdminDelete(`/api/system/themes/${encodeURIComponent(themeId)}`)
+}
+
 // =============================================================================
 // === OCR服务分组 ===
 // =============================================================================

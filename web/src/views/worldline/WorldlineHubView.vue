@@ -11,7 +11,8 @@
         </div>
 
         <div class="header-actions">
-          <router-link class="ghost-link" to="/graph">图谱</router-link>
+          <router-link class="ghost-link" to="/">首页</router-link>
+          <router-link class="ghost-link" to="/worldline/agent">Agent</router-link>
           <router-link class="ghost-link" to="/themes">模块</router-link>
           <a v-if="docsUrl" class="ghost-link" :href="docsUrl" target="_blank" rel="noopener noreferrer">文档</a>
         </div>
@@ -22,7 +23,7 @@
           <div class="panel-head">
             <div>
               <p class="eyebrow">LAUNCH</p>
-              <h2>选择知识模块并生成基础世界线</h2>
+              <h2>选择真实知识模块并生成基础世界线</h2>
             </div>
             <span class="panel-badge">{{ moduleBadgeText }}</span>
           </div>
@@ -37,14 +38,18 @@
               @click="selectTheme(theme.id)"
             >
               <span class="module-title">{{ theme.name }}</span>
-              <small>{{ theme.subtitle || moduleTypeLabel(theme) }}</small>
+              <small>{{ theme.subtitle || 'Live knowledge bridge' }}</small>
               <em>{{ moduleTypeLabel(theme) }}</em>
             </button>
           </div>
 
           <div v-else class="empty-state">
-            <strong>没有可用的 Worldline 模块</strong>
-            <p>请接入真实知识库，或保留 Phase 5 Preview 作为本地前端验收模块。</p>
+            <strong>暂无可用 Worldline 模块</strong>
+            <p>旧主题和演示入口已移除。请先在主题分区添加真实知识模块，再进入工作台生成世界线。</p>
+            <router-link class="secondary-button" to="/themes">
+              <Plus :size="17" />
+              <span>添加自定义模块</span>
+            </router-link>
           </div>
 
           <label class="question-label" for="worldline-hub-question">问题起点</label>
@@ -88,7 +93,7 @@
 
           <div class="status-matrix">
             <div>
-              <strong>{{ hasLiveBridge ? 'Live' : 'Preview' }}</strong>
+              <strong>{{ hasLiveBridge ? 'Live' : '-' }}</strong>
               <span>Bridge</span>
             </div>
             <div>
@@ -106,7 +111,7 @@
           </div>
 
           <div class="pipeline-list">
-            <p class="eyebrow">PHASE 5 SURFACES</p>
+            <p class="eyebrow">CORE SURFACES</p>
             <div v-for="item in surfaces" :key="item.title" class="pipeline-item">
               <strong>{{ item.title }}</strong>
               <span>{{ item.detail }}</span>
@@ -123,8 +128,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useInfoStore } from '@/stores/info'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
-import { getWorldlineDefaultQuestion, hasWorldlineAdapter } from '@/data/worldline'
+import { getWorldlineDefaultQuestion } from '@/data/worldline'
 import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId } from '@/apis/worldline_api'
+import { Plus } from 'lucide-vue-next'
 
 const router = useRouter()
 const infoStore = useInfoStore()
@@ -134,7 +140,7 @@ const questionDraft = ref('')
 const selectedThemeId = ref('')
 const fallbackQuestion = '描述你的目标、约束和证据来源，让 Worldline 展开几条可验证分支。'
 
-const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme) || hasWorldlineAdapter(theme.id)
+const isWorldlineEntry = (theme = {}) => hasWorldlineLiveBridge(theme)
 const themes = computed(() => (infoStore.themes || []).filter((theme) => isWorldlineEntry(theme)))
 const docsUrl = computed(() => infoStore.docsUrl || '')
 const hasAvailableThemes = computed(() => themes.value.length > 0)
@@ -143,13 +149,11 @@ const activeTheme = computed(
   () => themes.value.find((theme) => theme.id === selectedThemeId.value) || themes.value[0] || null
 )
 const hasLiveBridge = computed(() => Boolean(activeTheme.value && hasWorldlineLiveBridge(activeTheme.value)))
-const activeThemeSupported = computed(
-  () => Boolean(activeTheme.value?.id && (hasWorldlineLiveBridge(activeTheme.value) || hasWorldlineAdapter(activeTheme.value.id)))
-)
+const activeThemeSupported = computed(() => Boolean(activeTheme.value?.id && hasWorldlineLiveBridge(activeTheme.value)))
 const compactThemeDescription = computed(() => {
   const description = (activeTheme.value?.description || '').trim()
-  if (!description) return '围绕当前模块生成基础世界线，再进入工作台验证证据、图谱与时间事实。'
-  return description.length > 96 ? `${description.slice(0, 95)}…` : description
+  if (!description) return '当前没有真实知识模块。添加模块后，Worldline 会生成证据、Wiki、图谱与时间事实同屏可见的分支。'
+  return description.length > 96 ? `${description.slice(0, 95)}...` : description
 })
 const compactTags = computed(() => (activeTheme.value?.tags || []).slice(0, 5))
 const placeholderQuestion = computed(() =>
@@ -165,7 +169,7 @@ const canResumeCurrentTheme = computed(
 const surfaces = [
   {
     title: 'Worldline Stage',
-    detail: '左到右分叉与收束的青金发光线束'
+    detail: '左到右分叉与收束的青金发光世界线舞台'
   },
   {
     title: 'Evidence Rail',
@@ -177,18 +181,17 @@ const surfaces = [
   },
   {
     title: 'Agent Handoff',
-    detail: '分支上下文带入 Agent 或 Graph 继续验证'
+    detail: '将选中分支上下文交给受控 Agent 继续验证'
   }
 ]
 
 const moduleTypeLabel = (theme = {}) => {
   if (hasWorldlineLiveBridge(theme)) return 'Live Bridge'
-  if (hasWorldlineAdapter(theme.id)) return 'Local Preview'
   return 'Worldline'
 }
 
 const ensureSelectedTheme = () => {
-  if (selectedThemeId.value) return
+  if (selectedThemeId.value && themes.value.some((theme) => theme.id === selectedThemeId.value)) return
 
   const storedThemeId =
     worldlineStore.themeId && themes.value.some((theme) => theme.id === worldlineStore.themeId)
@@ -284,9 +287,10 @@ onMounted(async () => {
   max-width: 760px;
   margin: 0;
   color: var(--wl-text);
-  font-size: clamp(2rem, 4vw, 3.5rem);
-  font-weight: 900;
+  font-size: 52px;
+  font-weight: 950;
   line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .subtitle {
@@ -300,8 +304,8 @@ onMounted(async () => {
   margin: 0 0 8px;
   color: var(--wl-gold);
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.14em;
+  font-weight: 900;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -318,9 +322,10 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 40px;
   padding: 0 14px;
-  border-radius: 7px;
+  border-radius: var(--wl-radius-sm);
   border: 1px solid var(--wl-border);
   color: var(--wl-text-soft);
   text-decoration: none;
@@ -381,7 +386,7 @@ onMounted(async () => {
   margin: 0;
   color: var(--wl-text);
   font-size: 20px;
-  font-weight: 900;
+  font-weight: 950;
 }
 
 .panel-badge {
@@ -418,7 +423,7 @@ onMounted(async () => {
 .module-tile.active {
   border-color: var(--wl-border-gold);
   background:
-    radial-gradient(circle at top right, rgba(var(--wl-gold-rgb), 0.16), transparent 45%),
+    linear-gradient(90deg, rgba(var(--wl-gold-rgb), 0.12), transparent 45%),
     rgba(var(--wl-cyan-rgb), 0.07);
 }
 
@@ -450,6 +455,8 @@ onMounted(async () => {
 }
 
 .empty-state {
+  display: grid;
+  gap: 10px;
   margin-top: 18px;
   padding: 16px;
   border: 1px dashed var(--wl-border-strong);
@@ -463,8 +470,12 @@ onMounted(async () => {
 }
 
 .empty-state p {
-  margin: 8px 0 0;
+  margin: 0;
   line-height: 1.7;
+}
+
+.empty-state .secondary-button {
+  justify-self: flex-start;
 }
 
 .question-label {
@@ -581,6 +592,10 @@ onMounted(async () => {
 
   .hub-header {
     flex-direction: column;
+  }
+
+  .header-copy h1 {
+    font-size: 38px;
   }
 
   .header-actions,

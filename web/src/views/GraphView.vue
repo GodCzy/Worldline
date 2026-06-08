@@ -31,7 +31,7 @@
         <!-- <a-button type="default" @click="openLink('http://localhost:7474/')" :icon="h(GlobalOutlined)">
           Neo4j 浏览器
         </a-button> -->
-        <a-button v-if="isNeo4j" type="primary" @click="state.showModal = true"
+        <a-button v-if="isNeo4j" type="primary" :disabled="isGraphDegraded" @click="state.showModal = true"
           ><UploadOutlined /> 上传知识文件</a-button
         >
         <a-button v-else type="primary" @click="state.showUploadTipModal = true"
@@ -47,6 +47,11 @@
         </a-button>
       </template>
     </HeaderComponent>
+
+    <div v-if="graphAvailabilityMessage" class="graph-state-banner" :class="{ warning: isGraphDegraded }">
+      <InfoCircleOutlined />
+      <span>{{ graphAvailabilityMessage }}</span>
+    </div>
 
     <div v-if="currentGraphLoop" class="theme-graph-banner">
       <div class="theme-graph-copy">
@@ -108,10 +113,24 @@
           </div>
         </template>
         <template #content>
-          <a-empty v-show="graph.graphData.nodes.length === 0" style="padding: 4rem 0">
+          <a-empty
+            v-show="graph.graphData.nodes.length === 0"
+            class="graph-empty-state"
+            style="padding: 4rem 0"
+            data-graph-interactive="true"
+          >
             <template #description>
-              <span>当前没有可展示的图谱节点，请先切换知识库或上传知识文件后再继续浏览。</span>
+              <span>{{ graphEmptyDescription }}</span>
             </template>
+            <div class="graph-empty-actions">
+              <a-button :loading="graph.fetching" @click="loadSampleNodes">重新读取图谱</a-button>
+              <a-button v-if="!isNeo4j" type="primary" @click="goToDatabasePage">
+                前往知识库页面
+              </a-button>
+              <a-button v-else type="primary" :disabled="isGraphDegraded" @click="state.showModal = true">
+                上传 JSONL 图谱文件
+              </a-button>
+            </div>
           </a-empty>
         </template>
       </GraphCanvas>
@@ -260,6 +279,10 @@ const fileList = ref([])
 const sampleNodeCount = ref(100)
 const themeContextStore = useThemeContextStore()
 const activeThemeId = computed(() => themeContextStore.activeContext?.theme || '')
+const routeDbId = computed(() => {
+  const value = route.query.db_id || route.query.knowledge_db_id
+  return typeof value === 'string' ? value.trim() : ''
+})
 
 const graph = reactive(useGraph(graphRef))
 
@@ -277,12 +300,47 @@ const state = reactive({
   selectedDbId: 'neo4j',
   dbOptions: [],
   lightragStats: null,
+  graphError: '',
   embedModelName: '',
   batchSize: 40
 })
 
 const isNeo4j = computed(() => {
   return state.selectedDbId === 'neo4j'
+})
+
+const selectedGraphOption = computed(() =>
+  state.dbOptions.find((db) => db.value === state.selectedDbId)
+)
+
+const isGraphDegraded = computed(() => {
+  if (state.graphError) return true
+  if (selectedGraphOption.value?.degraded || selectedGraphOption.value?.available === false) return true
+  if (isNeo4j.value) return graphInfo.value?.degraded || graphInfo.value?.available === false
+  return state.lightragStats?.degraded || state.lightragStats?.available === false
+})
+
+const graphAvailabilityMessage = computed(() => {
+  const reason =
+    state.graphError ||
+    graphInfo.value?.degraded_reason ||
+    state.lightragStats?.degraded_reason ||
+    selectedGraphOption.value?.degraded_reason
+
+  if (reason) return reason
+  if (isGraphDegraded.value) return '当前图谱服务处于降级状态'
+  return ''
+})
+
+const graphEmptyDescription = computed(() => {
+  if (graph.fetching) return '正在读取图谱节点，请稍候。'
+  if (graphAvailabilityMessage.value) return graphAvailabilityMessage.value
+  if (state.loadingDatabases) return '正在读取可用图谱列表。'
+  if (state.dbOptions.length === 0) return '当前没有可用图谱，请先创建或接入知识库。'
+  if (!isNeo4j.value) {
+    return '当前知识库暂未生成可展示节点，请先完成文档上传、解析和入库，或调整查询关键词。'
+  }
+  return '当前没有可展示的图谱节点，可以上传 JSONL 图谱文件或调整查询数量后重新读取。'
 })
 
 const currentGraphLoop = computed(() =>
@@ -328,8 +386,16 @@ const loadDatabases = async () => {
       state.dbOptions = res.data.map((db) => ({
         label: `${db.name} (${db.type})`,
         value: db.id,
-        type: db.type
+        type: db.type,
+        status: db.status,
+        available: db.available,
+        degraded: db.degraded,
+        degraded_reason: db.degraded_reason
       }))
+
+      if (routeDbId.value && state.dbOptions.find((o) => o.value === routeDbId.value)) {
+        state.selectedDbId = routeDbId.value
+      }
 
       // If no selection or invalid selection, select first
       if (!state.selectedDbId || !state.dbOptions.find((o) => o.value === state.selectedDbId)) {
@@ -340,6 +406,7 @@ const loadDatabases = async () => {
     }
   } catch (error) {
     console.error('Failed to load databases:', error)
+    state.graphError = error.message || '图谱列表加载失败'
   } finally {
     state.loadingDatabases = false
   }
@@ -350,6 +417,7 @@ const handleDbChange = () => {
   graph.clearGraph()
   state.searchInput = ''
   state.lightragStats = null
+  state.graphError = ''
   prefillGraphKeyword()
 
   if (isNeo4j.value) {
@@ -367,9 +435,13 @@ const loadLightRAGStats = () => {
     .then((res) => {
       if (res.success) {
         state.lightragStats = res.data
+        state.graphError = res.data?.degraded_reason || ''
       }
     })
-    .catch((e) => console.error(e))
+    .catch((e) => {
+      console.error(e)
+      state.graphError = e.message || '图谱统计加载失败'
+    })
 }
 
 const prefillGraphKeyword = () => {
@@ -385,6 +457,7 @@ const loadGraphInfo = () => {
     .then((data) => {
       console.log(data)
       graphInfo.value = data.data
+      state.graphError = graphInfo.value?.degraded_reason || ''
       if (graphInfo.value?.embed_model_name) {
         state.embedModelName = graphInfo.value.embed_model_name
       } else {
@@ -395,7 +468,13 @@ const loadGraphInfo = () => {
     })
     .catch((error) => {
       console.error(error)
-      message.error(error.message || '加载图数据库信息失败')
+      graphInfo.value = {
+        status: 'unavailable',
+        available: false,
+        degraded: true,
+        degraded_reason: error.message || '图数据库信息加载失败'
+      }
+      state.graphError = graphInfo.value.degraded_reason
       state.loadingGraphInfo = false
     })
 }
@@ -453,6 +532,7 @@ const addDocumentByFile = () => {
 
 const loadSampleNodes = () => {
   graph.fetching = true
+  state.graphError = ''
 
   unifiedApi
     .getSubgraph({
@@ -462,13 +542,15 @@ const loadSampleNodes = () => {
     })
     .then((data) => {
       // Normalize data structure if needed
-      const result = data.data
-      graph.updateGraphData(result.nodes, result.edges)
+      const result = data.data || {}
+      state.graphError = result.degraded_reason || data.message || ''
+      graph.updateGraphData(result.nodes || [], result.edges || [])
       console.log(graph.graphData)
     })
     .catch((error) => {
       console.error(error)
-      message.error(error.message || '加载节点失败')
+      state.graphError = error.message || '图谱节点加载失败'
+      graph.updateGraphData([], [])
     })
     .finally(() => (graph.fetching = false))
 }
@@ -484,6 +566,7 @@ const onSearch = () => {
   }
 
   state.searchLoading = true
+  state.graphError = ''
 
   unifiedApi
     .getSubgraph({
@@ -492,12 +575,15 @@ const onSearch = () => {
       max_nodes: sampleNodeCount.value
     })
     .then((data) => {
-      const result = data.data
+      const result = data.data || {}
       if (!result || !result.nodes || !result.edges) {
         throw new Error('返回数据格式不正确')
       }
+      state.graphError = result.degraded_reason || data.message || ''
       graph.updateGraphData(result.nodes, result.edges)
-      if (graph.graphData.nodes.length === 0) {
+      if (result.degraded) {
+        message.warning(result.degraded_reason || '当前图谱服务处于降级状态')
+      } else if (graph.graphData.nodes.length === 0) {
         message.info('未找到相关实体')
       }
       console.log(data)
@@ -505,6 +591,7 @@ const onSearch = () => {
     })
     .catch((error) => {
       console.error('查询错误:', error)
+      state.graphError = error.message || '图谱查询失败'
       message.error(`查询出错：${error.message || '未知错误'}`)
     })
     .finally(() => (state.searchLoading = false))
@@ -526,10 +613,20 @@ watch(
   { immediate: true }
 )
 
+watch(routeDbId, (dbId) => {
+  if (!dbId || dbId === state.selectedDbId) return
+  state.selectedDbId = dbId
+  handleDbChange()
+})
+
 onMounted(async () => {
   await loadDatabases()
   prefillGraphKeyword()
-  loadGraphInfo() // Load default (Neo4j) info
+  if (isNeo4j.value) {
+    loadGraphInfo()
+  } else {
+    loadLightRAGStats()
+  }
   loadSampleNodes()
 })
 
@@ -564,11 +661,15 @@ const handleModalCancel = () => {
 
 const graphStatusClass = computed(() => {
   if (state.loadingGraphInfo) return 'loading'
+  if (isGraphDegraded.value) return 'warning'
+  if (!isNeo4j.value) return state.lightragStats ? 'open' : 'closed'
   return graphInfo.value?.status === 'open' ? 'open' : 'closed'
 })
 
 const graphStatusText = computed(() => {
   if (state.loadingGraphInfo) return '加载中'
+  if (isGraphDegraded.value) return '服务降级'
+  if (!isNeo4j.value) return state.lightragStats ? '已加载' : '待加载'
   return graphInfo.value?.status === 'open' ? '已连接' : '已关闭'
 })
 
@@ -761,6 +862,26 @@ const goToDatabasePage = () => {
     linear-gradient(90deg, rgba(7, 15, 24, 0.9), rgba(2, 5, 10, 0.84));
 }
 
+.graph-state-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 24px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.07);
+  color: var(--wl-text-soft);
+  font-size: 13px;
+  line-height: 1.5;
+
+  &.warning {
+    border-color: rgba(var(--wl-gold-rgb), 0.38);
+    background: rgba(var(--wl-gold-rgb), 0.1);
+    color: var(--wl-gold-soft);
+  }
+}
+
 .theme-graph-copy {
   display: flex;
   flex-wrap: wrap;
@@ -833,6 +954,11 @@ const goToDatabasePage = () => {
   &.closed {
     background-color: var(--wl-red);
   }
+
+  &.warning {
+    background-color: var(--wl-amber);
+    box-shadow: 0 0 12px rgba(255, 207, 103, 0.45);
+  }
 }
 
 @keyframes pulse {
@@ -851,6 +977,56 @@ const goToDatabasePage = () => {
 }
 
 @media (max-width: 768px) {
+  .graph-container {
+    :deep(.header-container) {
+      height: auto;
+      padding: 10px 12px;
+    }
+
+    :deep(.header-content) {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    :deep(.header-title) {
+      min-width: 0;
+    }
+
+    :deep(.header-title h1) {
+      white-space: nowrap;
+    }
+
+    :deep(.header-title p) {
+      display: none;
+    }
+
+    :deep(.header-actions) {
+      width: 100%;
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+
+  .db-selector {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 7px;
+
+    .label {
+      margin-right: 0;
+    }
+
+    :deep(.ant-select) {
+      width: 100% !important;
+    }
+  }
+
+  .status-wrapper {
+    margin-right: 0;
+  }
+
   .theme-graph-banner {
     padding: 12px 16px;
   }
@@ -859,6 +1035,33 @@ const goToDatabasePage = () => {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .container-outter {
+    height: calc(100vh - 210px);
+    min-height: 520px;
+
+    .actions {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 10px;
+      margin: 12px 0;
+      padding: 0 12px;
+    }
+  }
+
+  .actions {
+    .actions-left,
+    .actions-right {
+      width: 100%;
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    :deep(.ant-input-affix-wrapper),
+    :deep(.ant-input) {
+      width: 100% !important;
+    }
   }
 }
 
@@ -1018,6 +1221,24 @@ const goToDatabasePage = () => {
   :deep(.ant-empty-description) {
     color: var(--wl-muted);
   }
+}
+
+.graph-empty-state {
+  pointer-events: auto;
+
+  :deep(.ant-empty-description) {
+    max-width: 560px;
+    margin: 0 auto;
+    color: var(--wl-muted);
+    line-height: 1.7;
+  }
+}
+
+.graph-empty-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .upload-tip-content {

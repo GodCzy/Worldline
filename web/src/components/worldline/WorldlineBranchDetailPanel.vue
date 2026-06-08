@@ -67,7 +67,10 @@
           v-for="action in branch.nextActions"
           :key="action.id"
           class="action-button"
-          :class="{ primary: action.emphasis === 'primary' }"
+          :class="{
+            primary: action.emphasis === 'primary',
+            danger: action.emphasis === 'danger'
+          }"
           type="button"
           @click="emitAction(action)"
         >
@@ -289,6 +292,12 @@ const emitAction = (action) => {
   border-color: rgba(var(--wl-gold-rgb), 0.5);
   background: rgba(var(--wl-gold-rgb), 0.12);
   color: #fff7de;
+}
+
+.action-button.danger {
+  border-color: rgba(255, 108, 108, 0.42);
+  background: rgba(255, 108, 108, 0.08);
+  color: #ffdede;
 }
 
 .action-button span {

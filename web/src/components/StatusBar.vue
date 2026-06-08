@@ -278,4 +278,41 @@ onUnmounted(() => {
     display: none; // 在小屏幕上隐藏时间
   }
 }
+
+@media (max-width: 480px) {
+  .status-bar-content {
+    gap: 8px;
+    padding: 0 12px;
+  }
+
+  .status-left,
+  .status-right,
+  .user-info {
+    min-width: 0;
+  }
+
+  .status-right {
+    gap: 8px;
+  }
+
+  .user-greeting {
+    display: inline-block;
+    max-width: 124px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .task-center-button {
+    width: 34px;
+    height: 34px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 999px;
+  }
+
+  .task-center-label {
+    display: none;
+  }
+}
 </style>

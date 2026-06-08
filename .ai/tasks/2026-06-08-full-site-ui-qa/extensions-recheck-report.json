@@ -1,0 +1,18 @@
+{
+  "desktop": {
+    "route": "extensions",
+    "viewport": "1280x720",
+    "hasHorizontalOverflow": false,
+    "visibleOverflow": [],
+    "logCount": 0,
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/extensions-desktop-1280x720-fixed.jpg"
+  },
+  "mobile": {
+    "route": "extensions",
+    "viewport": "390x844",
+    "hasHorizontalOverflow": false,
+    "visibleOverflow": [],
+    "logCount": 0,
+    "screenshot": "D:/dev/Worldline/.ai/tasks/2026-06-08-full-site-ui-qa/screenshots/extensions-mobile-390x844-fixed.jpg"
+  }
+}

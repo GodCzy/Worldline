@@ -13,10 +13,16 @@ const queryString = (params = {}) => {
 }
 
 export const resolveThemeKnowledgeDbId = (theme = {}) =>
+  theme?.db_id ||
   theme?.knowledge_db_id ||
   theme?.knowledge?.db_id ||
+  theme?.knowledge?.knowledge_db_id ||
+  theme?.context?.db_id ||
   theme?.context?.knowledge_db_id ||
+  theme?.worldline?.db_id ||
   theme?.worldline?.knowledge_db_id ||
+  theme?.metadata?.db_id ||
+  theme?.metadata?.knowledge_db_id ||
   ''
 
 export const hasWorldlineLiveBridge = (theme = {}) => Boolean(resolveThemeKnowledgeDbId(theme))
@@ -45,6 +51,9 @@ export const worldlineApi = {
   listWikiPages: (dbId, params = {}) =>
     apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/wiki/pages${queryString(params)}`),
 
+  listStaleWikiPages: (dbId) =>
+    apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/wiki/stale-pages`),
+
   rebuildWiki: (dbId, payload = {}) =>
     apiAdminPost(`/api/knowledge/databases/${encodeSegment(dbId)}/wiki/rebuild`, payload),
 
@@ -53,6 +62,12 @@ export const worldlineApi = {
 
   listGraphRelationships: (dbId, params = {}) =>
     apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/graph/relationships${queryString(params)}`),
+
+  listGraphConflicts: (dbId, params = {}) =>
+    apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/graph/conflicts${queryString(params)}`),
+
+  getNeo4jProjection: (dbId, params = {}) =>
+    apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/graph/neo4j-projection${queryString(params)}`),
 
   rebuildGraph: (dbId, payload = {}) =>
     apiAdminPost(`/api/knowledge/databases/${encodeSegment(dbId)}/graph/rebuild`, payload),
@@ -77,4 +92,61 @@ export const worldlineApi = {
 
   getQualityGate: (dbId, gateId) =>
     apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/quality-gates/${encodeSegment(gateId)}`)
+}
+
+export const worldlineRunApi = {
+  createRun: (payload = {}) => apiAdminPost('/api/worldline/runs', payload),
+
+  listRuns: (params = {}) => apiAdminGet(`/api/worldline/runs${queryString(params)}`),
+
+  compareRuns: (params = {}) => apiAdminGet(`/api/worldline/runs/compare${queryString(params)}`),
+
+  getRun: (runId) => apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}`),
+
+  listRunEvents: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/events${queryString(params)}`),
+
+  listRunArtifacts: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/artifacts${queryString(params)}`),
+
+  getRunManifest: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/manifest${queryString(params)}`),
+
+  inspectRunArtifact: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/artifacts/read${queryString(params)}`),
+
+  inspectRunGates: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/gates${queryString(params)}`),
+
+  inspectRunEvidence: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/evidence${queryString(params)}`),
+
+  inspectRunKnowledge: (runId, params = {}) =>
+    apiAdminGet(`/api/worldline/runs/${encodeSegment(runId)}/knowledge${queryString(params)}`),
+
+  registerRunArtifact: (runId, payload = {}) =>
+    apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/artifacts`, payload),
+
+  renameRun: (runId, payload = {}) =>
+    apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/rename`, payload),
+
+  archiveRun: (runId, payload = {}) =>
+    apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/archive`, payload),
+
+  restoreRun: (runId, payload = {}) =>
+    apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/restore`, payload),
+
+  approveBranch: (runId, branchId, payload = {}) =>
+    apiAdminPost(
+      `/api/worldline/runs/${encodeSegment(runId)}/branches/${encodeSegment(branchId)}/approve`,
+      payload
+    ),
+
+  rejectBranch: (runId, branchId, payload = {}) =>
+    apiAdminPost(
+      `/api/worldline/runs/${encodeSegment(runId)}/branches/${encodeSegment(branchId)}/reject`,
+      payload
+    ),
+
+  proposeSkill: (runId, payload = {}) => apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/skills/propose`, payload)
 }

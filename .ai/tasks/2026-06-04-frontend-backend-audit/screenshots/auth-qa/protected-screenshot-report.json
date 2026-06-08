@@ -1,0 +1,27 @@
+[
+  {
+    "route": "/database",
+    "file": "database-1440x900.png",
+    "bytes": 55870,
+    "status": "ok_dark_empty_state"
+  },
+  {
+    "route": "/dashboard",
+    "file": "dashboard-1440x900.png",
+    "bytes": 140871,
+    "status": "ok_dark_dashboard"
+  },
+  {
+    "route": "/extensions",
+    "file": "extensions-1440x900.png",
+    "bytes": 403490,
+    "status": "ok_superadmin_tools_loaded",
+    "dom_report": "extensions-dom-style-report.json"
+  },
+  {
+    "route": "/graph",
+    "file": "graph-1440x900.png",
+    "bytes": 320694,
+    "status": "ok_neo4j_connected_empty_graph"
+  }
+]

@@ -1,5 +1,5 @@
 <template>
-  <div class="theme-detail-view">
+  <div class="theme-detail-view wl-ant-dark">
     <header class="detail-header">
       <router-link to="/themes" class="back-link">返回主题分区</router-link>
       <div class="header-actions">
@@ -47,7 +47,91 @@
         </div>
       </section>
 
+      <section class="capability-console">
+        <div class="capability-console-head">
+          <div>
+            <p class="eyebrow">MODULE CONTROL</p>
+            <h2>模块能力控制台</h2>
+            <p>把当前主题绑定到后端 Wiki、图谱、证据、时间线、MCP、Agent 工作流和质量门禁。</p>
+          </div>
+          <button class="action-button secondary compact" type="button" @click="openCapabilityDrawer">
+            <FileText :size="15" />
+            <span>能力地图</span>
+          </button>
+        </div>
+
+        <div class="capability-metrics">
+          <article>
+            <Database :size="18" />
+            <span>绑定知识库</span>
+            <strong>{{ knowledgeDbId || '待绑定' }}</strong>
+          </article>
+          <article>
+            <Network :size="18" />
+            <span>启用面</span>
+            <strong>{{ enabledSurfaceLabel || '未启用' }}</strong>
+          </article>
+          <article>
+            <ShieldCheck :size="18" />
+            <span>后端能力</span>
+            <strong>{{ capabilitySummary.enabledGroupCount }} 组 / {{ capabilitySummary.endpointCount }} 接口</strong>
+          </article>
+          <article>
+            <GitBranch :size="18" />
+            <span>接入状态</span>
+            <strong>{{ liveBridgeStatus }}</strong>
+          </article>
+        </div>
+
+        <div class="capability-actions">
+          <router-link class="action-button primary compact" :to="workbenchRoute">
+            <GitBranch :size="15" />
+            <span>世界线</span>
+          </router-link>
+          <button class="action-button secondary compact" type="button" @click="openDatabaseConsole">
+            <Database :size="15" />
+            <span>{{ knowledgeDbId ? '知识库' : '选择知识库' }}</span>
+          </button>
+          <button
+            class="action-button secondary compact"
+            type="button"
+            :disabled="!knowledgeDbId"
+            @click="openGraphConsole"
+          >
+            <Network :size="15" />
+            <span>知识图谱</span>
+          </button>
+          <button class="action-button ghost compact" type="button" @click="goToChat()">
+            <ExternalLink :size="15" />
+            <span>带上下文对话</span>
+          </button>
+        </div>
+
+        <div class="capability-compact-list">
+          <article v-for="group in compactCapabilityGroups" :key="group.key">
+            <strong>{{ group.label }}</strong>
+            <span>{{ group.summary }}</span>
+          </article>
+        </div>
+      </section>
+
       <section class="detail-grid">
+        <article class="info-card">
+          <h2>绑定知识库</h2>
+          <ul>
+            <li>{{ knowledgeSummary.name || knowledgeDbId || '待绑定知识库' }}</li>
+            <li v-if="knowledgeSummary.type">{{ knowledgeSummary.type }}</li>
+            <li v-if="knowledgeDbId">{{ knowledgeDbId }}</li>
+            <li>{{ moduleObjective }}</li>
+          </ul>
+          <details v-if="moduleEvidenceSources.length" class="summary-expand">
+            <summary>查看证据来源</summary>
+            <div class="tag-list">
+              <span v-for="item in moduleEvidenceSources" :key="item">{{ item }}</span>
+            </div>
+          </details>
+        </article>
+
         <article class="info-card">
           <h2>当前模块能力（摘要）</h2>
           <ul>
@@ -268,22 +352,65 @@
       <p>当前只开放已经在平台配置中声明的主题入口。</p>
       <router-link class="action-button ghost" to="/themes">返回主题分区</router-link>
     </main>
+
+    <a-drawer
+      :open="capabilityDrawerOpen"
+      width="620"
+      class="theme-capability-drawer wl-ant-dark"
+      title="模块后端能力地图"
+      placement="right"
+      @close="closeCapabilityDrawer"
+    >
+      <div class="drawer-summary">
+        <p>模块：{{ theme?.name || themeId }}</p>
+        <p>知识库：{{ knowledgeSummary.name || knowledgeDbId || '待绑定' }}</p>
+        <p>目标：{{ moduleObjective }}</p>
+        <p>状态：{{ liveBridgeStatus }}</p>
+      </div>
+
+      <div class="drawer-capability-list">
+        <section
+          v-for="group in capabilityGroups"
+          :key="group.key"
+          class="drawer-capability-item"
+          :class="{ disabled: !group.enabled }"
+        >
+          <div>
+            <strong>{{ group.label }}</strong>
+            <span>{{ group.enabled ? '已接入' : '未启用或待绑定' }}</span>
+          </div>
+          <p>{{ group.summary }}</p>
+          <code v-for="endpoint in group.endpoints" :key="`${group.key}-${endpoint.name}`">
+            {{ endpoint.method }} {{ endpoint.route }}
+          </code>
+        </section>
+      </div>
+
+      <details class="payload-preview">
+        <summary>查看模块能力 payload</summary>
+        <pre>{{ capabilityPayloadPreview }}</pre>
+      </details>
+    </a-drawer>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { setStoredRedirect } from '@/router'
 import { useInfoStore } from '@/stores/info'
 import { useUserStore } from '@/stores/user'
 import { useAgentStore } from '@/stores/agent'
 import { useThemeContextStore } from '@/stores/themeContext'
+import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId } from '@/apis/worldline_api'
 import {
   getWorldlineManifestSummary,
   getWorldlineThemeShowcaseCandidates,
   getWorldlineThemeShowcaseGraphs,
   getWorldlineThemeShowcaseMeta
 } from '@/data/worldline'
+import { buildWorldlineCapabilityContract, summarizeCapabilityContract } from '@/utils/worldlineCapabilities'
+import { Database, ExternalLink, FileText, GitBranch, Network, ShieldCheck } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -296,6 +423,10 @@ const WORLDLINE_HANDOFF_KEY = 'worldline_agent_handoff'
 const theme = computed(() => infoStore.getThemeById(String(route.params.themeId || '')))
 const themeId = computed(() => theme.value?.id || String(route.params.themeId || ''))
 const docsUrl = computed(() => infoStore.docsUrl || '')
+const capabilityDrawerOpen = ref(false)
+const knowledgeDbId = computed(() => resolveThemeKnowledgeDbId(theme.value))
+const hasLiveBridge = computed(() => Boolean(theme.value && hasWorldlineLiveBridge(theme.value)))
+const liveBridgeStatus = computed(() => (hasLiveBridge.value ? '已接入' : '待绑定知识库'))
 const entryPoints = computed(() => (Array.isArray(theme.value?.entry_points) ? theme.value.entry_points : []))
 const themeSummary = computed(() => {
   const subtitle = (theme.value?.subtitle || '').trim()
@@ -308,6 +439,22 @@ const compactTags = computed(() => (theme.value?.tags || []).slice(0, 3))
 const remainingTags = computed(() => (theme.value?.tags || []).slice(3))
 const compactEntries = computed(() => entryPoints.value.slice(0, 2))
 const remainingEntries = computed(() => entryPoints.value.slice(2))
+const knowledgeSummary = computed(() => ({
+  name: theme.value?.knowledge?.name || theme.value?.metadata?.knowledge_name || '',
+  type: theme.value?.knowledge?.kb_type || theme.value?.knowledge?.type || theme.value?.metadata?.knowledge_type || '',
+  description: theme.value?.knowledge?.description || theme.value?.metadata?.knowledge_description || ''
+}))
+const moduleObjective = computed(
+  () => theme.value?.worldline?.objective || theme.value?.context?.objective || '围绕绑定知识库生成可验证的世界线。'
+)
+const moduleEvidenceSources = computed(() => {
+  const value = theme.value?.worldline?.evidence_sources || theme.value?.context?.evidence_sources || []
+  if (Array.isArray(value)) return value.filter(Boolean)
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+})
 const showcaseMeta = computed(() =>
   getWorldlineThemeShowcaseMeta(themeId.value, {
     eyebrow: '\u4e3b\u9898\u63a2\u7d22\u5165\u53e3',
@@ -337,10 +484,63 @@ const manifestSummary = computed(() =>
 )
 const activeCandidateId = computed(() => themeContextStore.activeContext?.candidate || '')
 const activeGraphId = computed(() => themeContextStore.activeContext?.graph || '')
-const workbenchRoute = computed(() => `/worldline/${theme.value?.id || String(route.params.themeId || '')}`)
+const workbenchRoute = computed(() => {
+  const id = theme.value?.id || String(route.params.themeId || '')
+  return {
+    path: `/worldline/${id}`,
+    query: knowledgeDbId.value
+      ? {
+          db_id: knowledgeDbId.value,
+          knowledge_db_id: knowledgeDbId.value
+        }
+      : {}
+  }
+})
+const capabilityContract = computed(() =>
+  buildWorldlineCapabilityContract({
+    themeId: themeId.value,
+    dbId: knowledgeDbId.value,
+    surfaces: theme.value?.worldline?.surfaces || {}
+  })
+)
+const capabilitySummary = computed(() => summarizeCapabilityContract(capabilityContract.value))
+const capabilityGroups = computed(() => capabilityContract.value.groups || [])
+const compactCapabilityGroups = computed(() => capabilitySummary.value.enabledGroups.slice(0, 4))
+const enabledSurfaceLabel = computed(() => capabilitySummary.value.surfaceText)
+const capabilityPayloadPreview = computed(() =>
+  JSON.stringify(
+    {
+      id: themeId.value,
+      name: theme.value?.name || '',
+      knowledge: {
+        db_id: knowledgeDbId.value,
+        knowledge_db_id: knowledgeDbId.value,
+        ...knowledgeSummary.value
+      },
+      worldline: {
+        db_id: knowledgeDbId.value,
+        knowledge_db_id: knowledgeDbId.value,
+        objective: moduleObjective.value,
+        evidence_sources: moduleEvidenceSources.value,
+        generation: theme.value?.worldline?.generation || {},
+        surfaces: theme.value?.worldline?.surfaces || {},
+        capability_map: capabilityContract.value
+      }
+    },
+    null,
+    2
+  )
+)
 
 const buildThemeContext = (overrides = {}) => ({
   ...(theme.value?.context || {}),
+  db_id: knowledgeDbId.value || theme.value?.context?.db_id || '',
+  knowledge_db_id: knowledgeDbId.value || theme.value?.context?.knowledge_db_id || '',
+  knowledge_name: knowledgeSummary.value.name,
+  knowledge_type: knowledgeSummary.value.type,
+  objective: moduleObjective.value,
+  evidence_sources: moduleEvidenceSources.value,
+  generation: theme.value?.worldline?.generation || theme.value?.context?.generation || {},
   ...overrides
 })
 
@@ -369,6 +569,33 @@ const buildGraphLocation = (overrides = {}) => ({
   query: buildThemeQuery(overrides)
 })
 
+const openCapabilityDrawer = () => {
+  capabilityDrawerOpen.value = true
+}
+
+const closeCapabilityDrawer = () => {
+  capabilityDrawerOpen.value = false
+}
+
+const openDatabaseConsole = async () => {
+  if (knowledgeDbId.value) {
+    await router.push({ name: 'DatabaseInfoComp', params: { database_id: knowledgeDbId.value } })
+    return
+  }
+  await router.push({ name: 'DatabaseComp' })
+}
+
+const openGraphConsole = async () => {
+  if (!knowledgeDbId.value) return
+  await router.push(
+    buildGraphLocation({
+      entry: 'theme-capability-console',
+      db_id: knowledgeDbId.value,
+      knowledge_db_id: knowledgeDbId.value
+    })
+  )
+}
+
 const getCandidateContext = (candidate) => candidate?.context || { entry: 'recommendation' }
 
 const getGraphContext = (graphEntry) => graphEntry?.context || { entry: 'graph' }
@@ -383,8 +610,9 @@ const goToChat = async (overrides = {}) => {
   sessionStorage.setItem(WORLDLINE_HANDOFF_KEY, '1')
 
   if (!userStore.isLoggedIn) {
-    sessionStorage.setItem('redirect', router.resolve(buildAgentLocation('', overrides)).fullPath)
-    await router.push('/login')
+    const redirectPath = router.resolve(buildAgentLocation('', overrides)).fullPath
+    setStoredRedirect(redirectPath)
+    await router.push({ name: 'Home', query: { login: '1', redirect: redirectPath } })
     return
   }
 
@@ -423,8 +651,9 @@ const openGraphEntry = async (graphEntry) => {
   applyThemeSelection(overrides)
 
   if (!userStore.isLoggedIn) {
-    sessionStorage.setItem('redirect', router.resolve(buildGraphLocation(overrides)).fullPath)
-    await router.push('/login')
+    const redirectPath = router.resolve(buildGraphLocation(overrides)).fullPath
+    setStoredRedirect(redirectPath)
+    await router.push({ name: 'Home', query: { login: '1', redirect: redirectPath } })
     return
   }
 
@@ -553,6 +782,7 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 7px;
   min-height: 44px;
   padding: 0 18px;
   border-radius: 999px;
@@ -560,6 +790,11 @@ onMounted(() => {
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .action-button.compact {
@@ -603,6 +838,114 @@ onMounted(() => {
   grid-template-columns: repeat(3, 1fr);
   gap: 20px;
   margin-top: 24px;
+}
+
+.capability-console {
+  margin-top: 18px;
+  padding: 22px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
+}
+
+.capability-console-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.capability-console-head h2 {
+  margin: 0;
+  color: var(--wl-text);
+  font-size: 24px;
+  font-weight: 950;
+}
+
+.capability-console-head p:last-child {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: var(--wl-muted);
+  line-height: 1.7;
+}
+
+.capability-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.capability-metrics article {
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.04);
+}
+
+.capability-metrics svg {
+  color: var(--wl-cyan);
+}
+
+.capability-metrics span,
+.capability-metrics strong {
+  display: block;
+}
+
+.capability-metrics span {
+  margin-top: 8px;
+  color: var(--wl-muted);
+  font-size: 12px;
+}
+
+.capability-metrics strong {
+  overflow: hidden;
+  margin-top: 4px;
+  color: var(--wl-text);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.capability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.capability-compact-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.capability-compact-list article {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.capability-compact-list strong,
+.capability-compact-list span {
+  display: block;
+}
+
+.capability-compact-list strong {
+  color: var(--wl-gold-soft);
+  font-size: 13px;
+}
+
+.capability-compact-list span {
+  margin-top: 6px;
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .info-card ul {
@@ -825,10 +1168,247 @@ onMounted(() => {
   }
 }
 
+.theme-detail-view {
+  color: var(--wl-text);
+  background: var(--wl-page-bg);
+}
+
+.detail-header {
+  border-bottom: 1px solid var(--wl-border);
+  background: rgba(2, 5, 10, 0.74);
+}
+
+.back-link,
+.header-link {
+  color: var(--wl-muted);
+
+  &:hover {
+    color: var(--wl-text);
+  }
+}
+
+.hero-card,
+.info-card,
+.showcase-card {
+  border-color: var(--wl-border);
+  border-radius: var(--wl-radius);
+  background: var(--wl-panel);
+  box-shadow: var(--wl-shadow-soft);
+}
+
+.eyebrow,
+.showcase-eyebrow {
+  color: var(--wl-gold);
+  letter-spacing: 0;
+}
+
+.hero-copy h1,
+.info-card h2,
+.showcase-header h2,
+.panel-header h3,
+.showcase-item-header h4,
+.not-found h1 {
+  color: var(--wl-text);
+}
+
+.subtitle,
+.flow-hint,
+.info-card ul,
+.showcase-description,
+.panel-header p,
+.showcase-item-header p,
+.reason-list,
+.graph-focus,
+.summary-expand p,
+.summary-expand ul,
+.not-found p {
+  color: var(--wl-muted);
+}
+
+.action-button {
+  border-radius: var(--wl-radius-sm);
+  font-weight: 800;
+}
+
+.action-button.primary {
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-gold-rgb), 0.16);
+  color: var(--wl-gold-soft);
+}
+
+.action-button.secondary,
+.action-button.ghost {
+  border-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-text-soft);
+}
+
+.action-button:hover {
+  border-color: var(--wl-border-strong);
+  background: rgba(var(--wl-cyan-rgb), 0.1);
+  color: var(--wl-text);
+}
+
+.tag-list span,
+.mini-tag-list span,
+.related-card-pill,
+.stat-chip,
+.mini-badge {
+  border: 1px solid var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.06);
+  color: var(--wl-muted);
+}
+
+.stat-chip {
+  border-radius: var(--wl-radius-sm);
+
+  strong {
+    color: var(--wl-text);
+  }
+
+  span {
+    color: var(--wl-muted);
+  }
+}
+
+.entry-item,
+.showcase-item {
+  border-color: var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-text);
+
+  small {
+    color: var(--wl-muted);
+  }
+
+  &:hover,
+  &.active {
+    border-color: var(--wl-border-gold);
+    color: var(--wl-text);
+  }
+}
+
+.summary-expand summary {
+  color: var(--wl-gold-soft);
+}
+
+:global(.theme-capability-drawer .ant-drawer-content),
+:global(.theme-capability-drawer .ant-drawer-header),
+:global(.theme-capability-drawer .ant-drawer-body) {
+  background: #07131d;
+  color: var(--wl-text);
+}
+
+:global(.theme-capability-drawer .ant-drawer-content) {
+  border-left: 1px solid var(--wl-border-strong);
+}
+
+:global(.theme-capability-drawer .ant-drawer-title),
+:global(.theme-capability-drawer .ant-drawer-close) {
+  color: var(--wl-text);
+}
+
+.drawer-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.drawer-summary p {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  color: var(--wl-text-soft);
+  background: rgba(var(--wl-cyan-rgb), 0.04);
+}
+
+.drawer-capability-list {
+  display: grid;
+  gap: 10px;
+}
+
+.drawer-capability-item {
+  padding: 13px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.035);
+}
+
+.drawer-capability-item.disabled {
+  opacity: 0.58;
+}
+
+.drawer-capability-item > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.drawer-capability-item strong {
+  color: var(--wl-text);
+}
+
+.drawer-capability-item span {
+  color: var(--wl-gold-soft);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.drawer-capability-item p {
+  margin: 8px 0 10px;
+  color: var(--wl-muted);
+  line-height: 1.65;
+}
+
+.drawer-capability-item code {
+  display: block;
+  overflow: hidden;
+  margin-top: 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--wl-border);
+  border-radius: 8px;
+  background: #02060a;
+  color: var(--wl-text-soft);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payload-preview {
+  margin-top: 14px;
+}
+
+.payload-preview summary {
+  cursor: pointer;
+  color: var(--wl-gold-soft);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.payload-preview pre {
+  max-height: 260px;
+  overflow: auto;
+  margin: 10px 0 0;
+  padding: 12px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: #02060a;
+  color: var(--wl-text-soft);
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 1080px) {
   .showcase-grid,
   .hero-card,
-  .detail-grid {
+  .detail-grid,
+  .capability-metrics,
+  .capability-compact-list {
     grid-template-columns: 1fr;
   }
 }
@@ -861,6 +1441,10 @@ onMounted(() => {
   }
 
   .showcase-header {
+    flex-direction: column;
+  }
+
+  .capability-console-head {
     flex-direction: column;
   }
 }

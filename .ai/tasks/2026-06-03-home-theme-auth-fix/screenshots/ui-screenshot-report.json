@@ -1,0 +1,127 @@
+{
+  "generatedAt": "2026-06-03T15:15:45.945Z",
+  "baseUrl": "http://127.0.0.1:5173",
+  "report": [
+    {
+      "page": "home",
+      "route": "/",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/home-1920x1080.png",
+      "url": "http://127.0.0.1:5173/",
+      "status": "passed"
+    },
+    {
+      "page": "themes",
+      "route": "/themes",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/themes-1920x1080.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-hub",
+      "route": "/worldline",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/worldline-hub-1920x1080.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "agent-login-redirect",
+      "route": "/agent",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/agent-login-redirect-1920x1080.png",
+      "url": "http://127.0.0.1:5173/?login=1&redirect=/agent",
+      "status": "passed"
+    },
+    {
+      "page": "authenticated-sidebar",
+      "route": "/themes",
+      "viewport": "1920x1080",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/authenticated-sidebar-1920x1080.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/home-1440x900.png",
+      "url": "http://127.0.0.1:5173/",
+      "status": "passed"
+    },
+    {
+      "page": "themes",
+      "route": "/themes",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/themes-1440x900.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-hub",
+      "route": "/worldline",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/worldline-hub-1440x900.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "agent-login-redirect",
+      "route": "/agent",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/agent-login-redirect-1440x900.png",
+      "url": "http://127.0.0.1:5173/?login=1&redirect=/agent",
+      "status": "passed"
+    },
+    {
+      "page": "authenticated-sidebar",
+      "route": "/themes",
+      "viewport": "1440x900",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/authenticated-sidebar-1440x900.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    },
+    {
+      "page": "home",
+      "route": "/",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/home-390x844.png",
+      "url": "http://127.0.0.1:5173/",
+      "status": "passed"
+    },
+    {
+      "page": "themes",
+      "route": "/themes",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/themes-390x844.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    },
+    {
+      "page": "worldline-hub",
+      "route": "/worldline",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/worldline-hub-390x844.png",
+      "url": "http://127.0.0.1:5173/worldline",
+      "status": "passed"
+    },
+    {
+      "page": "agent-login-redirect",
+      "route": "/agent",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/agent-login-redirect-390x844.png",
+      "url": "http://127.0.0.1:5173/?login=1&redirect=/agent",
+      "status": "passed"
+    },
+    {
+      "page": "authenticated-sidebar",
+      "route": "/themes",
+      "viewport": "390x844",
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/authenticated-sidebar-390x844.png",
+      "url": "http://127.0.0.1:5173/themes",
+      "status": "passed"
+    }
+  ],
+  "failures": []
+}

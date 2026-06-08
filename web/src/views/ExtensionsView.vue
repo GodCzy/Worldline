@@ -172,15 +172,37 @@ const handleImportUpload = async ({ file, onSuccess, onError }) => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background-color: var(--gray-0);
+  --gray-0: #061017;
+  --gray-10: #08131c;
+  --gray-25: #061017;
+  --gray-50: #0a1a24;
+  --gray-100: rgba(124, 246, 255, 0.1);
+  --gray-150: rgba(124, 246, 255, 0.15);
+  --gray-200: rgba(124, 246, 255, 0.2);
+  --gray-500: #7f9aa6;
+  --gray-600: var(--wl-muted);
+  --gray-700: var(--wl-text-soft);
+  --gray-800: var(--wl-text);
+  --gray-900: var(--wl-text);
+  --gray-1000: var(--wl-text);
+  --main-color: var(--wl-cyan);
+  --main-10: rgba(var(--wl-cyan-rgb), 0.06);
+  --main-20: rgba(var(--wl-cyan-rgb), 0.08);
+  --main-50: rgba(var(--wl-cyan-rgb), 0.14);
+  --main-300: rgba(var(--wl-cyan-rgb), 0.35);
+  --main-500: var(--wl-cyan);
+  --main-600: var(--wl-cyan);
+  --main-700: var(--wl-text);
+  background-color: var(--wl-page-bg);
+  color: var(--wl-text);
 
   .extensions-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0 16px;
-    border-bottom: 1px solid var(--gray-150);
-    background-color: var(--gray-0);
+    border-bottom: 1px solid var(--wl-border);
+    background-color: rgba(2, 5, 10, 0.74);
 
     .extensions-tabs {
       flex: 1;
@@ -236,6 +258,100 @@ const handleImportUpload = async ({ file, onSuccess, onError }) => {
       height: 100%;
       min-height: 0;
       overflow: hidden;
+    }
+  }
+}
+
+.extensions-view :deep(.extension-page-root),
+.extensions-view :deep(.layout-wrapper),
+.extensions-view :deep(.sidebar-list),
+.extensions-view :deep(.main-panel),
+.extensions-view :deep(.config-view) {
+  background: var(--wl-page-bg);
+  color: var(--wl-text);
+}
+
+.extensions-view :deep(.sidebar-list) {
+  border-right-color: var(--wl-border);
+}
+
+.extensions-view :deep(.list-item),
+.extensions-view :deep(.detail-section),
+.extensions-view :deep(.server-card),
+.extensions-view :deep(.skill-card),
+.extensions-view :deep(.tool-card),
+.extensions-view :deep(.ant-card) {
+  border-color: var(--wl-border);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+  color: var(--wl-text);
+}
+
+.extensions-view :deep(.list-item.active),
+.extensions-view :deep(.list-item:hover) {
+  border-color: var(--wl-border-gold);
+  background: rgba(var(--wl-cyan-rgb), 0.08);
+}
+
+.extensions-view :deep(.item-name),
+.extensions-view :deep(.section-header),
+.extensions-view :deep(.tool-summary h2),
+.extensions-view :deep(.ant-tabs-tab),
+.extensions-view :deep(.ant-table),
+.extensions-view :deep(.ant-table-cell) {
+  color: var(--wl-text);
+}
+
+.extensions-view :deep(.item-category),
+.extensions-view :deep(.section-content),
+.extensions-view :deep(.text-muted),
+.extensions-view :deep(code) {
+  color: var(--wl-muted);
+}
+
+@media (max-width: 720px) {
+  .extensions-view {
+    .extensions-header {
+      align-items: flex-start;
+      gap: 6px;
+      padding: 0 10px;
+
+      .extensions-tabs {
+        min-width: 0;
+
+        :deep(.ant-tabs-nav-list) {
+          flex-wrap: wrap;
+        }
+
+        :deep(.ant-tabs-tab) {
+          padding: 10px 8px;
+          font-size: 13px;
+        }
+      }
+
+      .header-actions {
+        flex-shrink: 0;
+        gap: 6px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .extensions-view {
+    .extensions-header {
+      .header-actions {
+        :deep(.lucide-icon-btn) {
+          width: 34px;
+          min-width: 34px;
+          height: 34px;
+          padding: 0;
+          justify-content: center;
+
+          span {
+            display: none;
+          }
+        }
+      }
     }
   }
 }

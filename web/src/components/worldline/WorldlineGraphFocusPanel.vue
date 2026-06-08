@@ -37,6 +37,10 @@
     </div>
 
     <dl class="trace-grid">
+      <div v-if="routeTrace?.db_id">
+        <dt>db</dt>
+        <dd>{{ routeTrace.db_id }}</dd>
+      </div>
       <div v-if="routeTrace?.adapter">
         <dt>adapter</dt>
         <dd>{{ routeTrace.adapter }}</dd>

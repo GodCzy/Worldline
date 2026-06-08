@@ -27,6 +27,14 @@
         v-for="(item, index) in activeItems"
         :key="`${activeTab}-${item.id || item.title || item.name || index}`"
         class="rail-item"
+        :class="{ focused: isActiveItem(item) }"
+        :data-inspector-target="`${activeTab}:${itemStableId(item, activeTab)}`"
+        role="button"
+        tabindex="0"
+        :aria-pressed="isActiveItem(item)"
+        @click="focusItem(item)"
+        @keydown.enter.prevent="focusItem(item)"
+        @keydown.space.prevent="focusItem(item)"
       >
         <div class="rail-item-top">
           <strong>{{ itemTitle(item) }}</strong>
@@ -59,7 +67,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   evidenceRefs: {
@@ -77,10 +85,30 @@ const props = defineProps({
   timelineRefs: {
     type: Array,
     default: () => []
+  },
+  activeLayer: {
+    type: String,
+    default: ''
+  },
+  activeItemId: {
+    type: String,
+    default: ''
   }
 })
+const emit = defineEmits(['focus-item'])
 
 const activeTab = ref('evidence')
+const layerKeys = new Set(['evidence', 'wiki', 'graph', 'timeline'])
+
+watch(
+  () => props.activeLayer,
+  (layer) => {
+    if (layerKeys.has(layer)) {
+      activeTab.value = layer
+    }
+  },
+  { immediate: true }
+)
 
 const tabs = computed(() => [
   { key: 'evidence', label: 'Evidence', count: props.evidenceRefs.length },
@@ -102,6 +130,19 @@ const totalCount = computed(
 
 const itemTitle = (item = {}) => item.title || item.name || item.label || item.slug || item.id || '未命名支撑'
 const itemBadge = (item = {}) => item.typeLabel || item.type || item.status || activeTab.value
+const itemStableId = (item = {}, layer = activeTab.value) => {
+  if (layer === 'evidence') return String(item.evidenceId || item.id || item.slug || item.name || item.title || '')
+  return String(item.id || item.evidenceId || item.slug || item.name || item.title || '')
+}
+const isActiveItem = (item = {}) =>
+  Boolean(props.activeItemId) && itemStableId(item, activeTab.value) === props.activeItemId && props.activeLayer === activeTab.value
+const focusItem = (item = {}) => {
+  emit('focus-item', {
+    layer: activeTab.value,
+    itemId: itemStableId(item, activeTab.value),
+    item
+  })
+}
 const itemSummary = (item = {}) => {
   if (item.summary) return item.summary
   if (activeTab.value === 'wiki') return item.slug ? `Wiki slug: ${item.slug}` : '该 Wiki 页面参与当前分支解释。'
@@ -216,6 +257,23 @@ const formatBBox = (item = {}) => {
   border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
   border-radius: var(--wl-radius-sm);
   background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.rail-item:hover,
+.rail-item:focus-visible {
+  border-color: rgba(var(--wl-cyan-rgb), 0.38);
+  background: rgba(var(--wl-cyan-rgb), 0.075);
+  outline: none;
+}
+
+.rail-item.focused {
+  border-color: rgba(var(--wl-gold-rgb), 0.58);
+  background: rgba(var(--wl-gold-rgb), 0.09);
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--wl-gold-rgb), 0.14),
+    0 0 18px rgba(var(--wl-gold-rgb), 0.12);
 }
 
 .rail-item-top {

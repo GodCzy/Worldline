@@ -28,7 +28,13 @@
     </p>
 
     <div v-if="timelineRefs.length" class="temporal-list">
-      <div v-for="item in timelineRefs.slice(0, 4)" :key="item.id || item.label" class="temporal-item">
+      <div
+        v-for="item in timelineRefs.slice(0, 4)"
+        :key="item.id || item.label"
+        class="temporal-item"
+        :class="{ focused: isActiveTimeline(item) }"
+        :data-inspector-target="`timeline:${itemStableId(item)}`"
+      >
         <strong>{{ item.label || item.id }}</strong>
         <span>{{ item.validFrom || 'unknown' }} -> {{ item.validTo || 'present' }}</span>
       </div>
@@ -51,6 +57,10 @@ const props = defineProps({
   timelineRefs: {
     type: Array,
     default: () => []
+  },
+  activeTimelineId: {
+    type: String,
+    default: ''
   }
 })
 
@@ -72,6 +82,9 @@ const normalizedSnapshots = computed(() =>
 const activeSnapshot = computed(
   () => normalizedSnapshots.value[props.activeIndex] || normalizedSnapshots.value[0] || null
 )
+const itemStableId = (item = {}) => String(item.id || item.label || '')
+const isActiveTimeline = (item = {}) =>
+  Boolean(props.activeTimelineId) && itemStableId(item) === props.activeTimelineId
 </script>
 
 <style scoped lang="less">
@@ -192,6 +205,12 @@ const activeSnapshot = computed(
   background: rgba(255, 255, 255, 0.035);
   color: var(--wl-muted);
   font-size: 12px;
+}
+
+.temporal-item.focused {
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.5);
+  background: rgba(var(--wl-gold-rgb), 0.1);
+  box-shadow: inset 0 0 0 1px rgba(var(--wl-gold-rgb), 0.12);
 }
 
 .temporal-item strong {

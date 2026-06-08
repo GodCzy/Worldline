@@ -2,28 +2,32 @@
 
 Updated: 2026-06-03
 
-## Phase 5 Position
+## Position
 
 Worldline UI is the primary product surface for the Evidence-backed LLM Wiki + Temporal Knowledge Graph OS. It is not a marketing landing page and not a generic RAG chat shell.
 
-The first usable screen should expose work: pick a knowledge module, launch a worldline, inspect evidence, scrub timeline snapshots, focus graph context, and hand the selected branch to an Agent.
+The first usable screen should expose work: sign in, inspect runtime status, add a custom knowledge module, launch a worldline, inspect evidence, scrub timeline snapshots, focus graph context, and hand a selected branch to an Agent.
 
 ## Visual Direction
 
-- Dark operational console.
+- Dark operational console using the shared `--wl-*` token system.
 - Cyan and gold luminous worldline bundles.
 - Left-to-right root question, branching, inspection nodes, and convergence.
-- SVG first, no Three.js in Phase 5.
+- SVG/Canvas/G6 first; no Three.js unless a later immersive view is explicitly scoped.
 - Panels are compact work surfaces, not decorative nested cards.
+- Home, theme hub, Worldline hub, workbench, graph, login, and sidebar must read as one visual system.
 
 ## Required Views
 
-- `/worldline`: command hub for module selection, question launch, current status, and Phase 5 surface checklist.
-- `/worldline/:themeId`: full workbench with worldline stage, branch inspector, evidence rail, timeline scrubber, graph focus, and Agent handoff.
-- `/graph`: administrator graph surface that can receive Worldline route context and show the focused graph loop.
+- `/`: command entry with runtime status, embedded login/initialization, module add entry, and Worldline launch.
+- `/themes`: empty module registry with one `+` entry for future custom module creation.
+- `/worldline`: command hub for real module selection, question launch, current status, and core surface checklist.
+- `/worldline/:themeId`: full workbench with worldline stage, branch inspector, evidence rail, timeline scrubber, graph focus, and Agent handoff when a real live bridge exists.
+- `/graph`: administrator graph surface that can receive Worldline route context and show focused graph data.
 
 ## Interaction Contract
 
+- Unauthenticated Agent navigation routes to the home login panel, not a standalone login page.
 - Hover/select on a branch highlights the branch path and updates the active inspector.
 - Evidence rail must expose source uri, page, line, bbox, Wiki refs, entity refs, and timeline refs when present.
 - Timeline scrubber switches Source/Wiki/Graph/Gate snapshots without changing the route.
@@ -32,7 +36,7 @@ The first usable screen should expose work: pick a knowledge module, launch a wo
 
 ## Data Contract
 
-`worldlineStore.hydrate` remains compatible with older payloads and can consume these optional Phase 5 fields:
+`worldlineStore.hydrate` remains compatible with older payloads and can consume these optional fields:
 
 - `knowledgeMode`
 - `layers`
@@ -45,7 +49,7 @@ The first usable screen should expose work: pick a knowledge module, launch a wo
 - `routeTrace`
 - `overview`
 
-Live backend results take priority. `phase5-preview` is a local frontend validation adapter only; it must not be treated as a persisted knowledge source.
+Live backend results take priority. Local adapters are not default product content and must not be treated as persisted knowledge sources.
 
 ## Screenshot Gates
 
@@ -57,16 +61,17 @@ Required viewports:
 
 Required pages:
 
+- `/`
+- `/themes`
 - `/worldline`
-- `/worldline/phase5-preview`
-- `/graph?theme=phase5-preview&module=phase5-preview&scene=graph_timeline&version=worldline-phase5-preview&graph=phase5-graph-focus`
+- `/agent` unauthenticated redirect to `/?login=1&redirect=/agent`
+- authenticated sidebar state for Joy `superadmin`
 
 Required states:
 
-- Empty or blocked state when no live bridge is available.
-- Loading or fallback status during generation.
-- With branches.
-- Hover or selected branch.
-- Evidence rail tab content.
-- Timeline scrubber active state.
-- Graph focus and Agent handoff controls.
+- Empty module state.
+- Embedded login panel.
+- Authenticated sidebar state.
+- Worldline hub with no module.
+- Mobile layout.
+- Agent redirect behavior.

@@ -390,4 +390,39 @@ onUnmounted(() => {
   height: 16px;
   background-color: var(--gray-200);
 }
+
+@media (max-width: 768px) {
+  :deep(.ant-card-head-wrapper) {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  :deep(.ant-card-extra) {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .simple-controls {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .simple-toggle-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .simple-toggle {
+    display: inline-flex;
+    align-items: center;
+    min-height: 28px;
+    white-space: nowrap;
+  }
+
+  .divider {
+    display: none;
+  }
+}
 </style>

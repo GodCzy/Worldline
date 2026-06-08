@@ -33,7 +33,7 @@
         <div class="unsupported-card">
           <p class="eyebrow">NO MODULE</p>
           <h2>请先选择一个 Worldline 模块</h2>
-          <p>工作台需要 live bridge 或本地 Phase 5 Preview adapter 才能生成世界线。</p>
+          <p>工作台需要真实知识模块和 live bridge 才能生成世界线。</p>
           <router-link class="header-link" to="/worldline">返回 Hub</router-link>
         </div>
       </section>
@@ -104,6 +104,13 @@
               :route-trace="worldlineStore.routeTrace"
               @open-graph="openGraphFocus"
             />
+            <WorldlineLiveOpsPanel
+              :overview="liveOverviewForPanel"
+              :loading-key="liveActionKey"
+              :disabled="!canUseLiveOps"
+              :status-message="liveOpsMessage"
+              @action="handleLiveOpsAction"
+            />
           </aside>
         </section>
       </template>
@@ -128,6 +135,7 @@ import { useUserStore } from '@/stores/user'
 import { useAgentStore } from '@/stores/agent'
 import { useThemeContextStore } from '@/stores/themeContext'
 import { useWorldlineContextStore } from '@/stores/worldlineContext'
+import { setStoredRedirect } from '@/router'
 import { getWorldlineDefaultQuestion, hasWorldlineAdapter, resolveWorldlineAdapter } from '@/data/worldline'
 import { hasWorldlineLiveBridge, resolveThemeKnowledgeDbId, worldlineApi } from '@/apis/worldline_api'
 import WorldlineBranchCanvas from '@/components/worldline/WorldlineBranchCanvas.vue'
@@ -135,6 +143,7 @@ import WorldlineEvidenceRail from '@/components/worldline/WorldlineEvidenceRail.
 import WorldlineBranchDetailPanel from '@/components/worldline/WorldlineBranchDetailPanel.vue'
 import WorldlineTimelineScrubber from '@/components/worldline/WorldlineTimelineScrubber.vue'
 import WorldlineGraphFocusPanel from '@/components/worldline/WorldlineGraphFocusPanel.vue'
+import WorldlineLiveOpsPanel from '@/components/worldline/WorldlineLiveOpsPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,6 +157,9 @@ const WORLDLINE_HANDOFF_KEY = 'worldline_agent_handoff'
 const questionDraft = ref('')
 const isGenerating = ref(false)
 const liveStatus = ref({ state: 'idle', message: '' })
+const liveOverview = ref(null)
+const liveActionKey = ref('')
+const liveOpsMessage = ref('')
 
 const currentThemeId = computed(() => String(route.params.themeId || '').trim().toLowerCase())
 const hasThemeId = computed(() => Boolean(currentThemeId.value))
@@ -160,8 +172,32 @@ const routeKnowledgeDbId = computed(() => {
   return typeof fromQuery === 'string' ? fromQuery.trim() : ''
 })
 const currentKnowledgeDbId = computed(() => routeKnowledgeDbId.value || resolveThemeKnowledgeDbId(currentTheme.value))
+const currentGenerationConfig = computed(
+  () => currentTheme.value?.worldline?.generation || currentTheme.value?.context?.generation || {}
+)
+const currentEvidenceSources = computed(() => {
+  const value = currentTheme.value?.worldline?.evidence_sources || currentTheme.value?.context?.evidence_sources || []
+  if (Array.isArray(value)) return value
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+})
 const isLiveSupported = computed(() => Boolean(currentKnowledgeDbId.value))
 const isThemeSupported = computed(() => Boolean(currentThemeAdapter.value || isLiveSupported.value))
+const canUseLiveOps = computed(() => Boolean(isLiveSupported.value && userStore.isAdmin))
+const liveOverviewForPanel = computed(() => {
+  if (liveOverview.value) return liveOverview.value
+  const overview = worldlineStore.overview || {}
+  const counts = overview.counts || worldlineStore.routeTrace?.counts || {}
+  return {
+    ...overview,
+    counts,
+    quality_gate: overview.quality_gate || { latest: worldlineStore.quality?.latestGate || null },
+    quality: worldlineStore.quality,
+    status: overview.status || worldlineStore.status
+  }
+})
 const incomingQuestion = computed(() => (typeof route.query.question === 'string' ? route.query.question.trim() : ''))
 const generationLabel = computed(() => worldlineStore.displayMeta.generationLabel || '生成世界线')
 const workbenchTitle = computed(() => currentTheme.value?.name || worldlineStore.displayMeta.themeName || 'Worldline')
@@ -174,18 +210,22 @@ const unsupportedTitle = computed(() =>
   hasThemeId.value ? `模块 ${currentThemeId.value} 尚未接入 Worldline` : '当前没有指定模块'
 )
 const unsupportedDescription = computed(
-  () => '请返回 Hub 选择已配置 live bridge 的知识库模块，或使用 Phase 5 Preview 进行本地验收。'
+  () => '请返回 Hub 选择已配置 live bridge 的真实知识模块，或先在主题分区添加自定义模块。'
 )
 const liveStatusLabel = computed(() => {
   if (liveStatus.value.message) return liveStatus.value.message
   if (worldlineStore.lastGeneratedFrom === 'live-generate') return '已使用真实 Worldline facade'
-  if (worldlineStore.lastGeneratedFrom === 'phase5-preview') return '已使用 Phase 5 本地预览'
+  if (worldlineStore.lastGeneratedFrom === 'local-adapter') return '已使用本地模块 adapter'
   return '等待生成'
 })
+const defaultQuestionForTheme = () =>
+  currentTheme.value?.worldline?.default_question ||
+  currentTheme.value?.context?.default_question ||
+  getWorldlineDefaultQuestion(currentThemeId.value)
 
 const moduleTypeLabel = (theme = {}) => {
   if (hasWorldlineLiveBridge(theme)) return 'Live Bridge'
-  if (hasWorldlineAdapter(theme.id)) return 'Local Preview'
+  if (hasWorldlineAdapter(theme.id)) return 'Local Adapter'
   return 'Worldline'
 }
 
@@ -211,6 +251,36 @@ const applyWorldlineResult = (result, source) => {
 const hasHydratableBranches = (result) =>
   result && Array.isArray(result.branches) && result.branches.length > 0 && result.tree
 
+const refreshLiveOverview = async ({ silent = false } = {}) => {
+  if (!canUseLiveOps.value) {
+    liveOverview.value = null
+    return null
+  }
+
+  if (!silent) {
+    liveActionKey.value = 'refresh'
+  }
+
+  try {
+    const result = await worldlineApi.overview(currentKnowledgeDbId.value)
+    liveOverview.value = result
+    if (!silent) {
+      liveOpsMessage.value = '后端概览已刷新。'
+    }
+    return result
+  } catch (error) {
+    liveOpsMessage.value = error?.message || '后端概览读取失败。'
+    if (!silent) {
+      liveStatus.value = { state: 'failed', message: liveOpsMessage.value }
+    }
+    return null
+  } finally {
+    if (!silent && liveActionKey.value === 'refresh') {
+      liveActionKey.value = ''
+    }
+  }
+}
+
 const buildEmptyWorldlineResult = (message = '') => ({
   themeId: currentThemeId.value,
   moduleId: currentThemeId.value,
@@ -232,7 +302,7 @@ const buildEmptyWorldlineResult = (message = '') => ({
     themeName: currentTheme.value?.name || currentThemeId.value,
     generationLabel: '生成世界线',
     generationMode: 'base',
-    workspaceHint: '先补齐 live bridge、知识库数据或本地 adapter。'
+    workspaceHint: '先补齐 live bridge 或知识库数据。'
   }
 })
 
@@ -244,7 +314,7 @@ const tryGenerateLiveWorldline = async () => {
 
   if (!userStore.isAdmin) {
     liveStatus.value = currentThemeAdapter.value
-      ? { state: 'preview', message: '未登录管理员，已回退到本地预览。' }
+      ? { state: 'preview', message: '未登录管理员，已回退到本地 adapter。' }
       : { state: 'blocked', message: '该模块需要管理员权限读取真实 Worldline facade。' }
     return null
   }
@@ -255,11 +325,18 @@ const tryGenerateLiveWorldline = async () => {
       dbId: currentKnowledgeDbId.value,
       themeId: currentThemeId.value,
       question: questionDraft.value,
-      mode: 'base',
+      mode: currentGenerationConfig.value.mode || 'base',
       context: {
+        ...(currentTheme.value?.context || {}),
         theme: currentThemeId.value,
         module: currentThemeId.value,
-        knowledge_db_id: currentKnowledgeDbId.value
+        db_id: currentKnowledgeDbId.value,
+        knowledge_db_id: currentKnowledgeDbId.value,
+        knowledge_name: currentTheme.value?.knowledge?.name || currentTheme.value?.metadata?.knowledge_name || '',
+        knowledge_type: currentTheme.value?.knowledge?.kb_type || currentTheme.value?.metadata?.knowledge_type || '',
+        objective: currentTheme.value?.worldline?.objective || currentTheme.value?.context?.objective || '',
+        evidence_sources: currentEvidenceSources.value,
+        generation: currentGenerationConfig.value
       }
     })
     if (hasHydratableBranches(result)) {
@@ -273,10 +350,88 @@ const tryGenerateLiveWorldline = async () => {
     liveStatus.value = {
       state: currentThemeAdapter.value ? 'preview' : 'failed',
       message: currentThemeAdapter.value
-        ? '后端调用失败，已回退到本地预览。'
+        ? '后端调用失败，已回退到本地 adapter。'
         : error?.message || '后端 Worldline facade 调用失败。'
     }
     return null
+  }
+}
+
+const handleLiveOpsAction = async (actionKey) => {
+  if (!canUseLiveOps.value || liveActionKey.value) {
+    return
+  }
+
+  liveActionKey.value = actionKey
+  liveOpsMessage.value = ''
+
+  try {
+    if (actionKey === 'refresh') {
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = '后端概览已刷新。'
+      return
+    }
+
+    if (actionKey === 'refreshManifest') {
+      const [manifest, auditLogs] = await Promise.all([
+        worldlineApi.getMcpManifest(currentKnowledgeDbId.value),
+        worldlineApi.listMcpAuditLogs(currentKnowledgeDbId.value, { limit: 8 })
+      ])
+      liveOverview.value = {
+        ...(liveOverview.value || {}),
+        mcp: {
+          ...(liveOverview.value?.mcp || {}),
+          manifest,
+          audit_logs: auditLogs
+        }
+      }
+      liveOpsMessage.value = 'MCP manifest 与审计摘要已刷新。'
+      return
+    }
+
+    if (actionKey === 'planWorkflow') {
+      const plan = await worldlineApi.planWorkflow(currentKnowledgeDbId.value, {
+        workflow_type: 'knowledge_refresh'
+      })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `Workflow 已规划：${plan.workflow_id || plan.status || 'planned'}。`
+      return
+    }
+
+    if (actionKey === 'rebuildWiki') {
+      const result = await worldlineApi.rebuildWiki(currentKnowledgeDbId.value, { max_topics: 8 })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `Wiki 已重建：${result.status || 'success'}。`
+      await generateBaseWorldline()
+      return
+    }
+
+    if (actionKey === 'rebuildGraph') {
+      const result = await worldlineApi.rebuildGraph(currentKnowledgeDbId.value, { max_entities: 40 })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `图谱已重建：${result.status || 'success'}。`
+      await generateBaseWorldline()
+      return
+    }
+
+    if (actionKey === 'buildGoldenSet') {
+      const result = await worldlineApi.buildGoldenSet(currentKnowledgeDbId.value, { limit: 20 })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `Golden Set：${result.item_count ?? 0} 项。`
+      return
+    }
+
+    if (actionKey === 'runQualityGate') {
+      const result = await worldlineApi.runQualityGate(currentKnowledgeDbId.value, { thresholds: {} })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `Quality Gate：${result.status || 'finished'}。`
+      await generateBaseWorldline()
+    }
+  } catch (error) {
+    liveOpsMessage.value = error?.message || 'Live Ops 执行失败。'
+    liveStatus.value = { state: 'failed', message: liveOpsMessage.value }
+  } finally {
+    liveActionKey.value = ''
   }
 }
 
@@ -300,7 +455,7 @@ const generateBaseWorldline = async () => {
         theme: currentThemeId.value,
         module: currentThemeId.value
       })
-      applyWorldlineResult(result, 'phase5-preview')
+      applyWorldlineResult(result, 'local-adapter')
       return
     }
 
@@ -346,8 +501,9 @@ const goToThemeChat = async () => {
       name: 'AgentComp',
       query: themeContextStore.toRouteQuery(branch.context)
     }
-    sessionStorage.setItem('redirect', router.resolve(fallbackTarget).fullPath)
-    await router.push('/login')
+    const redirectPath = router.resolve(fallbackTarget).fullPath
+    setStoredRedirect(redirectPath)
+    await router.push({ name: 'Home', query: { login: '1', redirect: redirectPath } })
     return
   }
 
@@ -377,12 +533,17 @@ const ensureWorkbenchData = async () => {
 
   if (!hasThemeId.value || !isThemeSupported.value) {
     worldlineStore.reset()
-    questionDraft.value = getWorldlineDefaultQuestion(currentThemeId.value)
+    liveOverview.value = null
+    liveOpsMessage.value = ''
+    questionDraft.value = defaultQuestionForTheme()
     return
   }
 
+  await refreshLiveOverview({ silent: true })
+
   const canReuseCurrentState =
     worldlineStore.themeId === currentThemeId.value &&
+    (!currentKnowledgeDbId.value || worldlineStore.knowledgeDbId === currentKnowledgeDbId.value) &&
     worldlineStore.hasBranches &&
     (!incomingQuestion.value || incomingQuestion.value === worldlineStore.rootQuestion)
 
@@ -393,7 +554,7 @@ const ensureWorkbenchData = async () => {
   }
 
   questionDraft.value =
-    incomingQuestion.value || worldlineStore.questionDraft || getWorldlineDefaultQuestion(currentThemeId.value)
+    incomingQuestion.value || worldlineStore.questionDraft || defaultQuestionForTheme()
 
   await generateBaseWorldline()
 }

@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const appDir = fileURLToPath(new URL('./', import.meta.url))
+  const apiProxyTarget = env.VITE_API_URL || 'http://127.0.0.1:5050'
 
   const manualChunks = (id) => {
     if (!id.includes('node_modules')) {
@@ -92,7 +93,7 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '^/api': {
-          target: env.VITE_API_URL || 'http://api:5050',
+          target: apiProxyTarget,
           changeOrigin: true
         }
       },

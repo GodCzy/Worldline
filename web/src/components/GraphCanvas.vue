@@ -556,6 +556,10 @@ defineExpose({
     .canvas-content * {
       pointer-events: none;
     }
+    .canvas-content [data-graph-interactive],
+    .canvas-content [data-graph-interactive] * {
+      pointer-events: auto;
+    }
   }
 }
 
