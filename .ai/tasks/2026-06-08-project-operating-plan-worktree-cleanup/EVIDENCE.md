@@ -117,3 +117,43 @@
 
 - WSL 中 `pnpm` 不存在，改用 `npm --prefix web run build`。
 - Windows PowerShell 中 `npm` 不在 PATH，前端构建使用 WSL 的 `/home/joy/.local/bin/npm`。
+
+## 提交边界
+
+本次将脏工作树按逻辑边界整理为以下提交：
+
+- `53a95d6 docs: add Worldline roadmap and operating workflow`
+- `5a54164 feat: add Worldline backend contracts`
+- `f0e8015 feat: refine Worldline frontend workbench`
+- `a55476a chore: update Worldline runtime and reset evidence`
+- `b70c9c0 docs: add Agent run evidence archive`
+- `79f6dea chore: remove superseded phase previews`
+
+说明：
+
+- 提交前未使用 `git add .` 进行 blanket stage。
+- 旧 Phase 5 预览数据、重复截图证据和已替代测试已通过 `79f6dea` 移除。
+- `test/api/test_unified_graph_router.py` 最终没有内容差异；`git status` 已清洁。
+
+## 最终工作树复核
+
+命令：`git status --short --branch`
+
+结果：
+
+```text
+## codex/worldline-recovery-refactor
+```
+
+命令：`git clean -ndX`
+
+结果摘要：
+
+- 剩余 ignored 项仅为本地环境或高风险数据目录：`.env`、`.venv/`、`docker/volumes/`、`models/`、`node_modules/`、`saves/`、`web/node_modules/`。
+- 这些目录未删除，也未入仓。
+
+## OutputMD 总结
+
+已写入：
+
+- `D:\document\OutputMD\2026-06-08-Worldline-Project-Operating-Plan-Worktree-Cleanup.md`
