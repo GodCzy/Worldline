@@ -69,6 +69,13 @@
               @toggle-visible="() => {}"
             />
           </a-tab-pane>
+          <a-tab-pane v-if="!isDify" key="wiki" tab="LLM Wiki">
+            <WikiSection
+              v-if="databaseId"
+              :database-id="databaseId"
+              :active="activeTab === 'wiki'"
+            />
+          </a-tab-pane>
           <a-tab-pane key="query" tab="检索测试">
             <QuerySection ref="querySectionRef" :visible="true" @toggle-visible="() => {}" />
           </a-tab-pane>
@@ -153,6 +160,7 @@ import SearchConfigModal from '@/components/SearchConfigModal.vue'
 const KnowledgeGraphSection = defineAsyncComponent(() =>
   import('@/components/KnowledgeGraphSection.vue')
 )
+const WikiSection = defineAsyncComponent(() => import('@/components/WikiSection.vue'))
 const MindMapSection = defineAsyncComponent(() => import('@/components/MindMapSection.vue'))
 const RAGEvaluationTab = defineAsyncComponent(() => import('@/components/RAGEvaluationTab.vue'))
 const EvaluationBenchmarks = defineAsyncComponent(() =>
@@ -705,6 +713,73 @@ const handleMouseUp = () => {
   .config-text {
     font-size: 14px;
     margin-left: 4px;
+  }
+}
+
+@media (max-width: 720px) {
+  .unified-layout {
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .unified-layout {
+    .left-panel,
+    .right-panel {
+      width: 100% !important;
+      min-height: 0;
+      padding: 6px !important;
+    }
+
+    .left-panel {
+      flex: 0 0 42%;
+      padding-bottom: 0 !important;
+    }
+
+    .right-panel {
+      flex: 1 1 58%;
+      padding-top: 6px !important;
+    }
+
+    .resize-handle {
+      display: none;
+    }
+
+    .info-panel {
+      flex-direction: column;
+      gap: 6px;
+
+      .banner-item {
+        min-width: 0;
+      }
+    }
+  }
+
+  .knowledge-tabs {
+    border-radius: 8px;
+
+    :deep(.ant-tabs-nav) {
+      min-width: 0;
+      padding-right: 0;
+    }
+
+    :deep(.ant-tabs-nav-wrap) {
+      min-width: 0;
+    }
+
+    :deep(.ant-tabs-tab) {
+      margin: 0 10px 0 0;
+      padding: 10px 0;
+    }
+  }
+
+  .config-btn {
+    width: 32px;
+    padding: 4px;
+
+    .config-text {
+      display: none;
+    }
   }
 }
 

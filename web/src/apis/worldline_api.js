@@ -51,6 +51,11 @@ export const worldlineApi = {
   listWikiPages: (dbId, params = {}) =>
     apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/wiki/pages${queryString(params)}`),
 
+  getWikiPage: (dbId, pageId) =>
+    apiAdminGet(
+      `/api/knowledge/databases/${encodeSegment(dbId)}/wiki/pages/${encodeSegment(pageId)}`
+    ),
+
   listStaleWikiPages: (dbId) =>
     apiAdminGet(`/api/knowledge/databases/${encodeSegment(dbId)}/wiki/stale-pages`),
 
