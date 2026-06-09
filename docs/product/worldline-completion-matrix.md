@@ -46,10 +46,10 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 | Area | Current Status | Work To Complete | Recommended Plugins / Tools |
 |---|---|---|---|
-| Backend task retry/failure evidence | Partial | Failure records and retry evidence for parsing/indexing/wiki/graph/gate jobs. | GitHub CI, Browser |
+| Backend task retry/failure evidence | Partial | Operational health report now exposes parsing/indexing/document/workflow/gate failure evidence and retry policy. Still needed: controlled requeue execution and integration tests for actual retries. | GitHub CI, Browser |
 | Source versioning and stale rebuild | Partial | Source changes trigger stale Wiki, graph/timeline rebuild queue, and review state. | Browser, Spreadsheets |
-| Cost/latency budgets | Not Started | KB/run/branch/gate budget tracking and dashboard surface. | Spreadsheets, Dashboard QA |
-| Admin observability | Partial | Queue health, failed jobs, and external service unavailable surface. | Browser, Data Viz |
+| Cost/latency budgets | Partial | Operational health report now summarizes latest quality-gate cost/latency and budget violations. Still needed: KB/run/branch budget tracking and dashboard controls. | Spreadsheets, Dashboard QA |
+| Admin observability | Partial | Admin-only `/api/dashboard/worldline/operational-health` now exposes queue health, failed jobs, Redis unavailable state, budgets, and cleanup readiness. Still needed: compact dashboard UI surface and live Browser QA. | Browser, Data Viz |
 | Data cleanup routines | Partial | Temporary files, deleted KBs, MinIO objects, and archived artifact cleanup. | GitHub CI |
 
 ## P5 Completion Matrix
@@ -66,7 +66,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
+1. P4 operational hardening: add controlled retry execution, cleanup routines, and compact dashboard UI for the new operational health endpoint.
 2. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
 3. P3-3 Branch Canvas hardening: routeTrace, insufficient-evidence hints, and mobile interaction regression.
 

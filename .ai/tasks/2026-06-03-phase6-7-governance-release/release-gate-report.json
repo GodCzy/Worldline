@@ -3,10 +3,10 @@
   "phase": "phase6_7_release",
   "project_root": "/mnt/d/dev/Worldline",
   "codex_skills_root": "/mnt/c/Users/Joy/.codex/skills",
-  "generated_at": "2026-06-09T05:49:42.363857",
+  "generated_at": "2026-06-09T06:00:29.383380",
   "summary": {
-    "check_count": 8,
-    "passed_count": 8,
+    "check_count": 9,
+    "passed_count": 9,
     "failed_count": 0
   },
   "checks": [
@@ -26,6 +26,7 @@
           "docs/architecture/temporal-evidence-graph.md",
           "docs/architecture/worldline-ui.md",
           "docs/architecture/mcp-skill-governance.md",
+          "docs/architecture/operational-hardening.md",
           "docs/architecture/evaluation-gates.md"
         ],
         "missing": []
@@ -127,6 +128,17 @@
         "write_tool_count": 4,
         "subagent_lane_count": 4,
         "failures": []
+      }
+    },
+    {
+      "name": "worldline_operational_readiness_contract",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "service": "WorldlineOperationalHealthService",
+        "admin_endpoint": "/api/dashboard/worldline/operational-health",
+        "missing_service_fragments": [],
+        "missing_router_fragments": []
       }
     },
     {

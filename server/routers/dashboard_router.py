@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.routers.auth_router import get_admin_user
 from server.utils.auth_middleware import get_db
 from src.repositories.conversation_repository import ConversationRepository
+from src.services.worldline_operational_health_service import WorldlineOperationalHealthService
 from src.storage.postgres.models_business import User
 from src.utils.datetime_utils import UTC, ensure_shanghai, shanghai_now, utc_now
 from src.utils.logging_config import logger
@@ -636,6 +637,23 @@ async def get_dashboard_stats(
 # =============================================================================
 # 反馈管理（管理员权限）
 # =============================================================================
+
+
+@dashboard.get("/worldline/operational-health")
+async def get_worldline_operational_health(
+    db_id: str | None = None,
+    limit: int = 10,
+    current_user: User = Depends(get_admin_user),
+):
+    """Return read-only Worldline P4 operational health and retry evidence."""
+
+    try:
+        del current_user
+        return await WorldlineOperationalHealthService().build_report(db_id=db_id, limit=limit)
+    except Exception as e:
+        logger.error(f"Error getting Worldline operational health: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to get Worldline operational health: {str(e)}")
 
 
 class FeedbackListItem(BaseModel):

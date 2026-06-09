@@ -35,6 +35,7 @@ Worldline 当前主线是 Evidence-backed LLM Wiki + Temporal Knowledge Graph OS
 - [Worldline UI Architecture](./architecture/worldline-ui.md)
 - [Agent Operating Workflow](./architecture/agent-operating-workflow.md)
 - [MCP And Skill Governance](./architecture/mcp-skill-governance.md)
+- [Operational Hardening](./architecture/operational-hardening.md)
 - [Codex Plugin Inventory For Worldline](./architecture/codex-plugin-inventory.md)
 - [Evaluation Gates](./architecture/evaluation-gates.md)
 - [Worldline Completion Matrix](./product/worldline-completion-matrix.md)

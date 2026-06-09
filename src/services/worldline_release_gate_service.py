@@ -21,6 +21,7 @@ class WorldlineReleaseGateService:
         "docs/architecture/temporal-evidence-graph.md",
         "docs/architecture/worldline-ui.md",
         "docs/architecture/mcp-skill-governance.md",
+        "docs/architecture/operational-hardening.md",
         "docs/architecture/evaluation-gates.md",
     )
     REQUIRED_TASK_DIRS = (
@@ -58,6 +59,7 @@ class WorldlineReleaseGateService:
         checks.extend(self._skill_checks())
         checks.extend(self._mcp_checks())
         checks.extend(self._manifest_checks())
+        checks.append(self._operational_readiness_check())
         checks.append(self._screenshot_check())
 
         failed = [check for check in checks if not check["passed"]]
@@ -254,6 +256,36 @@ class WorldlineReleaseGateService:
                 },
             }
         ]
+
+    def _operational_readiness_check(self) -> dict[str, Any]:
+        service_source = self._read_project_file("src/services/worldline_operational_health_service.py")
+        router_source = self._read_project_file("server/routers/dashboard_router.py")
+        service_fragments = [
+            "class WorldlineOperationalHealthService",
+            '"queues"',
+            '"failure_evidence"',
+            '"retry_policy"',
+            '"budgets"',
+            '"cleanup_readiness"',
+            "worldline_operational_readiness_contract",
+        ]
+        router_fragments = [
+            '@dashboard.get("/worldline/operational-health")',
+            "WorldlineOperationalHealthService().build_report",
+        ]
+        missing_service = [fragment for fragment in service_fragments if fragment not in service_source]
+        missing_router = [fragment for fragment in router_fragments if fragment not in router_source]
+        return {
+            "name": "worldline_operational_readiness_contract",
+            "passed": not missing_service and not missing_router,
+            "severity": "required",
+            "details": {
+                "service": "WorldlineOperationalHealthService",
+                "admin_endpoint": "/api/dashboard/worldline/operational-health",
+                "missing_service_fragments": missing_service,
+                "missing_router_fragments": missing_router,
+            },
+        }
 
     def _screenshot_check(self) -> dict[str, Any]:
         report_path = (

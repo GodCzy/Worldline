@@ -124,6 +124,32 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
             ]
         ),
     )
+    _touch(
+        tmp_path / "src/services/worldline_operational_health_service.py",
+        "\n".join(
+            [
+                "class WorldlineOperationalHealthService:",
+                "    def build_report(self):",
+                "        return {",
+                '            "queues": {},',
+                '            "failure_evidence": {},',
+                '            "retry_policy": {"release_gate": "worldline_operational_readiness_contract"},',
+                '            "budgets": {},',
+                '            "cleanup_readiness": {},',
+                "        }",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "server/routers/dashboard_router.py",
+        "\n".join(
+            [
+                '@dashboard.get("/worldline/operational-health")',
+                "async def get_worldline_operational_health():",
+                "    return await WorldlineOperationalHealthService().build_report()",
+            ]
+        ),
+    )
 
     skills_root = tmp_path / "codex-skills"
     for skill_name in WorldlineReleaseGateService.REQUIRED_SKILLS:
@@ -162,5 +188,6 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
         "mcp_disabled_tool_policy",
         "connector_rollback_policy",
         "worldline_manifest_contract",
+        "worldline_operational_readiness_contract",
         "worldline_ui_screenshot_report",
     } <= check_names

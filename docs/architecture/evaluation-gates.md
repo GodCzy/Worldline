@@ -50,6 +50,7 @@ The gate checks:
 - MCP disabled-tool policy is present, including high-risk markers, conditional servers disabled by default, and task-required enablement review.
 - Connector rollback policy is present, including `remove_secrets`, `revoke_remote_authorization`, and remote draft cleanup evidence paths.
 - The controlled Worldline manifest keeps audit logs, service-boundary writes, and subagent lanes.
+- P4 operational readiness exposes queue health, failure evidence, retry policy, budget pressure, cleanup readiness, and an admin-only dashboard endpoint.
 - UI screenshot QA has no failures and covers home, themes, Worldline hub, Agent login redirect, and authenticated superadmin sidebar across desktop and mobile viewports.
 
 The command is:
