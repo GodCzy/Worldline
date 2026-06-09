@@ -63,6 +63,109 @@
       </div>
     </div>
 
+    <section
+      v-if="showWorldlineGraphReview"
+      class="worldline-graph-review"
+      data-worldline-graph-review="true"
+    >
+      <div class="review-header">
+        <div class="review-copy">
+          <span>Worldline Graph Review</span>
+          <strong>{{ reviewStatusText }}</strong>
+          <small>{{ state.selectedDbId }}</small>
+        </div>
+        <div class="review-actions">
+          <a-button size="small" :loading="temporalReview.loading" @click="loadWorldlineGraphReview">
+            Refresh
+          </a-button>
+          <a-button
+            size="small"
+            type="primary"
+            :loading="temporalReview.rebuilding"
+            @click="rebuildWorldlineGraph"
+          >
+            Rebuild graph
+          </a-button>
+        </div>
+      </div>
+
+      <a-alert
+        v-if="temporalReview.error"
+        class="review-alert"
+        type="warning"
+        show-icon
+        :message="temporalReview.error"
+      />
+
+      <div class="review-metrics">
+        <span><strong>{{ temporalReview.entities.length }}</strong> entities</span>
+        <span><strong>{{ temporalReview.relationships.length }}</strong> relations</span>
+        <span><strong>{{ temporalReview.timeline.length }}</strong> timeline</span>
+        <span :class="{ warning: conflictItems.length > 0 }">
+          <strong>{{ conflictItems.length }}</strong> conflicts
+        </span>
+      </div>
+
+      <div class="review-columns">
+        <div class="review-card">
+          <div class="review-card-title">
+            <span>Temporal conflicts</span>
+            <a-tag :color="conflictItems.length ? 'warning' : 'success'">
+              {{ conflictItems.length ? 'needs_review' : 'clean' }}
+            </a-tag>
+          </div>
+          <div v-if="!conflictItems.length" class="review-empty">
+            No temporal conflict detected for the selected knowledge base.
+          </div>
+          <article
+            v-for="conflict in conflictItems.slice(0, 4)"
+            v-else
+            :key="conflict.conflict_key || `${conflict.subject}-${conflict.occurred_at}`"
+            class="conflict-item"
+          >
+            <strong>{{ conflict.subject }} / {{ conflict.predicate }}</strong>
+            <span>{{ conflict.occurred_at }} - {{ conflict.object_count }} object states</span>
+            <div class="id-row">
+              <code v-for="factId in (conflict.fact_ids || []).slice(0, 4)" :key="factId">
+                {{ shortId(factId) }}
+              </code>
+            </div>
+            <div class="id-row">
+              <code v-for="evidenceId in (conflict.evidence_ids || []).slice(0, 4)" :key="evidenceId">
+                {{ shortId(evidenceId) }}
+              </code>
+            </div>
+          </article>
+        </div>
+
+        <div class="review-card">
+          <div class="review-card-title">
+            <span>Timeline facts</span>
+            <a-tag>{{ reviewTimelineStatus }}</a-tag>
+          </div>
+          <div v-if="!temporalReview.timeline.length" class="review-empty">
+            No timeline fact is available yet. Rebuild graph after parsing and indexing documents.
+          </div>
+          <article
+            v-for="fact in temporalReview.timeline.slice(0, 5)"
+            v-else
+            :key="fact.fact_id"
+            class="timeline-item"
+            :class="{ warning: fact.conflict_status === 'needs_review' }"
+          >
+            <strong>{{ fact.subject }}</strong>
+            <span>{{ fact.occurred_at?.slice(0, 10) || 'unknown date' }} / {{ fact.conflict_status || 'clean' }}</span>
+            <p>{{ fact.object }}</p>
+            <div class="id-row">
+              <code v-for="evidenceId in (fact.evidence_ids || []).slice(0, 3)" :key="evidenceId">
+                {{ shortId(evidenceId) }}
+              </code>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <div class="container-outter">
       <GraphCanvas
         ref="graphRef"
@@ -251,6 +354,7 @@ import {
 } from '@ant-design/icons-vue'
 import HeaderComponent from '@/components/HeaderComponent.vue'
 import { neo4jApi, unifiedApi } from '@/apis/graph_api'
+import { worldlineApi } from '@/apis/worldline_api'
 import { useUserStore } from '@/stores/user'
 import GraphCanvas from '@/components/GraphCanvas.vue'
 import GraphDetailPanel from '@/components/GraphDetailPanel.vue'
@@ -305,8 +409,35 @@ const state = reactive({
   batchSize: 40
 })
 
+const temporalReview = reactive({
+  loading: false,
+  rebuilding: false,
+  error: '',
+  entities: [],
+  relationships: [],
+  timeline: [],
+  conflictReport: null
+})
+
 const isNeo4j = computed(() => {
   return state.selectedDbId === 'neo4j'
+})
+
+const showWorldlineGraphReview = computed(() => Boolean(state.selectedDbId && !isNeo4j.value))
+
+const conflictItems = computed(() => temporalReview.conflictReport?.items || [])
+
+const reviewStatusText = computed(() => {
+  if (temporalReview.loading) return 'Loading graph evidence'
+  if (temporalReview.error) return 'Review unavailable'
+  if (conflictItems.value.length) return 'Temporal conflicts need review'
+  if (temporalReview.timeline.length) return 'Temporal graph is clean'
+  return 'Waiting for graph rebuild'
+})
+
+const reviewTimelineStatus = computed(() => {
+  if (!temporalReview.timeline.length) return 'empty'
+  return conflictItems.value.length ? 'needs_review' : 'clean'
 })
 
 const selectedGraphOption = computed(() =>
@@ -426,6 +557,7 @@ const handleDbChange = () => {
     // Also load stats for LightRAG or KB
     loadLightRAGStats()
   }
+  loadWorldlineGraphReview()
   loadSampleNodes()
 }
 
@@ -442,6 +574,58 @@ const loadLightRAGStats = () => {
       console.error(e)
       state.graphError = e.message || '图谱统计加载失败'
     })
+}
+
+const loadWorldlineGraphReview = async () => {
+  if (!showWorldlineGraphReview.value) return
+
+  temporalReview.loading = true
+  temporalReview.error = ''
+  try {
+    const [entities, relationships, conflicts, timeline] = await Promise.all([
+      worldlineApi.listGraphEntities(state.selectedDbId, { limit: 80 }),
+      worldlineApi.listGraphRelationships(state.selectedDbId, { limit: 120 }),
+      worldlineApi.listGraphConflicts(state.selectedDbId, { limit: 80 }),
+      worldlineApi.listTimeline(state.selectedDbId, { limit: 80 })
+    ])
+    temporalReview.entities = entities?.items || []
+    temporalReview.relationships = relationships?.items || []
+    temporalReview.conflictReport = conflicts || { items: [], conflict_count: 0, status: 'clean' }
+    temporalReview.timeline = timeline?.items || []
+  } catch (error) {
+    console.error('Failed to load Worldline graph review:', error)
+    temporalReview.entities = []
+    temporalReview.relationships = []
+    temporalReview.conflictReport = { items: [], conflict_count: 0, status: 'error' }
+    temporalReview.timeline = []
+    temporalReview.error = error?.response?.data?.detail || error.message || 'Worldline graph review failed'
+  } finally {
+    temporalReview.loading = false
+  }
+}
+
+const rebuildWorldlineGraph = async () => {
+  if (!showWorldlineGraphReview.value) return
+
+  temporalReview.rebuilding = true
+  temporalReview.error = ''
+  try {
+    await worldlineApi.rebuildGraph(state.selectedDbId, { max_entities: 40 })
+    message.success('Worldline graph rebuilt')
+    await loadWorldlineGraphReview()
+    loadSampleNodes()
+  } catch (error) {
+    console.error('Failed to rebuild Worldline graph:', error)
+    temporalReview.error = error?.response?.data?.detail || error.message || 'Worldline graph rebuild failed'
+  } finally {
+    temporalReview.rebuilding = false
+  }
+}
+
+const shortId = (value = '') => {
+  const text = String(value || '')
+  if (text.length <= 18) return text
+  return `${text.slice(0, 8)}...${text.slice(-6)}`
 }
 
 const prefillGraphKeyword = () => {
@@ -627,6 +811,7 @@ onMounted(async () => {
   } else {
     loadLightRAGStats()
   }
+  await loadWorldlineGraphReview()
   loadSampleNodes()
 })
 
@@ -912,6 +1097,165 @@ const goToDatabasePage = () => {
   font-size: 13px;
 }
 
+.worldline-graph-review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 12px 24px 0;
+  padding: 14px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(var(--wl-cyan-rgb), 0.12), transparent 32%),
+    rgba(2, 5, 10, 0.78);
+}
+
+.review-header,
+.review-actions,
+.review-card-title,
+.id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-header {
+  justify-content: space-between;
+}
+
+.review-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+
+  span {
+    color: var(--wl-muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--wl-text);
+    font-size: 15px;
+  }
+
+  small {
+    color: var(--wl-muted-soft);
+    overflow-wrap: anywhere;
+  }
+}
+
+.review-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.review-alert {
+  border-radius: var(--wl-radius-sm);
+}
+
+.review-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+
+  span {
+    min-width: 0;
+    border: 1px solid rgba(var(--wl-cyan-rgb), 0.16);
+    border-radius: var(--wl-radius-sm);
+    padding: 8px 10px;
+    background: rgba(7, 15, 24, 0.72);
+    color: var(--wl-muted);
+    font-size: 12px;
+  }
+
+  strong {
+    color: var(--wl-cyan);
+    font-size: 16px;
+  }
+
+  .warning strong {
+    color: var(--wl-amber);
+  }
+}
+
+.review-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.review-card {
+  min-width: 0;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(7, 15, 24, 0.62);
+  padding: 12px;
+}
+
+.review-card-title {
+  justify-content: space-between;
+  margin-bottom: 10px;
+
+  span {
+    color: var(--wl-text);
+    font-weight: 800;
+  }
+}
+
+.review-empty,
+.conflict-item,
+.timeline-item {
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.conflict-item,
+.timeline-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(var(--wl-cyan-rgb), 0.1);
+  padding-top: 10px;
+
+  & + & {
+    margin-top: 10px;
+  }
+
+  strong {
+    color: var(--wl-text-soft);
+    overflow-wrap: anywhere;
+  }
+
+  span,
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &.warning strong {
+    color: var(--wl-gold-soft);
+  }
+}
+
+.id-row {
+  flex-wrap: wrap;
+
+  code {
+    max-width: 100%;
+    border: 1px solid rgba(var(--wl-cyan-rgb), 0.18);
+    border-radius: 6px;
+    padding: 2px 5px;
+    background: rgba(2, 5, 10, 0.86);
+    color: var(--wl-cyan);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+}
+
 .db-selector {
   display: flex;
   align-items: center;
@@ -1035,6 +1379,29 @@ const goToDatabasePage = () => {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .worldline-graph-review {
+    margin: 10px 12px 0;
+    padding: 12px;
+  }
+
+  .review-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .review-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .review-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .review-columns {
+    grid-template-columns: 1fr;
   }
 
   .container-outter {

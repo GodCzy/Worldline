@@ -1,6 +1,6 @@
 # Worldline Completion Matrix
 
-Updated: 2026-06-08
+Updated: 2026-06-09
 
 This matrix breaks "finish all Worldline work" into verifiable slices. The current source of truth is `D:\dev\Worldline`, current `.ai/tasks` evidence, OutputMD summaries, and runnable validation results. `D:\document\Worldline` is only a pointer.
 
@@ -24,6 +24,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Full-site UI QA | Done | `.ai/tasks/2026-06-08-full-site-ui-qa` |
 | Upload/parse/query params | Done | `.ai/tasks/2026-06-08-upload-parse-query-params-linkage` |
 | Graph backend first pass | Verified Baseline | `.ai/tasks/2026-06-08-graph-backend-data-chain` |
+| Graph conflict review surface | Done | `.ai/tasks/2026-06-08-p3-2-graph-conflict-surface/EVIDENCE.md`, desktop and `390x844` screenshots |
 | Codex plugin inventory and workflow | Done | `.ai/tasks/2026-06-08-codex-plugin-completion-workflow/`, `docs/architecture/codex-plugin-inventory.md` |
 | Worktree cleanup and commits | Done | `D:\document\OutputMD\2026-06-08-Worldline-Project-Operating-Plan-Worktree-Cleanup.md` |
 
@@ -32,7 +33,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Slice | Current Status | Still Needed | Recommended Plugins / Tools |
 |---|---|---|---|
 | P3-1 Evidence-backed LLM Wiki | Done | Keep expanding stale/review workflow in later slices; current reading surface is implemented and QA evidence exists. | Browser, OpenAI Developers as needed |
-| P3-2 Temporal Knowledge Graph | Partial | Temporal conflict review backend is done; still needs `/graph` UI conflict surface, Worldline graph/timeline focus links, and screenshots. | Build Web Data Visualization, Browser |
+| P3-2 Temporal Knowledge Graph | Partial | Backend conflict review and compact `/graph` conflict surface are done; still needs graph/timeline focus links, broader regression coverage, and navigation from evidence/wiki views into graph facts. | Build Web Data Visualization, Browser |
 | P3-3 Worldline Branch Canvas | Partial | RouteTrace, quality status, insufficient-evidence hints, and mobile interaction regression. | Browser, Product Design, Data Visualization |
 | P3-4 Agent Run Ledger And Replay | Verified Baseline | Continue productizing replay, pagination, artifact registry, and cross-run knowledge reads. | GitHub, Browser |
 | P3-5 MCP And Skill Governance | Partial | Tool manifest governance report, disabled-tool release gate, connector rollback evidence. | GitHub, OpenAI Developers |
@@ -63,7 +64,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P3-2 DB graph/timeline focused regression: entities, relationships, conflicts, projection, timeline, and frontend focus behavior.
+1. P3-2 graph/timeline focus links and focused regression: entities, relationships, conflicts, projection, timeline, and frontend focus behavior.
 2. P3-6 Quality Gate Replay: create one explainable failure and trace from UI back to the evidence chain.
 3. P3-5 Governance report: turn the plugin/MCP matrix into a release gate and rollback checklist.
 4. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
