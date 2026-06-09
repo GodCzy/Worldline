@@ -84,3 +84,14 @@
 - shell/admin/Docker/Kubernetes write MCP
 - external communication write tools
 - any connector that requires secrets before destination and scope are confirmed
+
+## Release Gate Mapping
+
+The plugin inventory is enforced by `src/services/mcp_service.py::get_mcp_governance_report()` and `WorldlineReleaseGateService`.
+
+- Browser/Playwright is the default local QA tool and is not an application MCP default.
+- GitHub, OpenAI Platform, Figma, Notion, Linear, Canva, and Vercel remain conditional connector policies with explicit write scope and rollback text.
+- `sequentialthinking` and `mcp-server-chart` remain available configs but are disabled by default.
+- High-risk direct-write tool categories are tracked in `high_risk_tool_markers`.
+- Any task-level `disabled_tools` override appears in `disabled_tools_by_server` so release evidence can show what was suppressed.
+- Rollback evidence must cover `remove_secrets`, `revoke_remote_authorization`, and cleanup of remote drafts or generated assets when a connector is used.

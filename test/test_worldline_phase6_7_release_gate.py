@@ -21,6 +21,14 @@ def test_phase6_mcp_defaults_are_controlled() -> None:
     assert "sequentialthinking" in report["servers"]["disabled_by_default"]
     assert "mcp-server-chart" in report["servers"]["disabled_by_default"]
     assert report["violations"] == []
+    assert {"source", "license", "rollback"} <= set(report["review_checklist"])
+    assert report["disabled_tool_policy"]["task_required_enablement_requires_review"] is True
+    assert report["disabled_tool_policy"]["disabled_tools_by_server"]["worldline"] == []
+    assert "OpenAI Platform" in report["connector_policy"]
+    assert "GitHub" in report["connector_policy"]
+    assert "Browser/Playwright" in report["connector_policy"]
+    assert "remove_secrets" in report["rollback_checklist"]
+    assert "revoke_remote_authorization" in report["rollback_checklist"]
     assert defaults["worldline"]["enabled"] == 1
     assert defaults["sequentialthinking"]["enabled"] == 0
     assert defaults["mcp-server-chart"]["enabled"] == 0
@@ -38,6 +46,30 @@ def test_phase6_mcp_governance_detects_unexpected_enabled_server() -> None:
     assert "conditional_default_disabled" in checks
 
 
+def test_phase6_mcp_governance_detects_secret_env_keys() -> None:
+    defaults = get_default_mcp_server_configs()
+    defaults["worldline"]["env"]["OPENAI_API_KEY"] = "sk-test"
+
+    report = get_mcp_governance_report(defaults)
+
+    assert report["status"] == "failed"
+    violations = {item["check"]: item for item in report["violations"]}
+    assert "secrets_in_default_env" in violations
+    assert violations["secrets_in_default_env"]["server"] == "worldline"
+
+
+def test_phase6_mcp_governance_reports_disabled_tools_without_failure() -> None:
+    defaults = get_default_mcp_server_configs()
+    defaults["worldline"]["disabled_tools"] = ["worldline.run_quality_gate"]
+
+    report = get_mcp_governance_report(defaults)
+
+    assert report["status"] == "passed"
+    assert report["disabled_tool_policy"]["disabled_tools_by_server"]["worldline"] == [
+        "worldline.run_quality_gate"
+    ]
+
+
 def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path) -> None:
     for doc_path in WorldlineReleaseGateService.REQUIRED_DOCS:
         _touch(tmp_path / doc_path)
@@ -53,7 +85,19 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
                 '_DEFAULT_MCP_SERVERS["worldline"]["enabled"] = 1',
                 '_DEFAULT_MCP_SERVERS["sequentialthinking"]["enabled"] = 0',
                 '_DEFAULT_MCP_SERVERS["mcp-server-chart"]["enabled"] = 0',
+                "WORLDLINE_MCP_REVIEW_CHECKLIST = ()",
+                'WORLDLINE_CONNECTOR_POLICY = {"OpenAI Platform": {}}',
+                "WORLDLINE_CONNECTOR_ROLLBACK_CHECKLIST = ('remove_secrets', 'revoke_remote_authorization')",
                 "def get_mcp_governance_report():",
+                "    return {",
+                '        "disabled_tool_policy": {',
+                '            "disabled_tools_by_server": {},',
+                '            "task_required_enablement_requires_review": True,',
+                '            "high_risk_tool_markers": [],',
+                "        },",
+                '        "connector_policy": {},',
+                '        "rollback_checklist": ["remove_secrets", "revoke_remote_authorization"],',
+                "    }",
                 "    pass",
             ]
         ),
@@ -115,6 +159,8 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
         "phase_task_dirs_present",
         "codex_worldline_skills_installed",
         "mcp_default_governance",
+        "mcp_disabled_tool_policy",
+        "connector_rollback_policy",
         "worldline_manifest_contract",
-                "worldline_ui_screenshot_report",
+        "worldline_ui_screenshot_report",
     } <= check_names

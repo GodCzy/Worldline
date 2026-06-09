@@ -38,7 +38,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | P3-2 Temporal Knowledge Graph | Done | Current acceptance is covered: backend conflict review, compact `/graph` conflict surface, graph/timeline/evidence focus links, relationship focus regression, read-only projection checks, and `/graph` plus `/worldline/:themeId` screenshots. Future canvas parity can expand if `/api/graph/subgraph` starts returning the same node ids as the Worldline review payload. | Build Web Data Visualization, Browser |
 | P3-3 Worldline Branch Canvas | Partial | RouteTrace, quality status, insufficient-evidence hints, and mobile interaction regression. | Browser, Product Design, Data Visualization |
 | P3-4 Agent Run Ledger And Replay | Verified Baseline | Continue productizing replay, pagination, artifact registry, and cross-run knowledge reads. | GitHub, Browser |
-| P3-5 MCP And Skill Governance | Partial | Tool manifest governance report, disabled-tool release gate, connector rollback evidence. | GitHub, OpenAI Developers |
+| P3-5 MCP And Skill Governance | Done | Current acceptance is covered: MCP defaults governance report, disabled-tool release gate, connector policy, rollback checklist, focused pytest, and release-gate fixture regression. | GitHub, OpenAI Developers |
 | P3-6 Quality Gate Replay | Done | Current acceptance is covered: intentional failed gate payload stores reasons, replay thresholds, Evidence/Wiki/Graph/Timeline/Run refs, Branch Inspector replay panel, Strict Replay action, focused pytest, production build, and desktop/390px Browser QA screenshots. | Browser, Data Visualization |
 | P3-7 Compact Console UX | Verified Baseline | Continue desktop plus 390px screenshot QA for every new feature. | Browser, Product Design |
 
@@ -66,10 +66,9 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P3-5 Governance report: turn the plugin/MCP matrix into a release gate and rollback checklist.
-2. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
-3. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
-4. P3-3 Branch Canvas hardening: routeTrace, insufficient-evidence hints, and mobile interaction regression.
+1. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
+2. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
+3. P3-3 Branch Canvas hardening: routeTrace, insufficient-evidence hints, and mobile interaction regression.
 
 ## Workflow Rule
 

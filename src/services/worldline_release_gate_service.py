@@ -139,31 +139,78 @@ class WorldlineReleaseGateService:
 
     def _mcp_checks(self) -> list[dict[str, Any]]:
         source = self._read_project_file("src/services/mcp_service.py")
-        expected_fragments = [
+        default_fragments = [
             'WORLDLINE_DEFAULT_ENABLED_MCP_SERVERS = {"worldline"}',
             '_DEFAULT_MCP_SERVERS["worldline"]["enabled"] = 1',
             '_DEFAULT_MCP_SERVERS["sequentialthinking"]["enabled"] = 0',
             '_DEFAULT_MCP_SERVERS["mcp-server-chart"]["enabled"] = 0',
             "def get_mcp_governance_report(",
         ]
-        missing = [fragment for fragment in expected_fragments if fragment not in source]
-        report = {
-            "status": "passed" if not missing else "failed",
-            "policy": {
-                "default_enabled_allowlist": ["worldline"],
-                "conditional_servers": ["mcp-server-chart", "sequentialthinking"],
-                "external_agent_write_boundary": "worldline_service_boundary",
-                "external_codex_tools": ["GitHub", "Browser/Playwright"],
-            },
-            "missing_source_fragments": missing,
-        }
+        disabled_tool_fragments = [
+            "WORLDLINE_MCP_REVIEW_CHECKLIST",
+            '"disabled_tool_policy"',
+            '"disabled_tools_by_server"',
+            '"task_required_enablement_requires_review"',
+            '"high_risk_tool_markers"',
+        ]
+        connector_rollback_fragments = [
+            "WORLDLINE_CONNECTOR_POLICY",
+            "WORLDLINE_CONNECTOR_ROLLBACK_CHECKLIST",
+            '"connector_policy"',
+            '"rollback_checklist"',
+            '"OpenAI Platform"',
+            '"remove_secrets"',
+            '"revoke_remote_authorization"',
+        ]
+        default_missing = [fragment for fragment in default_fragments if fragment not in source]
+        disabled_tool_missing = [fragment for fragment in disabled_tool_fragments if fragment not in source]
+        connector_rollback_missing = [
+            fragment for fragment in connector_rollback_fragments if fragment not in source
+        ]
         return [
             {
                 "name": "mcp_default_governance",
-                "passed": report["status"] == "passed",
+                "passed": not default_missing,
                 "severity": "required",
-                "details": report,
-            }
+                "details": {
+                    "policy": {
+                        "default_enabled_allowlist": ["worldline"],
+                        "conditional_servers": ["mcp-server-chart", "sequentialthinking"],
+                        "external_agent_write_boundary": "worldline_service_boundary",
+                        "external_codex_tools": ["GitHub", "Browser/Playwright"],
+                    },
+                    "missing_source_fragments": default_missing,
+                },
+            },
+            {
+                "name": "mcp_disabled_tool_policy",
+                "passed": not disabled_tool_missing,
+                "severity": "required",
+                "details": {
+                    "policy": {
+                        "task_required_enablement_requires_review": True,
+                        "conditional_servers_disabled_by_default": [
+                            "mcp-server-chart",
+                            "sequentialthinking",
+                        ],
+                    },
+                    "missing_source_fragments": disabled_tool_missing,
+                },
+            },
+            {
+                "name": "connector_rollback_policy",
+                "passed": not connector_rollback_missing,
+                "severity": "required",
+                "details": {
+                    "required": [
+                        "connector_policy",
+                        "rollback_checklist",
+                        "remove_secrets",
+                        "revoke_remote_authorization",
+                    ],
+                    "missing_source_fragments": connector_rollback_missing,
+                },
+            },
         ]
 
     def _manifest_checks(self) -> list[dict[str, Any]]:

@@ -53,6 +53,89 @@ WORLDLINE_FORBIDDEN_DEFAULT_MARKERS = {
     "calendar",
 }
 WORLDLINE_SECRET_KEY_MARKERS = ("key", "token", "secret", "password", "credential")
+WORLDLINE_MCP_REVIEW_CHECKLIST = (
+    "source",
+    "license",
+    "maintenance_status",
+    "command_args_env_headers",
+    "token_handling",
+    "network_reach",
+    "write_scope",
+    "data_exposure",
+    "disabled_tools",
+    "rollback",
+)
+WORLDLINE_CONNECTOR_POLICY = {
+    "Browser/Playwright": {
+        "stance": "default_local_qa",
+        "allowed_when": "localhost or 127.0.0.1 UI verification, screenshots, and console QA.",
+        "write_scope": "local browser session only",
+        "secret_policy": "never collect secrets through automated forms",
+        "rollback": "close session and discard generated screenshots if the task is abandoned",
+    },
+    "GitHub": {
+        "stance": "conditional",
+        "allowed_when": "PR, issue, CI, review, or release publishing after Joy confirms the remote scope.",
+        "write_scope": "confirmed branch, PR, issue, or review thread only",
+        "secret_policy": "do not write tokens to the repository or task docs",
+        "rollback": "close draft PRs, revert remote comments if needed, and remove local auth references from evidence",
+    },
+    "OpenAI Platform": {
+        "stance": "conditional",
+        "allowed_when": "API key or OpenAI API project setup after Joy confirms the target env destination.",
+        "write_scope": "confirmed local env file or official credential store only",
+        "secret_policy": "remove_secrets from chat, docs, repository, and generated reports",
+        "rollback": "revoke_remote_authorization and delete the local env entry if the key is no longer needed",
+    },
+    "Figma": {
+        "stance": "conditional",
+        "allowed_when": "UI prototype, design-system sync, or screenshot-to-design tasks.",
+        "write_scope": "explicit Figma file, page, and node only",
+        "secret_policy": "no project secrets or private data in design layers",
+        "rollback": "restore or delete generated Figma frames after review",
+    },
+    "Notion": {
+        "stance": "conditional",
+        "allowed_when": "external PRD, release note, or workspace knowledge mirror.",
+        "write_scope": "confirmed Notion page or database only",
+        "secret_policy": "repository docs remain the source of truth; do not mirror secrets",
+        "rollback": "archive or delete generated Notion pages",
+    },
+    "Linear": {
+        "stance": "conditional",
+        "allowed_when": "turn P3/P4/P5 work into confirmed issues, projects, or status updates.",
+        "write_scope": "confirmed Linear team, project, or issue only",
+        "secret_policy": "avoid copying private repository data unless Joy confirms",
+        "rollback": "archive generated issues or revert status changes",
+    },
+    "Canva": {
+        "stance": "low_priority",
+        "allowed_when": "brand, demo, or social presentation assets only.",
+        "write_scope": "confirmed Canva design only",
+        "secret_policy": "no engineering source-of-truth or secrets in Canva",
+        "rollback": "delete or archive generated designs",
+    },
+    "Vercel": {
+        "stance": "conditional_deployment",
+        "allowed_when": (
+            "preview deployment, env management, logs, or observability after deployment scope is confirmed."
+        ),
+        "write_scope": "confirmed Vercel project, deployment, or env variable only",
+        "secret_policy": "never expose env values in chat, docs, or logs",
+        "rollback": (
+            "remove preview deployments, revert env vars, and revoke_remote_authorization if access is no longer needed"
+        ),
+    },
+}
+WORLDLINE_CONNECTOR_ROLLBACK_CHECKLIST = (
+    "disable_conditional_mcp_servers",
+    "restore_disabled_tools",
+    "remove_secrets",
+    "delete_unneeded_local_configs",
+    "revoke_remote_authorization",
+    "archive_or_delete_remote_drafts",
+    "record_rollback_evidence",
+)
 
 # Default MCP Server configurations (Imported to DB on first run)
 _DEFAULT_MCP_SERVERS = {
@@ -126,12 +209,20 @@ def _secret_env_keys(config: dict[str, Any]) -> list[str]:
     ]
 
 
+def _disabled_tools(config: dict[str, Any]) -> tuple[list[str], bool]:
+    disabled_tools = config.get("disabled_tools") or []
+    if not isinstance(disabled_tools, list):
+        return [], True
+    return [str(tool) for tool in disabled_tools], False
+
+
 def get_mcp_governance_report(server_configs: dict[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     """Return a deterministic Phase 6 governance report for MCP defaults."""
 
     configs = deepcopy(server_configs or _DEFAULT_MCP_SERVERS)
     enabled_by_default = sorted(name for name, config in configs.items() if _config_enabled(config))
     disabled_by_default = sorted(name for name, config in configs.items() if not _config_enabled(config))
+    disabled_tools_by_server: dict[str, list[str]] = {}
     violations: list[dict[str, Any]] = []
     warnings: list[dict[str, Any]] = []
 
@@ -164,6 +255,16 @@ def get_mcp_governance_report(server_configs: dict[str, dict[str, Any]] | None =
         )
 
     for name, config in configs.items():
+        disabled_tools, disabled_tools_malformed = _disabled_tools(config)
+        disabled_tools_by_server[name] = sorted(disabled_tools)
+        if disabled_tools_malformed:
+            violations.append(
+                {
+                    "check": "disabled_tools_format",
+                    "message": "disabled_tools must be a list when present.",
+                    "server": name,
+                }
+            )
         marker = _contains_forbidden_default_marker(name, config)
         if marker and _config_enabled(config):
             violations.append(
@@ -202,6 +303,16 @@ def get_mcp_governance_report(server_configs: dict[str, dict[str, Any]] | None =
             "external_agent_write_boundary": "worldline_service_boundary",
             "external_codex_tools": ["GitHub", "Browser/Playwright"],
         },
+        "review_checklist": list(WORLDLINE_MCP_REVIEW_CHECKLIST),
+        "disabled_tool_policy": {
+            "release_gate": "mcp_disabled_tool_policy",
+            "high_risk_tool_markers": sorted(WORLDLINE_FORBIDDEN_DEFAULT_MARKERS),
+            "conditional_servers_disabled_by_default": sorted(WORLDLINE_CONDITIONAL_MCP_SERVERS),
+            "task_required_enablement_requires_review": True,
+            "disabled_tools_by_server": disabled_tools_by_server,
+        },
+        "connector_policy": deepcopy(WORLDLINE_CONNECTOR_POLICY),
+        "rollback_checklist": list(WORLDLINE_CONNECTOR_ROLLBACK_CHECKLIST),
         "servers": {
             "total": len(configs),
             "enabled_by_default": enabled_by_default,

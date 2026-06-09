@@ -3,10 +3,10 @@
   "phase": "phase6_7_release",
   "project_root": "/mnt/d/dev/Worldline",
   "codex_skills_root": "/mnt/c/Users/Joy/.codex/skills",
-  "generated_at": "2026-06-03T14:35:29.872182",
+  "generated_at": "2026-06-09T05:49:42.363857",
   "summary": {
-    "check_count": 6,
-    "passed_count": 6,
+    "check_count": 8,
+    "passed_count": 8,
     "failed_count": 0
   },
   "checks": [
@@ -69,7 +69,6 @@
       "passed": true,
       "severity": "required",
       "details": {
-        "status": "passed",
         "policy": {
           "default_enabled_allowlist": [
             "worldline"
@@ -88,6 +87,35 @@
       }
     },
     {
+      "name": "mcp_disabled_tool_policy",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "policy": {
+          "task_required_enablement_requires_review": true,
+          "conditional_servers_disabled_by_default": [
+            "mcp-server-chart",
+            "sequentialthinking"
+          ]
+        },
+        "missing_source_fragments": []
+      }
+    },
+    {
+      "name": "connector_rollback_policy",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "required": [
+          "connector_policy",
+          "rollback_checklist",
+          "remove_secrets",
+          "revoke_remote_authorization"
+        ],
+        "missing_source_fragments": []
+      }
+    },
+    {
       "name": "worldline_manifest_contract",
       "passed": true,
       "severity": "required",
@@ -95,7 +123,7 @@
         "server": {
           "name": "worldline"
         },
-        "tool_count": 5,
+        "tool_count": 15,
         "write_tool_count": 4,
         "subagent_lane_count": 4,
         "failures": []
