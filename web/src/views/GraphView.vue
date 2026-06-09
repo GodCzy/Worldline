@@ -97,6 +97,33 @@
         :message="temporalReview.error"
       />
 
+      <div
+        v-if="graphFocus.hasFocus"
+        class="review-focus-card"
+        data-worldline-graph-focus-result="true"
+      >
+        <div class="focus-copy">
+          <span>Route focus</span>
+          <strong>{{ focusTitle }}</strong>
+          <small>{{ focusSubtitle }}</small>
+          <div v-if="focusMatches.length" class="focus-match-list">
+            <span
+              v-for="match in focusMatches.slice(0, 4)"
+              :key="`${match.kind}-${match.id || match.label}`"
+              :class="match.kind"
+            >
+              {{ match.kind }} / {{ match.label }}
+            </span>
+          </div>
+        </div>
+        <div class="focus-chips">
+          <code v-if="graphFocus.entityId">entity {{ shortId(graphFocus.entityId) }}</code>
+          <code v-if="graphFocus.factId">fact {{ shortId(graphFocus.factId) }}</code>
+          <code v-if="graphFocus.evidenceId">evidence {{ shortId(graphFocus.evidenceId) }}</code>
+          <code v-if="focusMatches.length">{{ focusMatches.length }} matched</code>
+        </div>
+      </div>
+
       <div class="review-metrics">
         <span><strong>{{ temporalReview.entities.length }}</strong> entities</span>
         <span><strong>{{ temporalReview.relationships.length }}</strong> relations</span>
@@ -122,6 +149,7 @@
             v-else
             :key="conflict.conflict_key || `${conflict.subject}-${conflict.occurred_at}`"
             class="conflict-item"
+            :class="{ focused: isConflictFocused(conflict) }"
           >
             <strong>{{ conflict.subject }} / {{ conflict.predicate }}</strong>
             <span>{{ conflict.occurred_at }} - {{ conflict.object_count }} object states</span>
@@ -151,7 +179,7 @@
             v-else
             :key="fact.fact_id"
             class="timeline-item"
-            :class="{ warning: fact.conflict_status === 'needs_review' }"
+            :class="{ warning: fact.conflict_status === 'needs_review', focused: isTimelineFocused(fact) }"
           >
             <strong>{{ fact.subject }}</strong>
             <span>{{ fact.occurred_at?.slice(0, 10) || 'unknown date' }} / {{ fact.conflict_status || 'clean' }}</span>
@@ -171,10 +199,11 @@
         ref="graphRef"
         :graph-data="graph.graphData"
         :graph-info="formattedGraphInfo"
-        :highlight-keywords="[state.searchInput]"
+        :highlight-keywords="focusHighlightKeywords"
         @node-click="graph.handleNodeClick"
         @edge-click="graph.handleEdgeClick"
         @canvas-click="graph.handleCanvasClick"
+        @data-rendered="applyRouteFocusToCanvas"
       >
         <template #top>
           <div class="actions">
@@ -336,7 +365,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref, h, watch } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, h, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useConfigStore } from '@/stores/config'
@@ -383,9 +412,12 @@ const fileList = ref([])
 const sampleNodeCount = ref(100)
 const themeContextStore = useThemeContextStore()
 const activeThemeId = computed(() => themeContextStore.activeContext?.theme || '')
+const queryValue = (value) => {
+  const rawValue = Array.isArray(value) ? value[0] : value
+  return typeof rawValue === 'string' ? rawValue.trim() : ''
+}
 const routeDbId = computed(() => {
-  const value = route.query.db_id || route.query.knowledge_db_id
-  return typeof value === 'string' ? value.trim() : ''
+  return queryValue(route.query.db_id || route.query.knowledge_db_id)
 })
 
 const graph = reactive(useGraph(graphRef))
@@ -426,6 +458,128 @@ const isNeo4j = computed(() => {
 const showWorldlineGraphReview = computed(() => Boolean(state.selectedDbId && !isNeo4j.value))
 
 const conflictItems = computed(() => temporalReview.conflictReport?.items || [])
+
+const graphFocus = computed(() => {
+  const entityId = queryValue(route.query.entity_id || route.query.entity)
+  const factId = queryValue(route.query.fact_id || route.query.timeline_id)
+  const evidenceId = queryValue(route.query.evidence_id || route.query.evidence)
+  const requestedLayer = queryValue(route.query.focus_layer)
+  const label = queryValue(route.query.focus_label || route.query.label)
+  const inferredLayer = entityId ? 'graph' : factId ? 'timeline' : evidenceId ? 'evidence' : requestedLayer
+  return {
+    entityId,
+    factId,
+    evidenceId,
+    layer: requestedLayer || inferredLayer || '',
+    label,
+    hasFocus: Boolean(entityId || factId || evidenceId || requestedLayer || label)
+  }
+})
+
+const getId = (item = {}, keys = []) =>
+  keys.map((key) => item?.[key]).find((value) => value !== undefined && value !== null && value !== '')
+
+const normalizeId = (value) => String(value || '').trim()
+
+const getEvidenceIds = (item = {}) => {
+  const direct = item.evidence_ids || item.evidenceIds || item.evidence_id || item.evidenceId || []
+  const values = Array.isArray(direct) ? direct : [direct]
+  return values.map((value) => normalizeId(value)).filter(Boolean)
+}
+
+const hasEvidenceFocus = (item = {}) =>
+  Boolean(graphFocus.value.evidenceId && getEvidenceIds(item).includes(graphFocus.value.evidenceId))
+
+const entityStableId = (entity = {}) =>
+  normalizeId(getId(entity, ['entity_id', 'id', 'node_id', 'name', 'label', 'title']))
+
+const entityTitle = (entity = {}) =>
+  normalizeId(entity.name || entity.label || entity.title || entity.entity_name || entityStableId(entity))
+
+const timelineStableId = (fact = {}) => normalizeId(getId(fact, ['fact_id', 'id', 'timeline_id']))
+
+const isEntityFocused = (entity = {}) => {
+  const entityId = entityStableId(entity)
+  return Boolean(
+    (graphFocus.value.entityId && entityId === graphFocus.value.entityId) || hasEvidenceFocus(entity)
+  )
+}
+
+const isTimelineFocused = (fact = {}) =>
+  Boolean(
+    (graphFocus.value.factId && timelineStableId(fact) === graphFocus.value.factId) || hasEvidenceFocus(fact)
+  )
+
+const isConflictFocused = (conflict = {}) => {
+  const factIds = (conflict.fact_ids || []).map((value) => normalizeId(value))
+  return Boolean(
+    (graphFocus.value.factId && factIds.includes(graphFocus.value.factId)) || hasEvidenceFocus(conflict)
+  )
+}
+
+const focusedEntities = computed(() => temporalReview.entities.filter((entity) => isEntityFocused(entity)))
+const focusedTimeline = computed(() => temporalReview.timeline.filter((fact) => isTimelineFocused(fact)))
+const focusedConflicts = computed(() => conflictItems.value.filter((conflict) => isConflictFocused(conflict)))
+
+const entityFocusMatches = computed(() =>
+  focusedEntities.value.map((item) => ({ kind: 'entity', label: entityTitle(item), id: entityStableId(item) }))
+)
+
+const timelineFocusMatches = computed(() =>
+  focusedTimeline.value.map((item) => ({
+    kind: 'timeline',
+    label: item.subject || item.object || timelineStableId(item),
+    id: timelineStableId(item)
+  }))
+)
+
+const conflictFocusMatches = computed(() =>
+  focusedConflicts.value.map((item) => ({
+    kind: 'conflict',
+    label: `${item.subject || 'unknown'} / ${item.predicate || 'state'}`,
+    id: item.conflict_key || item.fact_ids?.[0] || ''
+  }))
+)
+
+const focusMatches = computed(() => {
+  if (graphFocus.value.factId || graphFocus.value.layer === 'timeline') {
+    return [...timelineFocusMatches.value, ...conflictFocusMatches.value, ...entityFocusMatches.value]
+  }
+  if (graphFocus.value.entityId || graphFocus.value.layer === 'graph') {
+    return [...entityFocusMatches.value, ...timelineFocusMatches.value, ...conflictFocusMatches.value]
+  }
+  if (graphFocus.value.evidenceId || graphFocus.value.layer === 'evidence') {
+    return [...conflictFocusMatches.value, ...timelineFocusMatches.value, ...entityFocusMatches.value]
+  }
+  return [...entityFocusMatches.value, ...timelineFocusMatches.value, ...conflictFocusMatches.value]
+})
+
+const focusTitle = computed(() => {
+  if (!graphFocus.value.hasFocus) return ''
+  if (focusMatches.value.length) return focusMatches.value[0].label || 'Focused graph evidence'
+  if (graphFocus.value.label) return graphFocus.value.label
+  if (graphFocus.value.entityId) return 'Focused entity'
+  if (graphFocus.value.factId) return 'Focused timeline fact'
+  if (graphFocus.value.evidenceId) return 'Focused evidence anchor'
+  return 'Focused graph route'
+})
+
+const focusSubtitle = computed(() => {
+  if (!graphFocus.value.hasFocus) return ''
+  if (focusMatches.value.length) {
+    return `${graphFocus.value.layer || 'route'} focus matched ${focusMatches.value.length} graph review item(s).`
+  }
+  return `${graphFocus.value.layer || 'route'} focus is waiting for a matching graph, timeline, or evidence record.`
+})
+
+const focusHighlightKeywords = computed(() =>
+  [
+    state.searchInput,
+    graphFocus.value.label,
+    graphFocus.value.entityId,
+    focusedEntities.value[0] ? entityTitle(focusedEntities.value[0]) : ''
+  ].filter((value) => normalizeId(value))
+)
 
 const reviewStatusText = computed(() => {
   if (temporalReview.loading) return 'Loading graph evidence'
@@ -592,6 +746,7 @@ const loadWorldlineGraphReview = async () => {
     temporalReview.relationships = relationships?.items || []
     temporalReview.conflictReport = conflicts || { items: [], conflict_count: 0, status: 'clean' }
     temporalReview.timeline = timeline?.items || []
+    await applyRouteFocusToCanvas()
   } catch (error) {
     console.error('Failed to load Worldline graph review:', error)
     temporalReview.entities = []
@@ -718,7 +873,7 @@ const loadSampleNodes = () => {
   graph.fetching = true
   state.graphError = ''
 
-  unifiedApi
+  return unifiedApi
     .getSubgraph({
       db_id: state.selectedDbId,
       node_label: '*',
@@ -739,6 +894,64 @@ const loadSampleNodes = () => {
     .finally(() => (graph.fetching = false))
 }
 
+const nodeFocusCandidates = (node = {}) => {
+  const properties = node.properties || node.data?.original?.properties || {}
+  return [
+    node.id,
+    node.entity_id,
+    node.node_id,
+    node.name,
+    node.label,
+    node.title,
+    properties.entity_id,
+    properties.node_id,
+    properties.name,
+    properties.label,
+    properties.title
+  ]
+    .map((value) => normalizeId(value))
+    .filter(Boolean)
+}
+
+const findCanvasFocusNodeId = () => {
+  if (!graphFocus.value.hasFocus) return ''
+
+  const nodes = graph.graphData.nodes || []
+  const targetValues = [
+    graphFocus.value.entityId,
+    graphFocus.value.label,
+    focusedEntities.value[0] ? entityStableId(focusedEntities.value[0]) : '',
+    focusedEntities.value[0] ? entityTitle(focusedEntities.value[0]) : ''
+  ]
+    .map((value) => normalizeId(value))
+    .filter(Boolean)
+
+  if (!targetValues.length) return ''
+
+  const matchedNode = nodes.find((node) => {
+    const candidates = nodeFocusCandidates(node)
+    return targetValues.some((target) => candidates.includes(target))
+  })
+
+  return matchedNode?.id ? normalizeId(matchedNode.id) : ''
+}
+
+const applyRouteFocusToCanvas = async () => {
+  if (!graphRef.value) return
+  await nextTick()
+
+  if (!graphFocus.value.hasFocus) {
+    if (graphRef.value.clearFocus) await graphRef.value.clearFocus()
+    return
+  }
+
+  const nodeId = findCanvasFocusNodeId()
+  if (graphRef.value.clearFocus) await graphRef.value.clearFocus()
+  if (nodeId && graphRef.value.focusNode) {
+    await graphRef.value.focusNode(nodeId)
+  }
+}
+
 const onSearch = () => {
   if (state.searchLoading) {
     message.error('请稍后再试')
@@ -752,7 +965,7 @@ const onSearch = () => {
   state.searchLoading = true
   state.graphError = ''
 
-  unifiedApi
+  return unifiedApi
     .getSubgraph({
       db_id: state.selectedDbId,
       node_label: state.searchInput || '*',
@@ -802,6 +1015,19 @@ watch(routeDbId, (dbId) => {
   state.selectedDbId = dbId
   handleDbChange()
 })
+
+watch(
+  () => [
+    graphFocus.value.entityId,
+    graphFocus.value.factId,
+    graphFocus.value.evidenceId,
+    graphFocus.value.label,
+    graphFocus.value.layer
+  ],
+  () => {
+    applyRouteFocusToCanvas()
+  }
+)
 
 onMounted(async () => {
   await loadDatabases()
@@ -1156,6 +1382,88 @@ const goToDatabasePage = () => {
   border-radius: var(--wl-radius-sm);
 }
 
+.review-focus-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.34);
+  border-radius: var(--wl-radius-sm);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(var(--wl-gold-rgb), 0.14), transparent 38%),
+    rgba(7, 15, 24, 0.74);
+  padding: 10px 12px;
+}
+
+.focus-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+
+  span {
+    color: var(--wl-gold);
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: var(--wl-text);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    color: var(--wl-muted-soft);
+    overflow-wrap: anywhere;
+  }
+}
+
+.focus-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  min-width: 0;
+
+  code {
+    max-width: 100%;
+    border: 1px solid rgba(var(--wl-gold-rgb), 0.24);
+    border-radius: 6px;
+    padding: 3px 6px;
+    background: rgba(2, 5, 10, 0.86);
+    color: var(--wl-gold-soft);
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+}
+
+.focus-match-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+
+  span {
+    max-width: 100%;
+    border: 1px solid rgba(var(--wl-cyan-rgb), 0.18);
+    border-radius: 6px;
+    padding: 3px 6px;
+    background: rgba(var(--wl-cyan-rgb), 0.07);
+    color: var(--wl-text-soft);
+    font-size: 11px;
+    font-weight: 800;
+    overflow-wrap: anywhere;
+  }
+
+  .conflict {
+    border-color: rgba(var(--wl-gold-rgb), 0.28);
+    background: rgba(var(--wl-gold-rgb), 0.08);
+    color: var(--wl-gold-soft);
+  }
+}
+
 .review-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -1238,6 +1546,13 @@ const goToDatabasePage = () => {
 
   &.warning strong {
     color: var(--wl-gold-soft);
+  }
+
+  &.focused {
+    border-top-color: rgba(var(--wl-gold-rgb), 0.42);
+    border-radius: 6px;
+    background: rgba(var(--wl-gold-rgb), 0.09);
+    padding: 10px;
   }
 }
 
@@ -1393,6 +1708,14 @@ const goToDatabasePage = () => {
 
   .review-actions {
     width: 100%;
+    justify-content: flex-start;
+  }
+
+  .review-focus-card {
+    flex-direction: column;
+  }
+
+  .focus-chips {
     justify-content: flex-start;
   }
 

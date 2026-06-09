@@ -84,6 +84,15 @@
               <li v-for="citation in selectedCitations" :key="citation.evidence_id || citation.id">
                 <Link2 :size="14" />
                 <span>{{ citation.evidence_id || citation.id || citation.source }}</span>
+                <a-button
+                  class="citation-graph-link"
+                  size="small"
+                  type="link"
+                  :disabled="!citationEvidenceId(citation)"
+                  @click="openGraphForCitation(citation)"
+                >
+                  Open graph
+                </a-button>
               </li>
             </ul>
             <p v-else>暂无引用。</p>
@@ -124,6 +133,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { AlertTriangle, BookOpen, Link2, RefreshCw, ShieldCheck } from 'lucide-vue-next'
 import { worldlineApi } from '@/apis/worldline_api'
@@ -148,6 +158,7 @@ const selectedPageId = ref('')
 const selectedPageDetail = ref(null)
 const detailDrawerOpen = ref(false)
 const loadedForDb = ref('')
+const router = useRouter()
 
 const selectedPage = computed(() => {
   const listed = pages.value.find((page) => page.page_id === selectedPageId.value) || pages.value[0] || null
@@ -228,6 +239,23 @@ const rebuildWiki = async () => {
   } finally {
     rebuilding.value = false
   }
+}
+
+const citationEvidenceId = (citation = {}) =>
+  String(citation.evidence_id || citation.evidenceId || citation.id || '').trim()
+
+const openGraphForCitation = (citation = {}) => {
+  const evidenceId = citationEvidenceId(citation)
+  router.push({
+    path: '/graph',
+    query: {
+      db_id: props.databaseId,
+      knowledge_db_id: props.databaseId,
+      evidence_id: evidenceId,
+      focus_layer: 'evidence',
+      focus_label: citation.source || citation.title || evidenceId || 'Wiki citation'
+    }
+  })
 }
 
 watch(
@@ -391,7 +419,17 @@ watch(
 
 .wiki-block li span {
   min-width: 0;
+  flex: 1;
   overflow-wrap: anywhere;
+}
+
+.citation-graph-link {
+  flex: 0 0 auto;
+  height: auto;
+  padding: 0 2px;
+  color: #93c5fd;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .wiki-block p {

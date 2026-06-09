@@ -36,6 +36,19 @@
       </button>
     </div>
 
+    <div v-if="timelineRefs.length" class="timeline-list">
+      <button
+        v-for="fact in timelineRefs.slice(0, 4)"
+        :key="fact.id || fact.fact_id || fact.title"
+        class="timeline-chip"
+        type="button"
+        @click="$emit('focus-timeline', fact)"
+      >
+        <span>{{ timelineTitle(fact) }}</span>
+        <small>{{ timelineBadge(fact) }}</small>
+      </button>
+    </div>
+
     <dl class="trace-grid">
       <div v-if="routeTrace?.db_id">
         <dt>db</dt>
@@ -83,9 +96,11 @@ const props = defineProps({
   }
 })
 
-defineEmits(['open-graph', 'focus-entity'])
+defineEmits(['open-graph', 'focus-entity', 'focus-timeline'])
 
 const qualityStatus = computed(() => props.quality?.status || props.quality?.latestGate?.status || 'pending')
+const timelineTitle = (item = {}) => item.title || item.subject || item.label || item.id || item.fact_id || 'Timeline fact'
+const timelineBadge = (item = {}) => item.validFrom || item.occurred_at || item.date || item.status || 'temporal'
 </script>
 
 <style scoped lang="less">
@@ -166,14 +181,16 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
   text-transform: uppercase;
 }
 
-.entity-list {
+.entity-list,
+.timeline-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 12px;
 }
 
-.entity-chip {
+.entity-chip,
+.timeline-chip {
   display: inline-flex;
   min-height: 34px;
   flex-direction: column;
@@ -188,19 +205,27 @@ const qualityStatus = computed(() => props.quality?.status || props.quality?.lat
   text-align: left;
 }
 
+.timeline-chip {
+  border-color: rgba(var(--wl-gold-rgb), 0.24);
+}
+
 .entity-chip span,
-.entity-chip small {
+.entity-chip small,
+.timeline-chip span,
+.timeline-chip small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.entity-chip span {
+.entity-chip span,
+.timeline-chip span {
   font-size: 12px;
   font-weight: 900;
 }
 
-.entity-chip small {
+.entity-chip small,
+.timeline-chip small {
   color: var(--wl-muted-soft);
   font-size: 11px;
 }
