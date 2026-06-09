@@ -137,6 +137,10 @@ import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { AlertTriangle, BookOpen, Link2, RefreshCw, ShieldCheck } from 'lucide-vue-next'
 import { worldlineApi } from '@/apis/worldline_api'
+import {
+  buildCitationGraphFocusQuery,
+  citationEvidenceId
+} from '@/utils/worldlineGraphFocus'
 
 const props = defineProps({
   databaseId: {
@@ -241,20 +245,14 @@ const rebuildWiki = async () => {
   }
 }
 
-const citationEvidenceId = (citation = {}) =>
-  String(citation.evidence_id || citation.evidenceId || citation.id || '').trim()
-
 const openGraphForCitation = (citation = {}) => {
-  const evidenceId = citationEvidenceId(citation)
   router.push({
     path: '/graph',
-    query: {
-      db_id: props.databaseId,
-      knowledge_db_id: props.databaseId,
-      evidence_id: evidenceId,
-      focus_layer: 'evidence',
-      focus_label: citation.source || citation.title || evidenceId || 'Wiki citation'
-    }
+    query: buildCitationGraphFocusQuery({
+      databaseId: props.databaseId,
+      citation,
+      pageTitle: selectedPage.value?.title || 'Wiki citation'
+    })
   })
 }
 

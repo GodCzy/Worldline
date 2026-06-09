@@ -213,8 +213,12 @@ async def test_live_graph_timeline_and_stale_detector(sqlite_pg_manager) -> None
     assert entities["items"][0]["metadata"]["validity_window"]["basis"] == "source_doc_versions"
 
     relationships = await KnowledgeGraphService().list_relationships("kb_live")
-    assert relationships["items"][0]["metadata"]["episodes"][0]["episode_type"] == "relationship_co_mention"
-    assert relationships["items"][0]["metadata"]["direction"] == "undirected_co_mention"
+    relationship = relationships["items"][0]
+    assert relationship["source_entity_id"]
+    assert relationship["target_entity_id"]
+    assert relationship["evidence_ids"]
+    assert relationship["metadata"]["episodes"][0]["episode_type"] == "relationship_co_mention"
+    assert relationship["metadata"]["direction"] == "undirected_co_mention"
 
     conflicts = await KnowledgeGraphService().detect_temporal_conflicts("kb_live")
     assert conflicts["status"] == "clean"
@@ -226,6 +230,8 @@ async def test_live_graph_timeline_and_stale_detector(sqlite_pg_manager) -> None
     assert projection["nodes"]
     assert projection["relationships"]
     assert projection["temporal_facts"]
+    assert projection["relationships"][0]["properties"]["evidence_ids"]
+    assert projection["temporal_facts"][0]["properties"]["evidence_ids"]
 
     stale = await KnowledgeGraphService().detect_stale_pages("kb_live")
     assert stale["stale_count"] == 0
@@ -442,6 +448,15 @@ async def test_workbench_overview_and_generate(sqlite_pg_manager) -> None:
     assert result["branches"][0]["wikiRefs"]
     assert result["branches"][0]["entityRefs"]
     assert result["branches"][0]["timelineRefs"]
+    graph_branch = next(branch for branch in result["branches"] if branch["entityRefs"] or branch["timelineRefs"])
+    graph_action = next(action for action in graph_branch["nextActions"] if action["targetType"] == "graph")
+    assert graph_action["id"].endswith("-graph")
+    assert graph_branch["context"]["db_id"] == "kb_live"
+    assert graph_branch["context"]["knowledge_db_id"] == "kb_live"
+    assert graph_branch["entityRefs"][0]["id"]
+    assert graph_branch["entityRefs"][0]["evidenceId"]
+    assert graph_branch["timelineRefs"][0]["id"]
+    assert graph_branch["timelineRefs"][0]["evidenceId"]
     assert result["branches"][0]["quality"]["citationCoverage"] > 0
     assert result["snapshots"]
     assert result["quality"]["branchCount"] == len(result["branches"])

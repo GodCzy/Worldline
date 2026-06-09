@@ -147,6 +147,7 @@ import WorldlineBranchDetailPanel from '@/components/worldline/WorldlineBranchDe
 import WorldlineTimelineScrubber from '@/components/worldline/WorldlineTimelineScrubber.vue'
 import WorldlineGraphFocusPanel from '@/components/worldline/WorldlineGraphFocusPanel.vue'
 import WorldlineLiveOpsPanel from '@/components/worldline/WorldlineLiveOpsPanel.vue'
+import { buildGraphFocusQuery, refLabel, stableRefId } from '@/utils/worldlineGraphFocus'
 
 const route = useRoute()
 const router = useRouter()
@@ -514,87 +515,21 @@ const goToThemeChat = async () => {
   await router.push(target)
 }
 
-const stableRefId = (item = {}, keys = ['id', 'entity_id', 'fact_id', 'evidenceId', 'evidence_id', 'name', 'label']) => {
-  const value = keys.map((key) => item?.[key]).find((candidate) => candidate)
-  return String(value || '').trim()
-}
-
-const refLabel = (item = {}) => item.title || item.name || item.label || item.slug || item.id || item.fact_id || ''
-
-const defaultGraphFocus = () => {
-  const entity = worldlineStore.entityRefs[0]
-  if (entity) {
-    return {
-      layer: 'graph',
-      entityId: stableRefId(entity, ['id', 'entity_id', 'name']),
-      evidenceId: stableRefId(entity, ['evidenceId', 'evidence_id']),
-      label: refLabel(entity)
-    }
-  }
-
-  const fact = worldlineStore.timelineRefs[0]
-  if (fact) {
-    return {
-      layer: 'timeline',
-      factId: stableRefId(fact, ['fact_id', 'id']),
-      evidenceId: stableRefId(fact, ['evidenceId', 'evidence_id']),
-      label: refLabel(fact)
-    }
-  }
-
-  return {}
-}
-
-const normalizeGraphFocus = (focus = {}) => {
-  const source = focus?.item || focus?.entity || focus?.fact || focus || {}
-  const normalized = {
-    layer: focus.layer || focus.focus_layer || '',
-    entityId: focus.entityId || focus.entity_id || '',
-    factId: focus.factId || focus.fact_id || '',
-    evidenceId: focus.evidenceId || focus.evidence_id || '',
-    label: focus.label || focus.focus_label || refLabel(source)
-  }
-
-  if (!normalized.entityId && (focus.targetType === 'graph' || normalized.layer === 'graph')) {
-    normalized.entityId = focus.targetId || stableRefId(source, ['id', 'entity_id', 'name'])
-    normalized.layer = 'graph'
-  }
-
-  if (!normalized.factId && normalized.layer === 'timeline') {
-    normalized.factId = focus.targetId || stableRefId(source, ['fact_id', 'id'])
-  }
-
-  if (!normalized.evidenceId) {
-    normalized.evidenceId = stableRefId(source, ['evidenceId', 'evidence_id'])
-  }
-
-  if (!normalized.entityId && !normalized.factId && !normalized.evidenceId && !normalized.layer) {
-    return defaultGraphFocus()
-  }
-
-  return normalized
-}
-
 const openGraphFocus = async (focus = {}) => {
   const branch = worldlineStore.activeBranch
   if (branch?.context) {
     syncThemeContextFromBranch(branch)
   }
 
-  const normalizedFocus = normalizeGraphFocus(focus)
-  const query = {
-    ...themeContextStore.toRouteQuery(branch?.context || themeContextStore.activeContext || {})
-  }
-  const dbId = currentKnowledgeDbId.value || query.knowledge_db_id || query.db_id
-  if (dbId) {
-    query.db_id = dbId
-    query.knowledge_db_id = dbId
-  }
-  if (normalizedFocus.layer) query.focus_layer = normalizedFocus.layer
-  if (normalizedFocus.entityId) query.entity_id = normalizedFocus.entityId
-  if (normalizedFocus.factId) query.fact_id = normalizedFocus.factId
-  if (normalizedFocus.evidenceId) query.evidence_id = normalizedFocus.evidenceId
-  if (normalizedFocus.label) query.focus_label = normalizedFocus.label
+  const query = buildGraphFocusQuery({
+    baseQuery: themeContextStore.toRouteQuery(branch?.context || themeContextStore.activeContext || {}),
+    dbId: currentKnowledgeDbId.value,
+    focus,
+    fallback: {
+      entityRefs: worldlineStore.entityRefs,
+      timelineRefs: worldlineStore.timelineRefs
+    }
+  })
 
   await router.push({
     path: '/graph',

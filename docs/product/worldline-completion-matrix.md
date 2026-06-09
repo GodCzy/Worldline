@@ -25,7 +25,8 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Upload/parse/query params | Done | `.ai/tasks/2026-06-08-upload-parse-query-params-linkage` |
 | Graph backend first pass | Verified Baseline | `.ai/tasks/2026-06-08-graph-backend-data-chain` |
 | Graph conflict review surface | Done | `.ai/tasks/2026-06-08-p3-2-graph-conflict-surface/EVIDENCE.md`, desktop and `390x844` screenshots |
-| Graph/timeline focus links | Verified Baseline | `.ai/tasks/2026-06-09-p3-2-graph-focus-links/EVIDENCE.md`, Browser DOM QA at desktop and `390x844`; screenshot capture limitation recorded |
+| Graph/timeline focus links | Done | `.ai/tasks/2026-06-09-p3-2-graph-focus-links/EVIDENCE.md`, `.ai/tasks/2026-06-09-p3-2-focused-regression-hardening/EVIDENCE.md` |
+| P3-2 focused graph regression | Done | Shared graph focus utility tests, focused backend pytest, `/graph` and `/worldline/:themeId` desktop plus `390x844` screenshots |
 | Codex plugin inventory and workflow | Done | `.ai/tasks/2026-06-08-codex-plugin-completion-workflow/`, `docs/architecture/codex-plugin-inventory.md` |
 | Worktree cleanup and commits | Done | `D:\document\OutputMD\2026-06-08-Worldline-Project-Operating-Plan-Worktree-Cleanup.md` |
 
@@ -34,7 +35,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Slice | Current Status | Still Needed | Recommended Plugins / Tools |
 |---|---|---|---|
 | P3-1 Evidence-backed LLM Wiki | Done | Keep expanding stale/review workflow in later slices; current reading surface is implemented and QA evidence exists. | Browser, OpenAI Developers as needed |
-| P3-2 Temporal Knowledge Graph | Partial | Backend conflict review, compact `/graph` conflict surface, and graph/timeline/evidence focus links are done; still needs broader regression coverage across projection, canvas focus, and `/worldline/:themeId` screenshots. | Build Web Data Visualization, Browser |
+| P3-2 Temporal Knowledge Graph | Done | Current acceptance is covered: backend conflict review, compact `/graph` conflict surface, graph/timeline/evidence focus links, relationship focus regression, read-only projection checks, and `/graph` plus `/worldline/:themeId` screenshots. Future canvas parity can expand if `/api/graph/subgraph` starts returning the same node ids as the Worldline review payload. | Build Web Data Visualization, Browser |
 | P3-3 Worldline Branch Canvas | Partial | RouteTrace, quality status, insufficient-evidence hints, and mobile interaction regression. | Browser, Product Design, Data Visualization |
 | P3-4 Agent Run Ledger And Replay | Verified Baseline | Continue productizing replay, pagination, artifact registry, and cross-run knowledge reads. | GitHub, Browser |
 | P3-5 MCP And Skill Governance | Partial | Tool manifest governance report, disabled-tool release gate, connector rollback evidence. | GitHub, OpenAI Developers |
@@ -65,11 +66,11 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P3-2 focused regression hardening: entities, relationships, conflicts, Neo4j projection, timeline, canvas focus behavior, and `/worldline/:themeId` screenshot coverage.
-2. P3-6 Quality Gate Replay: create one explainable failure and trace from UI back to the evidence chain.
-3. P3-5 Governance report: turn the plugin/MCP matrix into a release gate and rollback checklist.
-4. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
-5. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
+1. P3-6 Quality Gate Replay: create one explainable failure and trace from UI back to the evidence chain.
+2. P3-5 Governance report: turn the plugin/MCP matrix into a release gate and rollback checklist.
+3. P4 operational hardening: retry, queue health, cleanup, and budget surfaces.
+4. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
+5. P3-3 Branch Canvas hardening: routeTrace, insufficient-evidence hints, and mobile interaction regression.
 
 ## Workflow Rule
 

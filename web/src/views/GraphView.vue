@@ -395,6 +395,17 @@ import {
   getWorldlineGraphDefaultKeyword,
   getWorldlineGraphLoopById
 } from '@/data/worldline'
+import {
+  buildGraphFocusMatches,
+  findCanvasFocusNodeId as resolveCanvasFocusNodeId,
+  focusHighlightKeywords as buildFocusHighlightKeywords,
+  getFocusDisplay,
+  isConflictFocused as isGraphConflictFocused,
+  isEntityFocused as isGraphEntityFocused,
+  isTimelineFocused as isGraphTimelineFocused,
+  parseGraphFocusQuery,
+  queryValue
+} from '@/utils/worldlineGraphFocus'
 
 const configStore = useConfigStore()
 const cur_embed_model = computed(() => configStore.config?.embed_model)
@@ -412,10 +423,6 @@ const fileList = ref([])
 const sampleNodeCount = ref(100)
 const themeContextStore = useThemeContextStore()
 const activeThemeId = computed(() => themeContextStore.activeContext?.theme || '')
-const queryValue = (value) => {
-  const rawValue = Array.isArray(value) ? value[0] : value
-  return typeof rawValue === 'string' ? rawValue.trim() : ''
-}
 const routeDbId = computed(() => {
   return queryValue(route.query.db_id || route.query.knowledge_db_id)
 })
@@ -459,126 +466,36 @@ const showWorldlineGraphReview = computed(() => Boolean(state.selectedDbId && !i
 
 const conflictItems = computed(() => temporalReview.conflictReport?.items || [])
 
-const graphFocus = computed(() => {
-  const entityId = queryValue(route.query.entity_id || route.query.entity)
-  const factId = queryValue(route.query.fact_id || route.query.timeline_id)
-  const evidenceId = queryValue(route.query.evidence_id || route.query.evidence)
-  const requestedLayer = queryValue(route.query.focus_layer)
-  const label = queryValue(route.query.focus_label || route.query.label)
-  const inferredLayer = entityId ? 'graph' : factId ? 'timeline' : evidenceId ? 'evidence' : requestedLayer
-  return {
-    entityId,
-    factId,
-    evidenceId,
-    layer: requestedLayer || inferredLayer || '',
-    label,
-    hasFocus: Boolean(entityId || factId || evidenceId || requestedLayer || label)
-  }
-})
+const graphFocus = computed(() => parseGraphFocusQuery(route.query))
 
-const getId = (item = {}, keys = []) =>
-  keys.map((key) => item?.[key]).find((value) => value !== undefined && value !== null && value !== '')
+const isEntityFocused = (entity = {}) => isGraphEntityFocused(entity, graphFocus.value)
+const isTimelineFocused = (fact = {}) => isGraphTimelineFocused(fact, graphFocus.value)
+const isConflictFocused = (conflict = {}) => isGraphConflictFocused(conflict, graphFocus.value)
 
-const normalizeId = (value) => String(value || '').trim()
-
-const getEvidenceIds = (item = {}) => {
-  const direct = item.evidence_ids || item.evidenceIds || item.evidence_id || item.evidenceId || []
-  const values = Array.isArray(direct) ? direct : [direct]
-  return values.map((value) => normalizeId(value)).filter(Boolean)
-}
-
-const hasEvidenceFocus = (item = {}) =>
-  Boolean(graphFocus.value.evidenceId && getEvidenceIds(item).includes(graphFocus.value.evidenceId))
-
-const entityStableId = (entity = {}) =>
-  normalizeId(getId(entity, ['entity_id', 'id', 'node_id', 'name', 'label', 'title']))
-
-const entityTitle = (entity = {}) =>
-  normalizeId(entity.name || entity.label || entity.title || entity.entity_name || entityStableId(entity))
-
-const timelineStableId = (fact = {}) => normalizeId(getId(fact, ['fact_id', 'id', 'timeline_id']))
-
-const isEntityFocused = (entity = {}) => {
-  const entityId = entityStableId(entity)
-  return Boolean(
-    (graphFocus.value.entityId && entityId === graphFocus.value.entityId) || hasEvidenceFocus(entity)
-  )
-}
-
-const isTimelineFocused = (fact = {}) =>
-  Boolean(
-    (graphFocus.value.factId && timelineStableId(fact) === graphFocus.value.factId) || hasEvidenceFocus(fact)
-  )
-
-const isConflictFocused = (conflict = {}) => {
-  const factIds = (conflict.fact_ids || []).map((value) => normalizeId(value))
-  return Boolean(
-    (graphFocus.value.factId && factIds.includes(graphFocus.value.factId)) || hasEvidenceFocus(conflict)
-  )
-}
-
-const focusedEntities = computed(() => temporalReview.entities.filter((entity) => isEntityFocused(entity)))
-const focusedTimeline = computed(() => temporalReview.timeline.filter((fact) => isTimelineFocused(fact)))
-const focusedConflicts = computed(() => conflictItems.value.filter((conflict) => isConflictFocused(conflict)))
-
-const entityFocusMatches = computed(() =>
-  focusedEntities.value.map((item) => ({ kind: 'entity', label: entityTitle(item), id: entityStableId(item) }))
+const focusedEntities = computed(() =>
+  temporalReview.entities.filter((entity) => isEntityFocused(entity))
 )
 
-const timelineFocusMatches = computed(() =>
-  focusedTimeline.value.map((item) => ({
-    kind: 'timeline',
-    label: item.subject || item.object || timelineStableId(item),
-    id: timelineStableId(item)
-  }))
+const focusMatches = computed(() =>
+  buildGraphFocusMatches({
+    focus: graphFocus.value,
+    entities: temporalReview.entities,
+    relationships: temporalReview.relationships,
+    timeline: temporalReview.timeline,
+    conflicts: conflictItems.value
+  })
 )
 
-const conflictFocusMatches = computed(() =>
-  focusedConflicts.value.map((item) => ({
-    kind: 'conflict',
-    label: `${item.subject || 'unknown'} / ${item.predicate || 'state'}`,
-    id: item.conflict_key || item.fact_ids?.[0] || ''
-  }))
-)
-
-const focusMatches = computed(() => {
-  if (graphFocus.value.factId || graphFocus.value.layer === 'timeline') {
-    return [...timelineFocusMatches.value, ...conflictFocusMatches.value, ...entityFocusMatches.value]
-  }
-  if (graphFocus.value.entityId || graphFocus.value.layer === 'graph') {
-    return [...entityFocusMatches.value, ...timelineFocusMatches.value, ...conflictFocusMatches.value]
-  }
-  if (graphFocus.value.evidenceId || graphFocus.value.layer === 'evidence') {
-    return [...conflictFocusMatches.value, ...timelineFocusMatches.value, ...entityFocusMatches.value]
-  }
-  return [...entityFocusMatches.value, ...timelineFocusMatches.value, ...conflictFocusMatches.value]
-})
-
-const focusTitle = computed(() => {
-  if (!graphFocus.value.hasFocus) return ''
-  if (focusMatches.value.length) return focusMatches.value[0].label || 'Focused graph evidence'
-  if (graphFocus.value.label) return graphFocus.value.label
-  if (graphFocus.value.entityId) return 'Focused entity'
-  if (graphFocus.value.factId) return 'Focused timeline fact'
-  if (graphFocus.value.evidenceId) return 'Focused evidence anchor'
-  return 'Focused graph route'
-})
-
-const focusSubtitle = computed(() => {
-  if (!graphFocus.value.hasFocus) return ''
-  if (focusMatches.value.length) {
-    return `${graphFocus.value.layer || 'route'} focus matched ${focusMatches.value.length} graph review item(s).`
-  }
-  return `${graphFocus.value.layer || 'route'} focus is waiting for a matching graph, timeline, or evidence record.`
-})
+const focusDisplay = computed(() => getFocusDisplay(graphFocus.value, focusMatches.value))
+const focusTitle = computed(() => focusDisplay.value.title)
+const focusSubtitle = computed(() => focusDisplay.value.subtitle)
 
 const focusHighlightKeywords = computed(() =>
-  [
-    state.searchInput,
-    graphFocus.value.label,
-    graphFocus.value.entityId,
-    focusedEntities.value[0] ? entityTitle(focusedEntities.value[0]) : ''
-  ].filter((value) => normalizeId(value))
+  buildFocusHighlightKeywords({
+    searchInput: state.searchInput,
+    focus: graphFocus.value,
+    focusedEntities: focusedEntities.value
+  })
 )
 
 const reviewStatusText = computed(() => {
@@ -894,46 +811,12 @@ const loadSampleNodes = () => {
     .finally(() => (graph.fetching = false))
 }
 
-const nodeFocusCandidates = (node = {}) => {
-  const properties = node.properties || node.data?.original?.properties || {}
-  return [
-    node.id,
-    node.entity_id,
-    node.node_id,
-    node.name,
-    node.label,
-    node.title,
-    properties.entity_id,
-    properties.node_id,
-    properties.name,
-    properties.label,
-    properties.title
-  ]
-    .map((value) => normalizeId(value))
-    .filter(Boolean)
-}
-
 const findCanvasFocusNodeId = () => {
-  if (!graphFocus.value.hasFocus) return ''
-
-  const nodes = graph.graphData.nodes || []
-  const targetValues = [
-    graphFocus.value.entityId,
-    graphFocus.value.label,
-    focusedEntities.value[0] ? entityStableId(focusedEntities.value[0]) : '',
-    focusedEntities.value[0] ? entityTitle(focusedEntities.value[0]) : ''
-  ]
-    .map((value) => normalizeId(value))
-    .filter(Boolean)
-
-  if (!targetValues.length) return ''
-
-  const matchedNode = nodes.find((node) => {
-    const candidates = nodeFocusCandidates(node)
-    return targetValues.some((target) => candidates.includes(target))
+  return resolveCanvasFocusNodeId({
+    nodes: graph.graphData.nodes || [],
+    focus: graphFocus.value,
+    focusedEntities: focusedEntities.value
   })
-
-  return matchedNode?.id ? normalizeId(matchedNode.id) : ''
 }
 
 const applyRouteFocusToCanvas = async () => {
@@ -1461,6 +1344,17 @@ const goToDatabasePage = () => {
     border-color: rgba(var(--wl-gold-rgb), 0.28);
     background: rgba(var(--wl-gold-rgb), 0.08);
     color: var(--wl-gold-soft);
+  }
+
+  .relationship {
+    border-color: rgba(142, 154, 255, 0.26);
+    background: rgba(142, 154, 255, 0.08);
+    color: #d7dcff;
+  }
+
+  .timeline {
+    border-color: rgba(var(--wl-cyan-rgb), 0.24);
+    background: rgba(var(--wl-cyan-rgb), 0.1);
   }
 }
 

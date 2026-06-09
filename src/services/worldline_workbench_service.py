@@ -566,7 +566,7 @@ class WorldlineWorkbenchService:
                     "name": item.get("name") or item.get("label") or item.get("entity_id"),
                     "type": item.get("entity_type") or item.get("type") or "entity",
                     "confidence": item.get("confidence"),
-                    "evidenceId": item.get("evidence_id") or item.get("evidenceId"),
+                    "evidenceId": self._first_evidence_id(item),
                 }
             )
         return refs
@@ -582,10 +582,19 @@ class WorldlineWorkbenchService:
                     "validFrom": item.get("valid_from") or item.get("validFrom") or metadata.get("valid_from"),
                     "validTo": item.get("valid_to") or item.get("validTo") or metadata.get("valid_to"),
                     "status": item.get("status") or metadata.get("status") or "observed",
-                    "evidenceId": item.get("evidence_id") or item.get("evidenceId"),
+                    "evidenceId": self._first_evidence_id(item),
                 }
             )
         return refs
+
+    def _first_evidence_id(self, item: dict[str, Any]) -> str | None:
+        direct = item.get("evidence_id") or item.get("evidenceId")
+        if direct:
+            return direct
+        evidence_ids = item.get("evidence_ids") or item.get("evidenceIds") or []
+        if isinstance(evidence_ids, list) and evidence_ids:
+            return evidence_ids[0]
+        return None
 
     def _branch_quality(
         self,
