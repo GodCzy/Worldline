@@ -33,6 +33,41 @@
         </div>
       </div>
 
+      <div v-if="hasGateReplay" class="gate-replay-panel" data-quality-gate-replay="true">
+        <div class="gate-replay-head">
+          <div>
+            <strong>Quality Gate Replay</strong>
+            <small>{{ latestGate.gate_id || latestGate.gateId || 'latest failed gate' }}</small>
+          </div>
+          <span class="gate-status">{{ latestGate.status || 'failed' }}</span>
+        </div>
+
+        <article
+          v-for="failure in replayFailures"
+          :key="failure.check"
+          class="gate-failure"
+          :data-gate-failure="failure.check"
+        >
+          <div class="gate-failure-head">
+            <strong>{{ failure.check }}</strong>
+            <span>{{ failure.severity || 'review' }}</span>
+          </div>
+          <p>{{ failure.reason || failureSummary(failure) }}</p>
+          <div class="gate-targets" aria-label="Quality gate replay targets">
+            <button
+              v-for="target in normalizedTargets(failure)"
+              :key="target.id"
+              class="gate-target"
+              type="button"
+              :data-gate-target="target.kind"
+              @click.stop="emitReplayTarget(target, failure)"
+            >
+              {{ targetKindLabel(target.kind) }}
+            </button>
+          </div>
+        </article>
+      </div>
+
       <div class="section-block">
         <strong>为什么生成这条线</strong>
         <p>{{ branch.choiceReason || branch.summary }}</p>
@@ -91,10 +126,14 @@ const props = defineProps({
   branch: {
     type: Object,
     default: null
+  },
+  quality: {
+    type: Object,
+    default: () => ({})
   }
 })
 
-const emit = defineEmits(['handoff', 'open-graph'])
+const emit = defineEmits(['handoff', 'open-graph', 'focus-replay-ref'])
 
 const evidenceCount = computed(() => props.branch?.evidenceRefs?.length || 0)
 const supportChannels = computed(() => {
@@ -110,6 +149,66 @@ const coverageLabel = computed(() => {
   const coverage = Number(props.branch?.quality?.citationCoverage ?? 0)
   return `${Math.round(coverage * 100)}%`
 })
+const latestGate = computed(() => props.quality?.latestGate || props.quality?.latest_gate || {})
+const replayFailures = computed(() => {
+  const replay = latestGate.value?.failure_replay || latestGate.value?.failureReplay || []
+  return Array.isArray(replay) ? replay.slice(0, 3) : []
+})
+const hasGateReplay = computed(() => replayFailures.value.length > 0)
+
+const targetKindLabels = {
+  evidence: 'Evidence',
+  wiki: 'Wiki',
+  graph: 'Graph',
+  timeline: 'Time',
+  run: 'Run'
+}
+
+const targetKindLabel = (kind = '') => targetKindLabels[kind] || kind || 'Open'
+const targetStableId = (target = {}, index = 0) =>
+  [
+    target.kind,
+    target.target_id,
+    target.targetId,
+    target.id,
+    target.evidence_id,
+    target.entity_id,
+    target.fact_id,
+    target.page_id,
+    target.gate_id,
+    index
+  ]
+    .filter(Boolean)
+    .join(':')
+
+const normalizedTargets = (failure = {}) => {
+  const directTargets = Array.isArray(failure.jump_targets) ? failure.jump_targets : []
+  if (directTargets.length) {
+    return directTargets.slice(0, 8).map((target, index) => ({
+      ...target,
+      id: targetStableId(target, index)
+    }))
+  }
+
+  const refs = failure.refs || {}
+  return Object.entries(refs)
+    .flatMap(([kind, items]) =>
+      (Array.isArray(items) ? items : []).slice(0, 2).map((item, index) => ({
+        kind,
+        label: item.label || item.title || item.name || item.id || kind,
+        target_id: item.id || item.page_id || item.entity_id || item.fact_id || item.gate_id,
+        evidence_id: item.evidence_id,
+        entity_id: item.entity_id,
+        fact_id: item.fact_id,
+        page_id: item.page_id,
+        gate_id: item.gate_id,
+        id: `${kind}:${item.id || item.page_id || item.entity_id || item.fact_id || item.gate_id || index}`
+      }))
+    )
+    .slice(0, 8)
+}
+
+const failureSummary = (failure = {}) => `${failure.observed ?? 'unknown'} / ${failure.expected || 'expected'}`
 
 const emitAction = (action) => {
   if (action.targetType === 'graph') {
@@ -117,6 +216,14 @@ const emitAction = (action) => {
     return
   }
   emit('handoff', action)
+}
+
+const emitReplayTarget = (target = {}, failure = {}) => {
+  emit('focus-replay-ref', {
+    ...target,
+    failure,
+    gate: latestGate.value
+  })
 }
 </script>
 
@@ -217,6 +324,89 @@ const emitAction = (action) => {
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.gate-replay-panel {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid rgba(255, 108, 108, 0.34);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(255, 108, 108, 0.06);
+}
+
+.gate-replay-head,
+.gate-failure-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.gate-replay-head strong,
+.gate-failure-head strong {
+  display: block;
+  color: var(--wl-text);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.gate-replay-head small,
+.gate-failure p {
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.gate-status,
+.gate-failure-head span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 108, 108, 0.34);
+  border-radius: 999px;
+  color: #ffdede;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.gate-failure {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gate-failure p {
+  margin: 7px 0 0;
+}
+
+.gate-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+}
+
+.gate-target {
+  min-height: 26px;
+  padding: 0 8px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.22);
+  border-radius: 999px;
+  background: rgba(var(--wl-cyan-rgb), 0.07);
+  color: var(--wl-text-soft);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.gate-target:hover,
+.gate-target:focus-visible {
+  border-color: rgba(var(--wl-gold-rgb), 0.52);
+  background: rgba(var(--wl-gold-rgb), 0.12);
+  color: #fff7de;
+  outline: none;
 }
 
 .section-block {

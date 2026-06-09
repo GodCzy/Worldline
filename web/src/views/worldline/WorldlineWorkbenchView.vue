@@ -88,14 +88,18 @@
           <aside class="inspect-column">
             <WorldlineBranchDetailPanel
               :branch="worldlineStore.activeBranch"
+              :quality="worldlineStore.quality"
               @handoff="goToThemeChat"
               @open-graph="openGraphFocus"
+              @focus-replay-ref="focusReplayRef"
             />
             <WorldlineEvidenceRail
               :evidence-refs="worldlineStore.evidenceRefs"
               :wiki-refs="worldlineStore.wikiRefs"
               :entity-refs="worldlineStore.entityRefs"
               :timeline-refs="worldlineStore.timelineRefs"
+              :active-layer="replayFocusLayer"
+              :active-item-id="replayFocusItemId"
               @focus-item="openGraphFocusFromRail"
             />
             <WorldlineGraphFocusPanel
@@ -164,6 +168,8 @@ const liveStatus = ref({ state: 'idle', message: '' })
 const liveOverview = ref(null)
 const liveActionKey = ref('')
 const liveOpsMessage = ref('')
+const replayFocusLayer = ref('')
+const replayFocusItemId = ref('')
 
 const currentThemeId = computed(() => String(route.params.themeId || '').trim().toLowerCase())
 const hasThemeId = computed(() => Boolean(currentThemeId.value))
@@ -430,6 +436,21 @@ const handleLiveOpsAction = async (actionKey) => {
       await refreshLiveOverview({ silent: true })
       liveOpsMessage.value = `Quality Gate：${result.status || 'finished'}。`
       await generateBaseWorldline()
+      return
+    }
+
+    if (actionKey === 'runStrictQualityGate') {
+      const result = await worldlineApi.runQualityGate(currentKnowledgeDbId.value, {
+        thresholds: {
+          evidence_accuracy_min: 1.01,
+          faithfulness_min: 1.01,
+          context_recall_min: 1.01,
+          context_precision_min: 1.01
+        }
+      })
+      await refreshLiveOverview({ silent: true })
+      liveOpsMessage.value = `Quality Gate replay: ${result.status || 'finished'} / ${result.failure_replay?.length || 0} failure(s).`
+      await generateBaseWorldline()
     }
   } catch (error) {
     liveOpsMessage.value = error?.message || 'Live Ops 执行失败。'
@@ -558,6 +579,9 @@ const openGraphFocusFromTimeline = async (fact = {}) => {
 }
 
 const openGraphFocusFromRail = async ({ layer = '', itemId = '', item = {} } = {}) => {
+  replayFocusLayer.value = layer
+  replayFocusItemId.value = itemId
+
   if (layer === 'graph') {
     await openGraphFocusFromEntity({ ...item, id: itemId || item.id })
     return
@@ -572,6 +596,57 @@ const openGraphFocusFromRail = async ({ layer = '', itemId = '', item = {} } = {
       evidenceId: itemId || stableRefId(item, ['evidenceId', 'evidence_id', 'id']),
       label: refLabel(item),
       item
+    })
+  }
+}
+
+const replayTargetLabel = (target = {}) =>
+  target.label || target.focus_label || target.page_id || target.entity_id || target.fact_id || target.evidence_id || target.gate_id || 'Quality gate replay'
+
+const replayTargetId = (target = {}, kind = '') => {
+  if (kind === 'run') return String(target.gate_id || target.target_id || target.targetId || target.id || '')
+  if (kind === 'timeline') return String(target.fact_id || target.target_id || target.targetId || target.id || '')
+  if (kind === 'graph') return String(target.entity_id || target.target_id || target.targetId || target.id || '')
+  if (kind === 'wiki') return String(target.page_id || target.target_id || target.targetId || target.id || '')
+  return String(target.evidence_id || target.target_id || target.targetId || target.id || '')
+}
+
+const focusReplayRef = async (target = {}) => {
+  const kind = String(target.kind || target.layer || '').trim()
+  const label = replayTargetLabel(target)
+
+  if (kind === 'run') {
+    const gateId = replayTargetId(target, kind)
+    replayFocusLayer.value = ''
+    replayFocusItemId.value = ''
+    liveOpsMessage.value = `Quality Gate replay run: ${gateId || target.gate?.gate_id || 'latest'}.`
+    return
+  }
+
+  const layer = kind === 'graph' || kind === 'timeline' || kind === 'wiki' ? kind : 'evidence'
+  const itemId = replayTargetId(target, layer)
+  replayFocusLayer.value = layer
+  replayFocusItemId.value = itemId
+  liveOpsMessage.value = `Replay focus: ${label}.`
+
+  if (layer === 'graph') {
+    await openGraphFocus({
+      layer: 'graph',
+      entityId: target.entity_id || itemId,
+      evidenceId: target.evidence_id || '',
+      label,
+      item: target
+    })
+    return
+  }
+
+  if (layer === 'timeline') {
+    await openGraphFocus({
+      layer: 'timeline',
+      factId: target.fact_id || itemId,
+      evidenceId: target.evidence_id || '',
+      label,
+      item: target
     })
   }
 }

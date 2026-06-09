@@ -6,6 +6,7 @@ from typing import Any
 from sqlalchemy import func, select
 
 from src.repositories.knowledge_graph_repository import KnowledgeGraphRepository
+from src.repositories.knowledge_object_repository import KnowledgeObjectRepository
 from src.services.knowledge_graph_service import KnowledgeGraphService
 from src.services.worldline_agent_workflow_service import WorldlineAgentWorkflowService
 from src.storage.postgres.manager import pg_manager
@@ -37,10 +38,12 @@ class WorldlineQualityGateService:
     def __init__(
         self,
         repository: KnowledgeGraphRepository | None = None,
+        object_repository: KnowledgeObjectRepository | None = None,
         graph_service: KnowledgeGraphService | None = None,
         workflow_service: WorldlineAgentWorkflowService | None = None,
     ) -> None:
         self.repository = repository or KnowledgeGraphRepository()
+        self.object_repository = object_repository or KnowledgeObjectRepository()
         self.graph_service = graph_service or KnowledgeGraphService(repository=self.repository)
         self.workflow_service = workflow_service or WorldlineAgentWorkflowService(repository=self.repository)
 
@@ -153,6 +156,16 @@ class WorldlineQualityGateService:
         latency_ms = round((time.perf_counter() - started) * 1000, 3)
         status = "passed" if not failures else "failed"
         gate_id = self._gate_id(db_id, metrics)
+        replay_refs = (
+            await self._build_replay_refs(
+                db_id,
+                gate_id=gate_id,
+                status=status,
+                metrics=metrics,
+            )
+            if failures
+            else {}
+        )
 
         payload = {
             "gate_id": gate_id,
@@ -161,7 +174,12 @@ class WorldlineQualityGateService:
             "thresholds": effective_thresholds,
             "metrics": metrics,
             "coverage_map": coverage_map,
-            "failure_replay": self._failure_replay(db_id, failures),
+            "failure_replay": self._failure_replay(
+                db_id,
+                failures,
+                replay_refs=replay_refs,
+                replay_thresholds=effective_thresholds,
+            ),
             "tracing": {
                 "trace_id": f"trace_{hashstr(gate_id, length=16)}",
                 "phase": "worldline_quality_gate_v1",
@@ -386,18 +404,162 @@ class WorldlineQualityGateService:
             )
         return failures
 
-    def _failure_replay(self, db_id: str, failures: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    async def _build_replay_refs(
+        self,
+        db_id: str,
+        *,
+        gate_id: str,
+        status: str,
+        metrics: dict[str, Any],
+    ) -> dict[str, list[dict[str, Any]]]:
+        evidence = (await self.object_repository.list_evidence_anchors(db_id, limit=3))["items"]
+        wiki_pages = await self.repository.list_wiki_pages(db_id)
+        entities = (await self.repository.list_entities(db_id, limit=3))["items"]
+        timeline = (await self.repository.list_timeline(db_id, limit=3))["items"]
+
+        return {
+            "evidence": [self._evidence_replay_ref(item) for item in evidence if item.get("evidence_id")],
+            "wiki": [self._wiki_replay_ref(page) for page in wiki_pages[:3] if page.page_id],
+            "graph": [self._graph_replay_ref(item) for item in entities if item.get("entity_id")],
+            "timeline": [self._timeline_replay_ref(item) for item in timeline if item.get("fact_id")],
+            "run": [
+                {
+                    "id": gate_id,
+                    "gate_id": gate_id,
+                    "db_id": db_id,
+                    "kind": "quality_gate_run",
+                    "label": f"Quality Gate {status}",
+                    "status": status,
+                    "metrics": {
+                        "evidence_accuracy": metrics.get("evidence_accuracy"),
+                        "faithfulness": metrics.get("faithfulness"),
+                        "context_recall": metrics.get("context_recall"),
+                        "context_precision": metrics.get("context_precision"),
+                    },
+                }
+            ],
+        }
+
+    def _evidence_replay_ref(self, item: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "id": item.get("evidence_id"),
+            "evidence_id": item.get("evidence_id"),
+            "kind": "evidence",
+            "label": item.get("source_title") or item.get("source_uri") or item.get("evidence_id"),
+            "source_uri": item.get("source_uri"),
+            "page": item.get("page"),
+            "line_start": item.get("line_start"),
+            "line_end": item.get("line_end"),
+            "excerpt": item.get("text_excerpt"),
+        }
+
+    def _wiki_replay_ref(self, page: WikiPage) -> dict[str, Any]:
+        evidence_ids = list(page.evidence_ids or [])
+        return {
+            "id": page.page_id,
+            "page_id": page.page_id,
+            "kind": "wiki",
+            "label": page.title or page.slug or page.page_id,
+            "slug": page.slug,
+            "page_type": page.page_type,
+            "evidence_id": evidence_ids[0] if evidence_ids else "",
+            "evidence_ids": evidence_ids[:5],
+            "status": page.status,
+        }
+
+    def _graph_replay_ref(self, item: dict[str, Any]) -> dict[str, Any]:
+        evidence_ids = list(item.get("evidence_ids") or [])
+        return {
+            "id": item.get("entity_id"),
+            "entity_id": item.get("entity_id"),
+            "kind": "graph",
+            "label": item.get("name") or item.get("entity_id"),
+            "entity_type": item.get("entity_type"),
+            "evidence_id": evidence_ids[0] if evidence_ids else "",
+            "evidence_ids": evidence_ids[:5],
+        }
+
+    def _timeline_replay_ref(self, item: dict[str, Any]) -> dict[str, Any]:
+        evidence_ids = list(item.get("evidence_ids") or [])
+        return {
+            "id": item.get("fact_id"),
+            "fact_id": item.get("fact_id"),
+            "kind": "timeline",
+            "label": item.get("subject") or item.get("object") or item.get("fact_id"),
+            "subject": item.get("subject"),
+            "predicate": item.get("predicate"),
+            "object": item.get("object"),
+            "occurred_at": item.get("occurred_at"),
+            "evidence_id": evidence_ids[0] if evidence_ids else "",
+            "evidence_ids": evidence_ids[:5],
+            "conflict_status": item.get("conflict_status"),
+        }
+
+    def _failure_replay(
+        self,
+        db_id: str,
+        failures: list[dict[str, Any]],
+        *,
+        replay_refs: dict[str, list[dict[str, Any]]],
+        replay_thresholds: dict[str, Any],
+    ) -> list[dict[str, Any]]:
         return [
             {
                 **failure,
+                "reason": self._failure_reason(failure),
+                "severity": self._failure_severity(failure.get("check")),
+                "refs": replay_refs,
+                "jump_targets": self._jump_targets(replay_refs),
                 "replay": {
                     "method": "POST",
                     "path": f"/api/knowledge/databases/{db_id}/quality-gates/run",
-                    "body": {"thresholds": self.DEFAULT_THRESHOLDS},
+                    "body": {"thresholds": replay_thresholds},
                 },
             }
             for failure in failures
         ]
+
+    def _failure_reason(self, failure: dict[str, Any]) -> str:
+        check = failure.get("check")
+        observed = failure.get("observed")
+        expected = failure.get("expected")
+        labels = {
+            "evidence_accuracy": "Evidence coverage is below the required accuracy threshold.",
+            "faithfulness": "The evidence-bound context is not faithful enough for promotion.",
+            "context_recall": "The golden set cannot recall enough expected evidence.",
+            "context_precision": "The golden set is not precise enough for the current branch.",
+            "golden_items": "The knowledge base does not have enough active golden items.",
+            "stale_pages": "One or more Wiki pages are stale against the graph/evidence layer.",
+            "temporal_conflicts": "Temporal facts contain reviewable conflicts.",
+            "permission_checks": "Controlled MCP or Agent write permissions did not pass.",
+        }
+        prefix = labels.get(str(check), "The quality gate check failed.")
+        return f"{prefix} Observed {observed}; expected {expected}."
+
+    def _failure_severity(self, check: str | None) -> str:
+        if check in {"evidence_accuracy", "faithfulness", "temporal_conflicts", "permission_checks"}:
+            return "high"
+        if check in {"context_recall", "context_precision", "stale_pages"}:
+            return "medium"
+        return "warning"
+
+    def _jump_targets(self, replay_refs: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+        targets: list[dict[str, Any]] = []
+        for kind in ("evidence", "wiki", "graph", "timeline", "run"):
+            for ref in replay_refs.get(kind, [])[:2]:
+                targets.append(
+                    {
+                        "kind": kind,
+                        "label": ref.get("label") or ref.get("id") or kind,
+                        "target_id": ref.get("id"),
+                        "evidence_id": ref.get("evidence_id"),
+                        "entity_id": ref.get("entity_id"),
+                        "fact_id": ref.get("fact_id"),
+                        "page_id": ref.get("page_id"),
+                        "gate_id": ref.get("gate_id"),
+                    }
+                )
+        return targets
 
     def _golden_item_id(self, db_id: str, item_type: str, source_id: str) -> str:
         return f"gold_{hashstr(f'{db_id}:golden:{item_type}:{source_id}', length=32)}"

@@ -415,6 +415,56 @@ async def test_quality_gate_builds_golden_set_and_replay(sqlite_pg_manager) -> N
 
 
 @pytest.mark.asyncio
+async def test_quality_gate_intentional_failure_has_replay_refs(sqlite_pg_manager) -> None:
+    await _seed_live_chunks()
+    await AutoWikiService().rebuild_wiki("kb_live", max_topics=5)
+    await KnowledgeGraphService().rebuild_graph("kb_live", max_entities=8)
+
+    gate_service = WorldlineQualityGateService()
+    await gate_service.build_golden_set("kb_live")
+    gate = await gate_service.run_gate(
+        "kb_live",
+        thresholds={
+            "evidence_accuracy_min": 1.01,
+            "faithfulness_min": 1.01,
+            "context_recall_min": 1.01,
+            "context_precision_min": 1.01,
+        },
+        created_by="pytest-intentional-failure",
+    )
+
+    assert gate["status"] == "failed"
+    assert {item["check"] for item in gate["failure_replay"]} >= {
+        "evidence_accuracy",
+        "faithfulness",
+        "context_recall",
+        "context_precision",
+    }
+
+    replay = gate["failure_replay"][0]
+    assert replay["reason"]
+    assert replay["severity"] in {"high", "medium", "warning"}
+    assert replay["replay"]["body"]["thresholds"]["evidence_accuracy_min"] == 1.01
+
+    refs = replay["refs"]
+    for ref_kind in ("evidence", "wiki", "graph", "timeline", "run"):
+        assert refs[ref_kind]
+
+    target_kinds = {target["kind"] for target in replay["jump_targets"]}
+    assert target_kinds >= {"evidence", "wiki", "graph", "timeline", "run"}
+    assert refs["run"][0]["gate_id"] == gate["gate_id"]
+    assert refs["evidence"][0]["evidence_id"]
+    assert refs["wiki"][0]["page_id"]
+    assert refs["graph"][0]["entity_id"]
+    assert refs["timeline"][0]["fact_id"]
+
+    stored = await KnowledgeGraphRepository().get_quality_gate_run("kb_live", gate["gate_id"])
+    assert stored is not None
+    serialized = KnowledgeGraphRepository().serialize_quality_gate_run(stored)
+    assert serialized["failure_replay"][0]["refs"]["run"][0]["gate_id"] == gate["gate_id"]
+
+
+@pytest.mark.asyncio
 async def test_workbench_overview_and_generate(sqlite_pg_manager) -> None:
     await _seed_live_chunks()
     await AutoWikiService().rebuild_wiki("kb_live", max_topics=5)

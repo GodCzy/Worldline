@@ -72,6 +72,7 @@
 <script setup>
 import { computed } from 'vue'
 import {
+  AlertTriangle,
   BookOpen,
   GitBranch,
   ListChecks,
@@ -103,6 +104,7 @@ const props = defineProps({
 defineEmits(['action'])
 
 const actions = [
+  { key: 'runStrictQualityGate', label: 'Strict Replay', title: 'Run intentional failed Quality Gate replay', icon: AlertTriangle },
   { key: 'planWorkflow', label: '规划流程', title: '规划 Worldline workflow', icon: Route },
   { key: 'rebuildWiki', label: '重建 Wiki', title: '重建 Auto-Wiki', icon: BookOpen },
   { key: 'rebuildGraph', label: '重建图谱', title: '重建 Graph 和 Timeline', icon: GitBranch },
