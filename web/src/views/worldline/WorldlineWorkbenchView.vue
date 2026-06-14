@@ -106,7 +106,7 @@
               :entity-refs="worldlineStore.entityRefs"
               :timeline-refs="worldlineStore.timelineRefs"
               :quality="worldlineStore.quality"
-              :route-trace="worldlineStore.routeTrace"
+              :route-trace="activeRouteTrace"
               @open-graph="openGraphFocus"
               @focus-entity="openGraphFocusFromEntity"
               @focus-timeline="openGraphFocusFromTimeline"
@@ -196,10 +196,11 @@ const currentEvidenceSources = computed(() => {
 const isLiveSupported = computed(() => Boolean(currentKnowledgeDbId.value))
 const isThemeSupported = computed(() => Boolean(currentThemeAdapter.value || isLiveSupported.value))
 const canUseLiveOps = computed(() => Boolean(isLiveSupported.value && userStore.isAdmin))
+const activeRouteTrace = computed(() => worldlineStore.activeBranch?.routeTrace || worldlineStore.routeTrace || {})
 const liveOverviewForPanel = computed(() => {
   if (liveOverview.value) return liveOverview.value
   const overview = worldlineStore.overview || {}
-  const counts = overview.counts || worldlineStore.routeTrace?.counts || {}
+  const counts = overview.counts || activeRouteTrace.value?.counts || worldlineStore.routeTrace?.counts || {}
   return {
     ...overview,
     counts,

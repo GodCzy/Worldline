@@ -33,6 +33,11 @@
         </div>
       </div>
 
+      <div class="support-banner" :class="{ warning: supportHints.length }" data-branch-support-status="true">
+        <strong>{{ branch.quality?.status || 'inspectable' }}</strong>
+        <span>{{ supportHintCopy }}</span>
+      </div>
+
       <div v-if="hasGateReplay" class="gate-replay-panel" data-quality-gate-replay="true">
         <div class="gate-replay-head">
           <div>
@@ -92,6 +97,38 @@
         </div>
       </dl>
 
+      <dl class="route-trace-grid" data-branch-route-trace="true">
+        <div>
+          <dt>Trace</dt>
+          <dd>{{ branchTrace.branch_id || branch.id }}</dd>
+        </div>
+        <div>
+          <dt>Policy</dt>
+          <dd>{{ branchTrace.conclusionPolicy || 'evidence_required' }}</dd>
+        </div>
+        <div>
+          <dt>Path</dt>
+          <dd>{{ routePathLabel }}</dd>
+        </div>
+        <div>
+          <dt>Support</dt>
+          <dd>{{ branchTrace.supportStatus || branch.quality?.status || 'inspectable' }}</dd>
+        </div>
+      </dl>
+
+      <div v-if="gateRefs.length" class="gate-ref-strip" data-branch-gate-refs="true">
+        <button
+          v-for="gate in gateRefs"
+          :key="gate.gateId || gate.id"
+          class="gate-ref"
+          type="button"
+          @click.stop="emitReplayTarget({ kind: 'run', gate_id: gate.gateId || gate.id, target_id: gate.gateId || gate.id })"
+        >
+          <span>{{ gate.gateId || gate.id || 'gate' }}</span>
+          <small>{{ gate.status || 'pending' }}</small>
+        </button>
+      </div>
+
       <div class="section-block subtle">
         <strong>什么时候切线</strong>
         <p>{{ branch.switchHint || '当证据不足、图谱冲突或质量门禁失败时，先回到当前层修复。' }}</p>
@@ -140,6 +177,12 @@ const supportChannels = computed(() => {
   if (!props.branch) return 0
   return ['evidenceRefs', 'wikiRefs', 'entityRefs', 'timelineRefs'].filter((key) => props.branch[key]?.length).length
 })
+const branchTrace = computed(() => props.branch?.routeTrace || {})
+const gateRefs = computed(() => (Array.isArray(props.branch?.gateRefs) ? props.branch.gateRefs : []))
+const supportHints = computed(() => {
+  const hints = props.branch?.quality?.hints || branchTrace.value?.hints || []
+  return Array.isArray(hints) ? hints.slice(0, 4) : []
+})
 const shortSummary = computed(() => {
   const summary = props.branch?.summary || ''
   if (!summary) return '选择分支后，这里会显示可验证说明。'
@@ -148,6 +191,14 @@ const shortSummary = computed(() => {
 const coverageLabel = computed(() => {
   const coverage = Number(props.branch?.quality?.citationCoverage ?? 0)
   return `${Math.round(coverage * 100)}%`
+})
+const supportHintCopy = computed(() => {
+  if (!supportHints.value.length) return 'Evidence, Wiki, Graph, Time, Gate refs 已连接。'
+  return supportHints.value.map((hint) => hint.message || hint.code).filter(Boolean).join(' / ')
+})
+const routePathLabel = computed(() => {
+  const path = branchTrace.value?.path || []
+  return Array.isArray(path) && path.length ? path.join(' -> ') : 'branch_canvas -> branch_inspector'
 })
 const latestGate = computed(() => props.quality?.latestGate || props.quality?.latest_gate || {})
 const replayFailures = computed(() => {
@@ -326,6 +377,39 @@ const emitReplayTarget = (target = {}, failure = {}) => {
   text-transform: uppercase;
 }
 
+.support-banner {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 10px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.16);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(var(--wl-cyan-rgb), 0.045);
+}
+
+.support-banner.warning {
+  border-color: rgba(var(--wl-gold-rgb), 0.28);
+  background: rgba(var(--wl-gold-rgb), 0.07);
+}
+
+.support-banner strong {
+  color: var(--wl-text);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.support-banner span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 .gate-replay-panel {
   margin-top: 14px;
   padding: 12px;
@@ -454,6 +538,72 @@ const emitReplayTarget = (target = {}, failure = {}) => {
   color: var(--wl-text);
   font-size: 13px;
   line-height: 1.6;
+}
+
+.route-trace-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+  padding: 10px;
+  border: 1px solid rgba(var(--wl-cyan-rgb), 0.12);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.route-trace-grid div {
+  min-width: 0;
+}
+
+.route-trace-grid dt {
+  color: rgba(var(--wl-gold-rgb), 0.78);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.route-trace-grid dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.gate-ref-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.gate-ref {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 30px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 9px;
+  border: 1px solid rgba(var(--wl-gold-rgb), 0.26);
+  border-radius: 999px;
+  background: rgba(var(--wl-gold-rgb), 0.08);
+  color: #fff7de;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.gate-ref span {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gate-ref small {
+  color: var(--wl-muted-soft);
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .action-list {

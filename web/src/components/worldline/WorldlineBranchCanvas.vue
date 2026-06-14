@@ -18,6 +18,8 @@
       <svg
         v-if="(tree.nodes || []).length"
         class="canvas-svg"
+        role="img"
+        aria-label="Worldline branch canvas"
         :viewBox="`0 0 ${tree.width || 1200} ${tree.height || 640}`"
         preserveAspectRatio="xMidYMid meet"
       >
@@ -73,6 +75,7 @@
           :is-active="node.branchId && node.branchId === activeBranchId"
           :is-selected="node.id === selectedNodeId"
           @select="$emit('select-node', $event)"
+          @preview="$emit('select-node', $event)"
         />
       </svg>
 
@@ -155,6 +158,7 @@ const buildEdgePath = (edge, offset = 0) => {
 
 <style scoped lang="less">
 .branch-canvas {
+  max-width: 100%;
   min-height: 0;
   overflow: hidden;
   border: 1px solid var(--wl-border);
@@ -224,6 +228,7 @@ const buildEdgePath = (edge, offset = 0) => {
   width: 100%;
   min-height: 470px;
   overflow: hidden;
+  overscroll-behavior-x: contain;
 }
 
 .canvas-svg {
@@ -294,10 +299,14 @@ const buildEdgePath = (edge, offset = 0) => {
 
   .canvas-shell {
     overflow-x: auto;
+    overflow-y: hidden;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
   .canvas-svg {
     width: 980px;
+    min-width: 860px;
     max-width: none;
     height: 560px;
   }

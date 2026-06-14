@@ -507,7 +507,43 @@ async def test_workbench_overview_and_generate(sqlite_pg_manager) -> None:
     assert graph_branch["entityRefs"][0]["evidenceId"]
     assert graph_branch["timelineRefs"][0]["id"]
     assert graph_branch["timelineRefs"][0]["evidenceId"]
+    assert graph_branch["gateRefs"][0]["gateId"] == overview["quality_gate"]["latest"]["gate_id"]
+    assert graph_branch["routeTrace"]["branch_id"] == graph_branch["id"]
+    assert graph_branch["routeTrace"]["supportStatus"] in {"passed", "inspectable"}
+    assert graph_branch["routeTrace"]["counts"]["evidence"] == len(graph_branch["evidenceRefs"])
+    assert graph_branch["routeTrace"]["path"] == [
+        "root_question",
+        "branch_canvas",
+        "branch_inspector",
+        "evidence_rail",
+        "timeline_scrubber",
+        "graph_focus",
+        "quality_gate",
+    ]
+    assert not any(hint["code"] == "no_evidence_anchors" for hint in graph_branch["quality"]["hints"])
     assert result["branches"][0]["quality"]["citationCoverage"] > 0
     assert result["snapshots"]
     assert result["quality"]["branchCount"] == len(result["branches"])
     assert result["routeTrace"]["deterministic_baseline"] is True
+    assert result["routeTrace"]["conclusion_policy"] == "evidence_required"
+
+
+@pytest.mark.asyncio
+async def test_workbench_generate_blocks_evidence_free_conclusions(sqlite_pg_manager) -> None:
+    async with pg_manager.get_async_session_context() as session:
+        session.add(KnowledgeBase(db_id="kb_empty", name="Empty Worldline KB", kb_type="milvus"))
+
+    result = await WorldlineWorkbenchService().generate_worldline(
+        "kb_empty",
+        theme_id="knowledge-ops",
+        question="Can this empty knowledge base produce a conclusion?",
+    )
+
+    assert result["status"] == "needs_evidence"
+    assert result["branches"] == []
+    assert result["quality"]["status"] == "needs_evidence"
+    assert result["quality"]["supportStatus"] == "needs_evidence"
+    assert result["routeTrace"]["supportStatus"] == "needs_evidence"
+    assert result["routeTrace"]["evidence_required"] is True
+    assert result["routeTrace"]["hints"][0]["code"] == "no_evidence_anchors"
+    assert "已阻断默认结论" in result["displayMeta"]["workspaceHint"]

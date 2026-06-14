@@ -62,13 +62,21 @@
         <dt>facade</dt>
         <dd>{{ routeTrace.facade }}</dd>
       </div>
-      <div v-if="routeTrace?.evidence_count !== undefined">
-        <dt>evidence</dt>
-        <dd>{{ routeTrace.evidence_count }}</dd>
+      <div v-if="routeTrace?.branch_id">
+        <dt>branch</dt>
+        <dd>{{ routeTrace.branch_id }}</dd>
       </div>
-      <div v-if="routeTrace?.timeline_count !== undefined">
+      <div v-if="routeTrace?.supportStatus">
+        <dt>support</dt>
+        <dd>{{ routeTrace.supportStatus }}</dd>
+      </div>
+      <div v-if="traceEvidenceCount !== undefined">
+        <dt>evidence</dt>
+        <dd>{{ traceEvidenceCount }}</dd>
+      </div>
+      <div v-if="traceTimelineCount !== undefined">
         <dt>timeline</dt>
-        <dd>{{ routeTrace.timeline_count }}</dd>
+        <dd>{{ traceTimelineCount }}</dd>
       </div>
     </dl>
   </section>
@@ -99,6 +107,8 @@ const props = defineProps({
 defineEmits(['open-graph', 'focus-entity', 'focus-timeline'])
 
 const qualityStatus = computed(() => props.quality?.status || props.quality?.latestGate?.status || 'pending')
+const traceEvidenceCount = computed(() => props.routeTrace?.evidence_count ?? props.routeTrace?.counts?.evidence)
+const traceTimelineCount = computed(() => props.routeTrace?.timeline_count ?? props.routeTrace?.counts?.timeline)
 const timelineTitle = (item = {}) => item.title || item.subject || item.label || item.id || item.fact_id || 'Timeline fact'
 const timelineBadge = (item = {}) => item.validFrom || item.occurred_at || item.date || item.status || 'temporal'
 </script>

@@ -1,6 +1,6 @@
 # Worldline Completion Matrix
 
-Updated: 2026-06-09
+Updated: 2026-06-14
 
 This matrix breaks "finish all Worldline work" into verifiable slices. The current source of truth is `D:\dev\Worldline`, current `.ai/tasks` evidence, OutputMD summaries, and runnable validation results. `D:\document\Worldline` is only a pointer.
 
@@ -27,6 +27,7 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 | Graph conflict review surface | Done | `.ai/tasks/2026-06-08-p3-2-graph-conflict-surface/EVIDENCE.md`, desktop and `390x844` screenshots |
 | Graph/timeline focus links | Done | `.ai/tasks/2026-06-09-p3-2-graph-focus-links/EVIDENCE.md`, `.ai/tasks/2026-06-09-p3-2-focused-regression-hardening/EVIDENCE.md` |
 | P3-2 focused graph regression | Done | Shared graph focus utility tests, focused backend pytest, `/graph` and `/worldline/:themeId` desktop plus `390x844` screenshots |
+| P3-3 branch canvas completion | Done | `.ai/tasks/2026-06-14-p3-3-branch-canvas-completion/EVIDENCE.md`, focused backend pytest, production build, Edge CDP desktop and `390x844` screenshots |
 | Codex plugin inventory and workflow | Done | `.ai/tasks/2026-06-08-codex-plugin-completion-workflow/`, `docs/architecture/codex-plugin-inventory.md` |
 | Worktree cleanup and commits | Done | `D:\document\OutputMD\2026-06-08-Worldline-Project-Operating-Plan-Worktree-Cleanup.md` |
 
@@ -36,11 +37,11 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 |---|---|---|---|
 | P3-1 Evidence-backed LLM Wiki | Done | Keep expanding stale/review workflow in later slices; current reading surface is implemented and QA evidence exists. | Browser, OpenAI Developers as needed |
 | P3-2 Temporal Knowledge Graph | Done | Current acceptance is covered: backend conflict review, compact `/graph` conflict surface, graph/timeline/evidence focus links, relationship focus regression, read-only projection checks, and `/graph` plus `/worldline/:themeId` screenshots. Future canvas parity can expand if `/api/graph/subgraph` starts returning the same node ids as the Worldline review payload. | Build Web Data Visualization, Browser |
-| P3-3 Worldline Branch Canvas | Partial | RouteTrace, quality status, insufficient-evidence hints, and mobile interaction regression. | Browser, Product Design, Data Visualization |
-| P3-4 Agent Run Ledger And Replay | Verified Baseline | Continue productizing replay, pagination, artifact registry, and cross-run knowledge reads. | GitHub, Browser |
+| P3-3 Worldline Branch Canvas | Done | Current acceptance is covered: branch-level routeTrace, gate refs, evidence-required policy, support/quality hints, evidence-free branch blocking, Inspector surfacing, hover/focus preview, keyboard selection, production build, and desktop plus `390x844` CDP QA. | Browser, Product Design, Data Visualization |
+| P3-4 Agent Run Ledger And Replay | Done | Current acceptance is covered: run ledger API, event/artifact/gate/evidence pagination, run selector filters/pagination, bulk archive/restore, replay manifest, artifact registry, resource drilldown/diff, cross-run knowledge reads, audit logs, and real API/Browser E2E evidence. Future phases can expand retention and multi-user operations. | GitHub, Browser |
 | P3-5 MCP And Skill Governance | Done | Current acceptance is covered: MCP defaults governance report, disabled-tool release gate, connector policy, rollback checklist, focused pytest, and release-gate fixture regression. | GitHub, OpenAI Developers |
 | P3-6 Quality Gate Replay | Done | Current acceptance is covered: intentional failed gate payload stores reasons, replay thresholds, Evidence/Wiki/Graph/Timeline/Run refs, Branch Inspector replay panel, Strict Replay action, focused pytest, production build, and desktop/390px Browser QA screenshots. | Browser, Data Visualization |
-| P3-7 Compact Console UX | Verified Baseline | Continue desktop plus 390px screenshot QA for every new feature. | Browser, Product Design |
+| P3-7 Compact Console UX | Done | Current acceptance is covered: compact KB creation modal, Agent Workbench compact detail drawer, full-site desktop and `390x844` UI QA, and P3-3 desktop/mobile canvas QA. Continue screenshot QA for future features. | Browser, Product Design |
 
 ## P4 Completion Matrix
 
@@ -68,7 +69,7 @@ Do not repeat "new KB compact creation"; it is already done. Continue in this or
 
 1. P4 operational hardening: add controlled retry execution, cleanup routines, and compact dashboard UI for the new operational health endpoint.
 2. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
-3. P3-3 Branch Canvas hardening: routeTrace, insufficient-evidence hints, and mobile interaction regression.
+3. Keep P3 regression checks in the release path: focused backend tests, production build, and desktop plus `390x844` screenshots for future UI changes.
 
 ## Workflow Rule
 

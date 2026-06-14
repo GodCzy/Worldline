@@ -1,0 +1,60 @@
+[
+  {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "screenshotPath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-14-p3-3-branch-canvas-completion\\p3-3-worldline-branch-canvas-cdp-1440x900.png",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5183/worldline/p3-branch?question=P3%20Branch%20Canvas%20QA",
+    "hasCanvas": true,
+    "hasInspector": true,
+    "hasRouteTrace": true,
+    "hasGateRefs": true,
+    "hasSupportStatus": true,
+    "textSignals": {
+      "branchInspector": true,
+      "routePolicy": true,
+      "gateId": true,
+      "evidenceRail": true
+    },
+    "pageOverflowX": false,
+    "scrollWidth": 1440,
+    "clientWidth": 1440,
+    "canvasBox": {
+      "x": 77,
+      "y": 429,
+      "width": 956,
+      "height": 558
+    }
+  },
+  {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "screenshotPath": "D:\\dev\\Worldline\\.ai\\tasks\\2026-06-14-p3-3-branch-canvas-completion\\p3-3-worldline-branch-canvas-cdp-390x844.png",
+    "title": "世界线 - Worldline",
+    "url": "http://127.0.0.1:5183/worldline/p3-branch?question=P3%20Branch%20Canvas%20QA",
+    "hasCanvas": true,
+    "hasInspector": true,
+    "hasRouteTrace": true,
+    "hasGateRefs": true,
+    "hasSupportStatus": true,
+    "textSignals": {
+      "branchInspector": true,
+      "routePolicy": true,
+      "gateId": true,
+      "evidenceRail": true
+    },
+    "pageOverflowX": false,
+    "scrollWidth": 390,
+    "clientWidth": 390,
+    "canvasBox": {
+      "x": 69,
+      "y": 745,
+      "width": 980,
+      "height": 560
+    }
+  }
+]

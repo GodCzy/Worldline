@@ -121,6 +121,7 @@ class WorldlineWorkbenchService:
         wiki_items = list(overview["wiki"]["pages"].get("items") or [])
         entity_items = list(overview["graph"]["entities"].get("items") or [])
         timeline_items = list(overview["timeline"].get("items") or [])
+        latest_gate = overview["quality_gate"]["latest"]
 
         branches = self._build_branches(
             db_id=db_id,
@@ -130,6 +131,7 @@ class WorldlineWorkbenchService:
             wiki_items=wiki_items,
             entity_items=entity_items,
             timeline_items=timeline_items,
+            latest_gate=latest_gate,
             context=context or {},
         )
         if focus_branch_id:
@@ -137,6 +139,13 @@ class WorldlineWorkbenchService:
 
         active_branch_id = branches[0]["id"] if branches else ""
         generation_mode = "focused" if mode == "focused" else "base"
+        support_hints = self._support_hints(
+            evidence_items,
+            wiki_items,
+            entity_items,
+            timeline_items,
+        )
+        support_status = "needs_evidence" if not branches else ("partial_support" if support_hints else "inspectable")
 
         return {
             "themeId": theme_id or "worldline",
@@ -152,7 +161,7 @@ class WorldlineWorkbenchService:
             ],
             "rootQuestion": normalized_question,
             "questionDraft": normalized_question,
-            "status": "ready" if branches else "empty",
+            "status": "ready" if branches else "needs_evidence",
             "sourceType": "worldline-live-facade-v1",
             "generationMode": generation_mode,
             "generationRound": 2 if generation_mode == "focused" else 1,
@@ -172,14 +181,23 @@ class WorldlineWorkbenchService:
                 "themeName": theme_id or "Worldline",
                 "generationLabel": "生成真实世界线",
                 "generationMode": generation_mode,
-                "workspaceHint": "先检查证据支撑，再把分支带入 Agent、Graph 或 Quality Gate 继续验证。",
+                "workspaceHint": (
+                    "没有可追溯 EvidenceAnchor，已阻断默认结论；请先导入、解析或重建证据。"
+                    if not branches
+                    else "先检查证据支撑，再把分支带入 Agent、Graph 或 Quality Gate 继续验证。"
+                ),
             },
             "snapshots": self._build_snapshots(overview, branches),
-            "quality": self._quality_summary(overview["quality_gate"]["latest"], branches),
+            "quality": self._quality_summary(latest_gate, branches, support_hints, support_status),
             "routeTrace": {
                 "db_id": db_id,
                 "facade": "WorldlineWorkbenchService",
                 "deterministic_baseline": True,
+                "conclusion_policy": "evidence_required",
+                "evidence_required": True,
+                "support_status": support_status,
+                "supportStatus": support_status,
+                "hints": support_hints,
                 "counts": overview["counts"],
                 "evidence_count": len(evidence_items),
                 "wiki_page_count": len(wiki_items),
@@ -281,6 +299,7 @@ class WorldlineWorkbenchService:
         wiki_items: list[dict[str, Any]],
         entity_items: list[dict[str, Any]],
         timeline_items: list[dict[str, Any]],
+        latest_gate: dict[str, Any] | None,
         context: dict[str, Any],
     ) -> list[dict[str, Any]]:
         branches: list[dict[str, Any]] = []
@@ -288,6 +307,10 @@ class WorldlineWorkbenchService:
         wiki_refs = self._wiki_refs(wiki_items)
         entity_refs = self._entity_refs(entity_items)
         timeline_refs = self._timeline_refs(timeline_items)
+        gate_refs = self._gate_refs(latest_gate)
+
+        if not evidence_refs:
+            return []
 
         if evidence_items:
             branches.append(
@@ -304,6 +327,7 @@ class WorldlineWorkbenchService:
                     wiki_refs=wiki_refs,
                     entity_refs=entity_refs,
                     timeline_refs=timeline_refs,
+                    gate_refs=gate_refs,
                     context={**context, "scene": "evidence_first", "entry": "worldline-live"},
                 )
             )
@@ -322,6 +346,7 @@ class WorldlineWorkbenchService:
                     wiki_refs=wiki_refs,
                     entity_refs=entity_refs,
                     timeline_refs=timeline_refs,
+                    gate_refs=gate_refs,
                     context={**context, "scene": "auto_wiki", "entry": "worldline-live"},
                 )
             )
@@ -340,6 +365,7 @@ class WorldlineWorkbenchService:
                     wiki_refs=wiki_refs,
                     entity_refs=entity_refs,
                     timeline_refs=timeline_refs,
+                    gate_refs=gate_refs,
                     context={**context, "scene": "graph_timeline", "entry": "worldline-live"},
                 )
             )
@@ -360,8 +386,10 @@ class WorldlineWorkbenchService:
         wiki_refs: list[dict[str, Any]],
         entity_refs: list[dict[str, Any]],
         timeline_refs: list[dict[str, Any]],
+        gate_refs: list[dict[str, Any]],
         context: dict[str, Any],
     ) -> dict[str, Any]:
+        quality = self._branch_quality(evidence_refs, wiki_refs, entity_refs, timeline_refs, gate_refs)
         return {
             "id": branch_id,
             "title": title,
@@ -388,7 +416,21 @@ class WorldlineWorkbenchService:
             "wikiRefs": wiki_refs,
             "entityRefs": entity_refs,
             "timelineRefs": timeline_refs,
-            "quality": self._branch_quality(evidence_refs, wiki_refs, entity_refs, timeline_refs),
+            "gateRefs": gate_refs,
+            "quality": quality,
+            "routeTrace": self._branch_route_trace(
+                db_id=db_id,
+                theme_id=theme_id,
+                branch_id=branch_id,
+                choice_label=choice_label,
+                evidence_refs=evidence_refs,
+                wiki_refs=wiki_refs,
+                entity_refs=entity_refs,
+                timeline_refs=timeline_refs,
+                gate_refs=gate_refs,
+                quality=quality,
+                context=context,
+            ),
             "nextStepTitle": "继续验证此分支",
             "nextStepSubtitle": "把当前分支带入 Agent、Graph 或 Quality Gate 继续检查。",
             "nextGenerationLabel": "基于真实知识库继续生成",
@@ -587,6 +629,21 @@ class WorldlineWorkbenchService:
             )
         return refs
 
+    def _gate_refs(self, latest_gate: dict[str, Any] | None) -> list[dict[str, Any]]:
+        if not latest_gate:
+            return []
+        gate_id = latest_gate.get("gate_id") or latest_gate.get("gateId")
+        return [
+            {
+                "id": gate_id,
+                "gateId": gate_id,
+                "status": latest_gate.get("status"),
+                "failureCount": len(latest_gate.get("failure_replay") or latest_gate.get("failureReplay") or []),
+                "createdAt": latest_gate.get("created_at") or latest_gate.get("createdAt"),
+                "summary": latest_gate.get("summary") or latest_gate.get("status") or "quality gate",
+            }
+        ]
+
     def _first_evidence_id(self, item: dict[str, Any]) -> str | None:
         direct = item.get("evidence_id") or item.get("evidenceId")
         if direct:
@@ -602,17 +659,122 @@ class WorldlineWorkbenchService:
         wiki_refs: list[dict[str, Any]],
         entity_refs: list[dict[str, Any]],
         timeline_refs: list[dict[str, Any]],
+        gate_refs: list[dict[str, Any]],
     ) -> dict[str, Any]:
         evidence_count = len(evidence_refs)
         support_channels = sum(bool(items) for items in (evidence_refs, wiki_refs, entity_refs, timeline_refs))
+        hints = self._support_hints(evidence_refs, wiki_refs, entity_refs, timeline_refs)
+        gate_status = gate_refs[0].get("status") if gate_refs else None
+        if not evidence_count:
+            status = "needs_evidence"
+        elif gate_status in {"failed", "blocked"}:
+            status = gate_status
+        elif hints:
+            status = "partial_support"
+        else:
+            status = gate_status or "inspectable"
         return {
-            "status": "inspectable" if evidence_count else "needs_evidence",
+            "status": status,
             "evidenceCount": evidence_count,
             "supportChannels": support_channels,
             "citationCoverage": min(1.0, evidence_count / 3) if evidence_count else 0.0,
             "graphSupport": bool(entity_refs),
             "temporalSupport": bool(timeline_refs),
+            "gateStatus": gate_status,
+            "gateCount": len(gate_refs),
+            "hints": hints,
         }
+
+    def _branch_route_trace(
+        self,
+        *,
+        db_id: str,
+        theme_id: str,
+        branch_id: str,
+        choice_label: str,
+        evidence_refs: list[dict[str, Any]],
+        wiki_refs: list[dict[str, Any]],
+        entity_refs: list[dict[str, Any]],
+        timeline_refs: list[dict[str, Any]],
+        gate_refs: list[dict[str, Any]],
+        quality: dict[str, Any],
+        context: dict[str, Any],
+    ) -> dict[str, Any]:
+        hints = quality.get("hints") or []
+        return {
+            "db_id": db_id,
+            "theme_id": theme_id,
+            "branch_id": branch_id,
+            "facade": "WorldlineWorkbenchService",
+            "branchMode": choice_label,
+            "sourceType": "worldline-live-facade-v1",
+            "conclusionPolicy": "evidence_required",
+            "supportStatus": quality.get("status"),
+            "insufficientEvidence": not evidence_refs,
+            "counts": {
+                "evidence": len(evidence_refs),
+                "wiki": len(wiki_refs),
+                "entity": len(entity_refs),
+                "timeline": len(timeline_refs),
+                "gate": len(gate_refs),
+            },
+            "path": [
+                "root_question",
+                "branch_canvas",
+                "branch_inspector",
+                "evidence_rail",
+                "timeline_scrubber",
+                "graph_focus",
+                "quality_gate",
+            ],
+            "hints": hints,
+            "context": {
+                "entry": context.get("entry"),
+                "scene": context.get("scene"),
+            },
+        }
+
+    def _support_hints(
+        self,
+        evidence_refs: list[dict[str, Any]],
+        wiki_refs: list[dict[str, Any]],
+        entity_refs: list[dict[str, Any]],
+        timeline_refs: list[dict[str, Any]],
+    ) -> list[dict[str, str]]:
+        hints: list[dict[str, str]] = []
+        if not evidence_refs:
+            hints.append(
+                {
+                    "code": "no_evidence_anchors",
+                    "severity": "blocking",
+                    "message": "没有 EvidenceAnchor，Worldline 不生成默认结论。",
+                }
+            )
+        if not wiki_refs:
+            hints.append(
+                {
+                    "code": "missing_wiki_refs",
+                    "severity": "review",
+                    "message": "该分支缺少 Wiki 页面支撑，建议先重建 Wiki。",
+                }
+            )
+        if not entity_refs:
+            hints.append(
+                {
+                    "code": "missing_entity_refs",
+                    "severity": "review",
+                    "message": "该分支缺少图谱实体支撑，建议先重建 Graph。",
+                }
+            )
+        if not timeline_refs:
+            hints.append(
+                {
+                    "code": "missing_timeline_refs",
+                    "severity": "review",
+                    "message": "该分支缺少时间事实支撑，建议检查 TemporalFact。",
+                }
+            )
+        return hints
 
     def _build_snapshots(self, overview: dict[str, Any], branches: list[dict[str, Any]]) -> list[dict[str, Any]]:
         counts = overview.get("counts") or {}
@@ -648,14 +810,23 @@ class WorldlineWorkbenchService:
             },
         ]
 
-    def _quality_summary(self, latest_gate: dict[str, Any] | None, branches: list[dict[str, Any]]) -> dict[str, Any]:
+    def _quality_summary(
+        self,
+        latest_gate: dict[str, Any] | None,
+        branches: list[dict[str, Any]],
+        support_hints: list[dict[str, str]],
+        support_status: str,
+    ) -> dict[str, Any]:
         branch_scores = [branch.get("quality", {}).get("citationCoverage", 0.0) for branch in branches]
+        status = "needs_evidence" if not branches else (latest_gate or {}).get("status") or "inspectable"
         return {
-            "status": (latest_gate or {}).get("status") or ("inspectable" if branches else "empty"),
+            "status": status,
             "gateId": (latest_gate or {}).get("gate_id"),
             "branchCount": len(branches),
             "citationCoverage": round(sum(branch_scores) / len(branch_scores), 3) if branch_scores else 0.0,
             "latestGate": latest_gate,
+            "supportStatus": support_status,
+            "hints": support_hints,
         }
 
     def _summary_from_evidence(self, evidence_items: list[dict[str, Any]], question: str) -> str:
@@ -667,7 +838,8 @@ class WorldlineWorkbenchService:
 
     def _summary_from_wiki(self, wiki_items: list[dict[str, Any]]) -> str:
         titles = [item.get("title") for item in wiki_items[:4] if item.get("title")]
-        return f"LLM Wiki 已生成 {len(wiki_items)} 个页面，可先从 {', '.join(titles) if titles else '首页'} 进入知识结构。"
+        entry = ", ".join(titles) if titles else "首页"
+        return f"LLM Wiki 已生成 {len(wiki_items)} 个页面，可先从 {entry} 进入知识结构。"
 
     def _summary_from_graph(self, entity_items: list[dict[str, Any]], timeline_items: list[dict[str, Any]]) -> str:
         entity_names = [item.get("name") for item in entity_items[:4] if item.get("name")]

@@ -8,7 +8,10 @@
     ]"
     tabindex="0"
     @click="$emit('select', node.id)"
+    @pointerenter="$emit('preview', node.id)"
+    @focus="$emit('preview', node.id)"
     @keydown.enter.prevent="$emit('select', node.id)"
+    @keydown.space.prevent="$emit('select', node.id)"
   >
     <circle :cx="cx" :cy="cy" :r="outerRadius + 10" class="node-aura" />
     <circle :cx="cx" :cy="cy" :r="outerRadius" class="node-halo" />
@@ -61,7 +64,7 @@ const props = defineProps({
   }
 })
 
-defineEmits(['select'])
+defineEmits(['select', 'preview'])
 
 const truncate = (value, limit) => {
   if (!value) return ''
