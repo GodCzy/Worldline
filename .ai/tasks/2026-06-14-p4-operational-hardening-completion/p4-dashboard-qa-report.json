@@ -1,0 +1,92 @@
+{
+  "status": "passed",
+  "server": "http://127.0.0.1:5194",
+  "screenshots": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-14-p4-operational-hardening-completion/screenshots",
+  "checks": [
+    {
+      "label": "desktop",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5194/qa-seed",
+      "metrics": {
+        "path": "/dashboard",
+        "panelPresent": true,
+        "drawerPresent": false,
+        "statusText": "attention",
+        "metrics": [
+          "available",
+          "3",
+          "3",
+          "controlled_routine_available"
+        ],
+        "nextAction": "review recent failure evidence and requeue through controlled service APIs",
+        "overflowX": 0,
+        "clipped": [],
+        "panelRect": {
+          "left": 234,
+          "top": 251.171875,
+          "width": 1120,
+          "height": 117.578125
+        }
+      },
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-14-p4-operational-hardening-completion/screenshots/p4-dashboard-desktop.png",
+      "expects_drawer": false
+    },
+    {
+      "label": "drawer",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5194/qa-seed?drawer=update_budgets",
+      "metrics": {
+        "path": "/dashboard",
+        "panelPresent": true,
+        "drawerPresent": true,
+        "statusText": "attention",
+        "metrics": [
+          "available",
+          "3",
+          "3",
+          "controlled_routine_available"
+        ],
+        "nextAction": "review recent failure evidence and requeue through controlled service APIs",
+        "overflowX": 0,
+        "clipped": [],
+        "panelRect": {
+          "left": 234,
+          "top": 251.171875,
+          "width": 1120,
+          "height": 117.578125
+        }
+      },
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-14-p4-operational-hardening-completion/screenshots/p4-dashboard-drawer.png",
+      "expects_drawer": true
+    },
+    {
+      "label": "mobile",
+      "viewport": "390x844",
+      "url": "http://127.0.0.1:5194/qa-seed",
+      "metrics": {
+        "path": "/dashboard",
+        "panelPresent": true,
+        "drawerPresent": false,
+        "statusText": "attention",
+        "metrics": [
+          "available",
+          "3",
+          "3",
+          "controlled_routine_available"
+        ],
+        "nextAction": "review recent failure evidence and requeue through controlled service APIs",
+        "overflowX": 0,
+        "clipped": [],
+        "panelRect": {
+          "left": 72,
+          "top": 444.75,
+          "width": 300,
+          "height": 604.3125
+        }
+      },
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-14-p4-operational-hardening-completion/screenshots/p4-dashboard-mobile.png",
+      "expects_drawer": false
+    }
+  ],
+  "failures": []
+}

@@ -1,4 +1,4 @@
-import { apiAdminGet } from './base'
+import { apiAdminGet, apiAdminPost } from './base'
 
 /**
  * Dashboard API模块
@@ -42,6 +42,18 @@ export const dashboardApi = {
    */
   getStats: () => {
     return apiAdminGet('/api/dashboard/stats')
+  },
+
+  getWorldlineOperationalHealth: (params = {}) => {
+    const queryParams = new URLSearchParams()
+    if (params.db_id) queryParams.append('db_id', params.db_id)
+    if (params.limit) queryParams.append('limit', params.limit)
+    const query = queryParams.toString()
+    return apiAdminGet(`/api/dashboard/worldline/operational-health${query ? `?${query}` : ''}`)
+  },
+
+  runWorldlineOperationalAction: (payload = {}) => {
+    return apiAdminPost('/api/dashboard/worldline/operational-health/actions', payload)
   },
 
   /**

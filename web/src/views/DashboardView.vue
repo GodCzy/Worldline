@@ -13,6 +13,52 @@
       <p>这里集中展示平台运行、智能体使用、知识库使用和近期对话概况。</p>
     </div>
 
+    <section class="worldline-ops-panel" data-worldline-p4-ops-panel="true">
+      <div class="worldline-ops-head">
+        <div>
+          <span>WORLDLINE P4</span>
+          <strong>Operational Hardening</strong>
+        </div>
+        <a-tag :color="operationalStatusColor">{{ operationalStatusLabel }}</a-tag>
+      </div>
+
+      <div class="worldline-ops-controls">
+        <a-input
+          v-model:value="operationalFilters.db_id"
+          size="small"
+          placeholder="db_id"
+          allow-clear
+          @pressEnter="loadOperationalHealth"
+        />
+        <a-button size="small" :loading="operationalLoading" @click="loadOperationalHealth">刷新</a-button>
+        <a-button size="small" @click="openOperationalDrawer('requeue')">重试</a-button>
+        <a-button size="small" @click="openOperationalDrawer('cleanup')">清理</a-button>
+        <a-button size="small" @click="openOperationalDrawer('update_budgets')">预算</a-button>
+        <a-button size="small" @click="openOperationalDrawer('mark_source_stale')">Stale</a-button>
+      </div>
+
+      <div class="worldline-ops-metrics">
+        <div>
+          <span>Redis</span>
+          <strong>{{ redisStatus }}</strong>
+        </div>
+        <div>
+          <span>Failures</span>
+          <strong>{{ operationalFailureCount }}</strong>
+        </div>
+        <div>
+          <span>Budget</span>
+          <strong>{{ budgetViolationCount }}</strong>
+        </div>
+        <div>
+          <span>Cleanup</span>
+          <strong>{{ cleanupState }}</strong>
+        </div>
+      </div>
+
+      <p class="worldline-ops-next">{{ operationalNextAction }}</p>
+    </section>
+
     <!-- Grid布局的主要内容区域 -->
     <div class="dashboard-grid">
       <!-- 调用统计模块 - 占据2x1网格 -->
@@ -126,11 +172,43 @@
 
     <!-- 反馈模态框 -->
     <FeedbackModalComponent ref="feedbackModal" />
+
+    <a-drawer
+      v-model:open="operationalDrawerOpen"
+      class="worldline-ops-drawer"
+      title="Worldline P4 Controls"
+      width="420"
+      placement="right"
+    >
+      <div class="worldline-drawer-form" data-worldline-p4-action-drawer="true">
+        <label>
+          <span>Action</span>
+          <a-select v-model:value="operationalActionForm.action">
+            <a-select-option value="requeue">requeue</a-select-option>
+            <a-select-option value="cleanup">cleanup</a-select-option>
+            <a-select-option value="update_budgets">update_budgets</a-select-option>
+            <a-select-option value="mark_source_stale">mark_source_stale</a-select-option>
+          </a-select>
+        </label>
+        <label>
+          <span>db_id</span>
+          <a-input v-model:value="operationalActionForm.db_id" placeholder="required" />
+        </label>
+        <label>
+          <span>Payload JSON</span>
+          <a-textarea v-model:value="operationalActionForm.payloadText" :rows="12" />
+        </label>
+        <a-button type="primary" :loading="operationalActionBusy" @click="submitOperationalAction">
+          执行
+        </a-button>
+        <pre v-if="lastOperationalAction" class="worldline-action-result">{{ lastOperationalActionPreview }}</pre>
+      </div>
+    </a-drawer>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { computed, ref, reactive, onMounted, onUnmounted } from 'vue'
 import { message } from 'ant-design-vue'
 import { dashboardApi } from '@/apis/dashboard_api'
 import dayjs, { parseToShanghai } from '@/utils/time'
@@ -168,6 +246,20 @@ const filters = reactive({
 const conversations = ref([])
 const loading = ref(false)
 const loadingDetail = ref(false)
+const operationalLoading = ref(false)
+const operationalActionBusy = ref(false)
+const operationalDrawerOpen = ref(false)
+const operationalHealth = ref(null)
+const lastOperationalAction = ref(null)
+const operationalFilters = reactive({
+  db_id: '',
+  limit: 10
+})
+const operationalActionForm = reactive({
+  action: 'requeue',
+  db_id: '',
+  payloadText: ''
+})
 
 // 调用统计子组件引用
 const callStatsRef = ref(null)
@@ -225,6 +317,63 @@ const conversationColumns = [
   }
 ]
 
+const actionPayloadTemplates = {
+  requeue: {
+    stages: ['parsing', 'indexing', 'wiki_generation', 'graph_rebuild', 'quality_gate'],
+    dry_run: true,
+    limit: 10
+  },
+  cleanup: {
+    targets: ['temporary_files', 'deleted_kbs', 'minio_objects', 'archived_artifacts'],
+    dry_run: true,
+    delete_minio: false,
+    prune_archived_artifacts: false,
+    limit: 10
+  },
+  update_budgets: {
+    budgets: {
+      gate: { total_latency_ms: 5000, estimated_usd: 0.1 },
+      kb: { failed_file_count: 0, failed_workflow_count: 0, active_workflow_count: 2 },
+      run: { total_latency_ms: 600000, estimated_usd: 1 },
+      branch: { generation_latency_ms: 15000, estimated_usd: 0.1 }
+    }
+  },
+  mark_source_stale: {
+    file_id: '',
+    content_hash: '',
+    reason: 'source version changed',
+    dry_run: true
+  }
+}
+
+const operationalStatusLabel = computed(() => operationalHealth.value?.status || 'not loaded')
+const operationalStatusColor = computed(() => {
+  const status = operationalStatusLabel.value
+  if (status === 'healthy') return 'green'
+  if (status === 'attention') return 'orange'
+  if (status === 'degraded') return 'red'
+  return 'default'
+})
+const redisStatus = computed(() => operationalHealth.value?.queues?.redis?.status || '-')
+const operationalFailureCount = computed(
+  () => operationalHealth.value?.failure_evidence?.summary?.total_failed_records ?? 0
+)
+const budgetViolationCount = computed(() => {
+  const budgets = operationalHealth.value?.budgets || {}
+  const flatViolations = budgets.violations?.length || 0
+  const scopedViolations = budgets.scopes?.violations?.length || 0
+  return flatViolations + scopedViolations
+})
+const cleanupState = computed(() => {
+  const readiness = operationalHealth.value?.cleanup_readiness || {}
+  return readiness.blocked_by_active_workflows ? 'blocked' : readiness.temporary_file_cleanup || '-'
+})
+const operationalNextAction = computed(() => {
+  const actions = operationalHealth.value?.next_actions || []
+  return actions[0] || 'Worldline P4 health has not been loaded.'
+})
+const lastOperationalActionPreview = computed(() => JSON.stringify(lastOperationalAction.value, null, 2))
+
 // 子组件引用
 const userStatsRef = ref(null)
 const toolStatsRef = ref(null)
@@ -270,6 +419,58 @@ const loadAllStats = async () => {
 
 // 保留原有的loadStats函数以兼容旧代码
 const loadStats = loadAllStats
+
+const loadOperationalHealth = async () => {
+  operationalLoading.value = true
+  try {
+    operationalHealth.value = await dashboardApi.getWorldlineOperationalHealth({
+      db_id: operationalFilters.db_id || undefined,
+      limit: operationalFilters.limit
+    })
+  } catch (error) {
+    console.error('加载 Worldline P4 运维状态失败:', error)
+    message.warning('Worldline P4 运维状态加载失败')
+  } finally {
+    operationalLoading.value = false
+  }
+}
+
+const openOperationalDrawer = (action) => {
+  operationalActionForm.action = action
+  operationalActionForm.db_id = operationalFilters.db_id || operationalHealth.value?.db_id || ''
+  operationalActionForm.payloadText = JSON.stringify(actionPayloadTemplates[action] || {}, null, 2)
+  operationalDrawerOpen.value = true
+}
+
+const submitOperationalAction = async () => {
+  if (!operationalActionForm.db_id) {
+    message.warning('请先填写 db_id')
+    return
+  }
+  let payload = {}
+  try {
+    payload = operationalActionForm.payloadText ? JSON.parse(operationalActionForm.payloadText) : {}
+  } catch (error) {
+    message.error('Payload JSON 格式不正确')
+    return
+  }
+  operationalActionBusy.value = true
+  try {
+    lastOperationalAction.value = await dashboardApi.runWorldlineOperationalAction({
+      db_id: operationalActionForm.db_id,
+      action: operationalActionForm.action,
+      payload
+    })
+    message.success('Worldline P4 action 已提交')
+    operationalFilters.db_id = operationalActionForm.db_id
+    await loadOperationalHealth()
+  } catch (error) {
+    console.error('执行 Worldline P4 action 失败:', error)
+    message.error(error?.message || '执行 Worldline P4 action 失败')
+  } finally {
+    operationalActionBusy.value = false
+  }
+}
 
 // 加载对话列表
 const loadConversations = async () => {
@@ -352,6 +553,7 @@ const cleanupCharts = () => {
 onMounted(() => {
   loadAllStats()
   loadConversations()
+  loadOperationalHealth()
 })
 
 // 组件卸载时清理图表
@@ -595,6 +797,171 @@ onUnmounted(() => {
   color: var(--wl-text);
 }
 
+.worldline-ops-panel {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.75fr) minmax(420px, 1.25fr) minmax(420px, 1.35fr);
+  gap: 10px;
+  align-items: stretch;
+  margin: 12px 16px 0;
+  padding: 12px;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius);
+  background:
+    linear-gradient(135deg, rgba(var(--wl-cyan-rgb), 0.08), rgba(var(--wl-gold-rgb), 0.035)),
+    rgba(6, 16, 23, 0.92);
+  box-shadow: var(--wl-shadow-soft);
+}
+
+.worldline-ops-head {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 2px;
+
+  div {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  span {
+    color: var(--wl-muted);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  strong {
+    overflow: hidden;
+    color: var(--wl-text);
+    font-size: 16px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.worldline-ops-controls {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) repeat(5, minmax(52px, auto));
+  gap: 6px;
+  align-items: center;
+
+  :deep(.ant-input),
+  :deep(.ant-btn) {
+    min-height: 28px;
+    border-radius: 6px;
+  }
+
+  :deep(.ant-btn) {
+    padding-inline: 8px;
+  }
+}
+
+.worldline-ops-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(76px, 1fr));
+  gap: 8px;
+
+  div {
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid rgba(var(--wl-cyan-rgb), 0.14);
+    border-radius: var(--wl-radius-sm);
+    background: rgba(var(--wl-cyan-rgb), 0.035);
+  }
+
+  span {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--wl-muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    overflow: hidden;
+    color: var(--wl-text);
+    font-size: 14px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.worldline-ops-next {
+  grid-column: 1 / -1;
+  min-height: 20px;
+  margin: 0;
+  padding-top: 2px;
+  overflow: hidden;
+  color: var(--wl-muted);
+  font-size: 12px;
+  line-height: 1.55;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.worldline-drawer-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--wl-text-soft);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  :deep(.ant-input),
+  :deep(.ant-input-affix-wrapper),
+  :deep(.ant-select-selector),
+  :deep(.ant-input-textarea textarea) {
+    border-color: var(--wl-border);
+    background: rgba(var(--wl-cyan-rgb), 0.035);
+    color: var(--wl-text);
+  }
+}
+
+.worldline-action-result {
+  max-height: 220px;
+  margin: 0;
+  padding: 10px;
+  overflow: auto;
+  border: 1px solid var(--wl-border);
+  border-radius: var(--wl-radius-sm);
+  background: rgba(0, 0, 0, 0.24);
+  color: var(--wl-text-soft);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+:global(.worldline-ops-drawer .ant-drawer-content),
+:global(.worldline-ops-drawer .ant-drawer-header),
+:global(.worldline-ops-drawer .ant-drawer-body) {
+  background: #07131d;
+  color: var(--wl-text);
+}
+
+:global(.worldline-ops-drawer .ant-drawer-header) {
+  border-bottom-color: var(--wl-border);
+}
+
+:global(.worldline-ops-drawer .ant-drawer-title),
+:global(.worldline-ops-drawer .ant-drawer-close) {
+  color: var(--wl-text);
+}
+
 // Dashboard 特有的网格布局
 .dashboard-grid {
   display: grid;
@@ -812,6 +1179,14 @@ onUnmounted(() => {
 
 // Dashboard 特有的响应式设计
 @media (max-width: 1200px) {
+  .worldline-ops-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .worldline-ops-controls {
+    grid-template-columns: minmax(180px, 1fr) repeat(5, minmax(56px, auto));
+  }
+
   .dashboard-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: auto auto auto;
@@ -865,6 +1240,34 @@ onUnmounted(() => {
 
   .dashboard-intro {
     padding: 0 0 8px;
+  }
+
+  .worldline-ops-panel {
+    margin: 12px 0 0;
+    padding: 10px;
+    width: min(100%, calc(100vw - 88px));
+    box-sizing: border-box;
+  }
+
+  .worldline-ops-head {
+    align-items: flex-start;
+  }
+
+  .worldline-ops-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    :deep(.ant-input-affix-wrapper),
+    :deep(.ant-input) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .worldline-ops-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .worldline-ops-next {
+    white-space: normal;
   }
 
   .dashboard-grid {
@@ -933,6 +1336,17 @@ onUnmounted(() => {
     .placeholder-subtitle {
       font-size: 12px;
     }
+  }
+}
+
+@media (max-width: 480px) {
+  .worldline-ops-panel {
+    width: 300px;
+    max-width: 300px;
+  }
+
+  .worldline-ops-controls {
+    grid-template-columns: 1fr;
   }
 }
 </style>

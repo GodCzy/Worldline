@@ -47,11 +47,11 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 | Area | Current Status | Work To Complete | Recommended Plugins / Tools |
 |---|---|---|---|
-| Backend task retry/failure evidence | Partial | Operational health report now exposes parsing/indexing/document/workflow/gate failure evidence and retry policy. Still needed: controlled requeue execution and integration tests for actual retries. | GitHub CI, Browser |
-| Source versioning and stale rebuild | Partial | Source changes trigger stale Wiki, graph/timeline rebuild queue, and review state. | Browser, Spreadsheets |
-| Cost/latency budgets | Partial | Operational health report now summarizes latest quality-gate cost/latency and budget violations. Still needed: KB/run/branch budget tracking and dashboard controls. | Spreadsheets, Dashboard QA |
-| Admin observability | Partial | Admin-only `/api/dashboard/worldline/operational-health` now exposes queue health, failed jobs, Redis unavailable state, budgets, and cleanup readiness. Still needed: compact dashboard UI surface and live Browser QA. | Browser, Data Viz |
-| Data cleanup routines | Partial | Temporary files, deleted KBs, MinIO objects, and archived artifact cleanup. | GitHub CI |
+| Backend task retry/failure evidence | Done | Operational health exposes parsing/indexing/document/workflow/gate failures, retry policy, and controlled `requeue` action coverage with audit evidence. Keep real queue-worker replay in routine regression once production workers are attached. | GitHub CI, Browser |
+| Source versioning and stale rebuild | Done | `mark_source_stale` marks source assets and Wiki pages stale, records review metadata, and queues Wiki/graph/quality-gate rebuild workflow evidence. | Browser, Spreadsheets |
+| Cost/latency budgets | Done | KB-scoped operational budgets persist through admin action payloads; health reports expose legacy flat and scoped KB/run/branch/gate observations plus violations; Dashboard shows compact budget pressure. | Spreadsheets, Dashboard QA |
+| Admin observability | Done | Admin-only health and action endpoints are wired into a compact Dashboard P4 panel with refresh, metrics, action drawer, payload editor, and result preview. | Browser, Data Viz |
+| Data cleanup routines | Done | Controlled cleanup covers safe temporary files, deleted-KB readiness, MinIO candidates with explicit delete flag, and archived run artifact pruning through the run ledger. | GitHub CI |
 
 ## P5 Completion Matrix
 
@@ -67,8 +67,8 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P4 operational hardening: add controlled retry execution, cleanup routines, and compact dashboard UI for the new operational health endpoint.
-2. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
+1. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
+2. Keep P4 regression checks in the release path: focused backend tests, production build, dashboard static QA, and docs build.
 3. Keep P3 regression checks in the release path: focused backend tests, production build, and desktop plus `390x844` screenshots for future UI changes.
 
 ## Workflow Rule

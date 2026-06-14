@@ -10,7 +10,7 @@ import traceback
 from datetime import datetime, timedelta
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import Integer, String, cast, distinct, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.routers.auth_router import get_admin_user
 from server.utils.auth_middleware import get_db
 from src.repositories.conversation_repository import ConversationRepository
+from src.services.worldline_operational_action_service import WorldlineOperationalActionService
 from src.services.worldline_operational_health_service import WorldlineOperationalHealthService
 from src.storage.postgres.models_business import User
 from src.utils.datetime_utils import UTC, ensure_shanghai, shanghai_now, utc_now
@@ -654,6 +655,38 @@ async def get_worldline_operational_health(
         logger.error(f"Error getting Worldline operational health: {e}")
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to get Worldline operational health: {str(e)}")
+
+
+@dashboard.post("/worldline/operational-health/actions")
+async def run_worldline_operational_action(
+    payload: dict | None = Body(None),
+    current_user: User = Depends(get_admin_user),
+):
+    """Run controlled Worldline P4 operational actions behind the admin boundary."""
+
+    try:
+        payload = payload or {}
+        db_id = str(payload.get("db_id") or payload.get("dbId") or "").strip()
+        action = str(payload.get("action") or "").strip()
+        if not db_id:
+            raise HTTPException(status_code=400, detail="db_id is required")
+        if not action:
+            raise HTTPException(status_code=400, detail="action is required")
+        action_payload = payload.get("payload") if isinstance(payload.get("payload"), dict) else payload
+        return await WorldlineOperationalActionService().run_action(
+            db_id,
+            action=action,
+            payload=action_payload,
+            actor=current_user.username,
+        )
+    except HTTPException:
+        raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except Exception as e:
+        logger.error(f"Error running Worldline operational action: {e}")
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to run Worldline operational action: {str(e)}")
 
 
 class FeedbackListItem(BaseModel):

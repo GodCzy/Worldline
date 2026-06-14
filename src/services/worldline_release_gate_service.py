@@ -259,6 +259,7 @@ class WorldlineReleaseGateService:
 
     def _operational_readiness_check(self) -> dict[str, Any]:
         service_source = self._read_project_file("src/services/worldline_operational_health_service.py")
+        action_source = self._read_project_file("src/services/worldline_operational_action_service.py")
         router_source = self._read_project_file("server/routers/dashboard_router.py")
         service_fragments = [
             "class WorldlineOperationalHealthService",
@@ -267,22 +268,38 @@ class WorldlineReleaseGateService:
             '"retry_policy"',
             '"budgets"',
             '"cleanup_readiness"',
+            '"operation_controls"',
             "worldline_operational_readiness_contract",
+        ]
+        action_fragments = [
+            "class WorldlineOperationalActionService",
+            "async def requeue_failed",
+            "async def mark_source_stale",
+            "async def update_budgets",
+            "async def cleanup",
+            "worldline.operational_requeue",
+            "worldline.operational_cleanup",
         ]
         router_fragments = [
             '@dashboard.get("/worldline/operational-health")',
             "WorldlineOperationalHealthService().build_report",
+            '@dashboard.post("/worldline/operational-health/actions")',
+            "WorldlineOperationalActionService().run_action",
         ]
         missing_service = [fragment for fragment in service_fragments if fragment not in service_source]
+        missing_action = [fragment for fragment in action_fragments if fragment not in action_source]
         missing_router = [fragment for fragment in router_fragments if fragment not in router_source]
         return {
             "name": "worldline_operational_readiness_contract",
-            "passed": not missing_service and not missing_router,
+            "passed": not missing_service and not missing_action and not missing_router,
             "severity": "required",
             "details": {
                 "service": "WorldlineOperationalHealthService",
                 "admin_endpoint": "/api/dashboard/worldline/operational-health",
+                "action_service": "WorldlineOperationalActionService",
+                "action_endpoint": "/api/dashboard/worldline/operational-health/actions",
                 "missing_service_fragments": missing_service,
+                "missing_action_fragments": missing_action,
                 "missing_router_fragments": missing_router,
             },
         }

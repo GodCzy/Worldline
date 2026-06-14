@@ -136,7 +136,25 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
                 '            "retry_policy": {"release_gate": "worldline_operational_readiness_contract"},',
                 '            "budgets": {},',
                 '            "cleanup_readiness": {},',
+                '            "operation_controls": {},',
                 "        }",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "src/services/worldline_operational_action_service.py",
+        "\n".join(
+            [
+                "class WorldlineOperationalActionService:",
+                "    async def requeue_failed(self):",
+                "        pass",
+                "    async def mark_source_stale(self):",
+                "        pass",
+                "    async def update_budgets(self):",
+                "        pass",
+                "    async def cleanup(self):",
+                "        pass",
+                '    audit_tools = ("worldline.operational_requeue", "worldline.operational_cleanup")',
             ]
         ),
     )
@@ -147,6 +165,9 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
                 '@dashboard.get("/worldline/operational-health")',
                 "async def get_worldline_operational_health():",
                 "    return await WorldlineOperationalHealthService().build_report()",
+                '@dashboard.post("/worldline/operational-health/actions")',
+                "async def run_worldline_operational_action():",
+                "    return await WorldlineOperationalActionService().run_action()",
             ]
         ),
     )

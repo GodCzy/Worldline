@@ -10,6 +10,7 @@ from src.services.run_queue_service import _redacted_redis_url, get_redis_client
 from src.storage.postgres.manager import pg_manager
 from src.storage.postgres.models_knowledge import (
     DocumentVersion,
+    KnowledgeBase,
     KnowledgeFile,
     QualityGateRun,
     SourceAsset,
@@ -29,6 +30,26 @@ DEFAULT_OPERATIONAL_BUDGETS = {
     "quality_gate_estimated_usd": 0.10,
     "failed_file_count": 0,
     "failed_workflow_count": 0,
+}
+
+DEFAULT_OPERATIONAL_BUDGET_SCOPES = {
+    "kb": {
+        "failed_file_count": 0,
+        "failed_workflow_count": 0,
+        "active_workflow_count": 2,
+    },
+    "run": {
+        "total_latency_ms": 600000,
+        "estimated_usd": 1.0,
+    },
+    "branch": {
+        "generation_latency_ms": 15000,
+        "estimated_usd": 0.10,
+    },
+    "gate": {
+        "total_latency_ms": 5000,
+        "estimated_usd": 0.10,
+    },
 }
 
 RedisHealthProvider = Callable[[], Awaitable[dict[str, Any]]]
@@ -60,6 +81,7 @@ class WorldlineOperationalHealthService:
         elif (
             failures["summary"]["total_failed_records"] > 0
             or budget_report["violations"]
+            or budget_report["scopes"]["violations"]
             or queues["workflow_runs"]["active_count"] > 0
         ):
             status = "attention"
@@ -74,6 +96,7 @@ class WorldlineOperationalHealthService:
             "retry_policy": self._retry_policy(),
             "budgets": budget_report,
             "cleanup_readiness": self._cleanup_readiness(snapshot),
+            "operation_controls": self._operation_controls(db_id),
             "next_actions": self._next_actions(status, failures, budget_report),
         }
 
@@ -170,6 +193,11 @@ class WorldlineOperationalHealthService:
                     )
                 )
             ).scalar_one_or_none()
+            kb = None
+            if db_id:
+                kb = (
+                    await session.execute(select(KnowledgeBase).where(KnowledgeBase.db_id == db_id))
+                ).scalar_one_or_none()
 
         return {
             "file_status_counts": self._counts(file_status_rows.all()),
@@ -181,6 +209,7 @@ class WorldlineOperationalHealthService:
             "recent_workflows": [self._serialize_workflow(row) for row in recent_workflows],
             "recent_gates": [self._serialize_gate(row) for row in recent_gates],
             "latest_gate": self._serialize_gate(latest_gate) if latest_gate else None,
+            "knowledge_base": self._serialize_kb(kb) if kb else None,
         }
 
     def _scope(self, stmt, model, db_id: str | None):
@@ -302,6 +331,14 @@ class WorldlineOperationalHealthService:
         }
 
     def _budget_report(self, snapshot: dict[str, Any]) -> dict[str, Any]:
+        scoped_budgets = self._effective_budget_scopes(snapshot)
+        flat_budgets = {
+            **self.budgets,
+            "quality_gate_total_latency_ms": scoped_budgets["gate"]["total_latency_ms"],
+            "quality_gate_estimated_usd": scoped_budgets["gate"]["estimated_usd"],
+            "failed_file_count": scoped_budgets["kb"]["failed_file_count"],
+            "failed_workflow_count": scoped_budgets["kb"]["failed_workflow_count"],
+        }
         latest_gate = snapshot["latest_gate"] or {}
         latency_stats = latest_gate.get("latency_stats") or {}
         cost_stats = latest_gate.get("cost_stats") or {}
@@ -315,26 +352,109 @@ class WorldlineOperationalHealthService:
             "failed_file_count": failed_files,
             "failed_workflow_count": failed_workflows,
         }
+        scoped_observed = {
+            "kb": {
+                "failed_file_count": failed_files,
+                "failed_workflow_count": failed_workflows,
+                "active_workflow_count": self._sum_counts(snapshot["workflow_status_counts"], ACTIVE_RUN_STATUSES),
+            },
+            "run": {
+                "total_latency_ms": 0.0,
+                "estimated_usd": 0.0,
+            },
+            "branch": {
+                "generation_latency_ms": 0.0,
+                "estimated_usd": 0.0,
+            },
+            "gate": {
+                "total_latency_ms": latest_latency,
+                "estimated_usd": latest_cost,
+            },
+        }
         violations = [
-            {"metric": metric, "observed": value, "budget": self.budgets[metric]}
+            {"metric": metric, "observed": value, "budget": flat_budgets[metric]}
             for metric, value in observed.items()
-            if value > float(self.budgets[metric])
+            if value > float(flat_budgets[metric])
         ]
+        scoped_violations = []
+        for scope, metrics in scoped_observed.items():
+            for metric, value in metrics.items():
+                budget = scoped_budgets.get(scope, {}).get(metric)
+                if budget is not None and value > float(budget):
+                    scoped_violations.append(
+                        {
+                            "scope": scope,
+                            "metric": metric,
+                            "observed": value,
+                            "budget": budget,
+                        }
+                    )
         return {
-            "defaults": dict(self.budgets),
+            "defaults": dict(flat_budgets),
             "observed": observed,
             "latest_quality_gate": latest_gate,
             "violations": violations,
+            "scopes": {
+                "defaults": DEFAULT_OPERATIONAL_BUDGET_SCOPES,
+                "effective": scoped_budgets,
+                "observed": scoped_observed,
+                "violations": scoped_violations,
+            },
         }
 
     def _cleanup_readiness(self, snapshot: dict[str, Any]) -> dict[str, Any]:
         return {
-            "temporary_file_cleanup": "tracked_by_knowledge_file_status",
-            "deleted_kb_cleanup": "requires_follow_up_cleanup_routine",
-            "minio_object_cleanup": "requires_follow_up_cleanup_routine",
-            "archived_artifact_cleanup": "requires_follow_up_cleanup_routine",
+            "temporary_file_cleanup": "controlled_routine_available",
+            "deleted_kb_cleanup": "controlled_routine_available",
+            "minio_object_cleanup": "controlled_routine_available",
+            "archived_artifact_cleanup": "controlled_routine_available",
             "blocked_by_active_workflows": snapshot["workflow_status_counts"].get("running", 0) > 0,
+            "action_endpoint": "/api/dashboard/worldline/operational-health/actions",
         }
+
+    def _operation_controls(self, db_id: str | None) -> dict[str, Any]:
+        return {
+            "endpoint": "/api/dashboard/worldline/operational-health/actions",
+            "requires_admin": True,
+            "db_id_required": True,
+            "current_db_id": db_id,
+            "actions": {
+                "requeue": {
+                    "method": "POST",
+                    "stages": sorted(["parsing", "indexing", "wiki_generation", "graph_rebuild", "quality_gate"]),
+                    "dry_run_supported": True,
+                },
+                "mark_source_stale": {
+                    "method": "POST",
+                    "requires": ["asset_id or file_id or source_uri"],
+                    "queues": ["worldline.rebuild_wiki", "worldline.update_graph", "worldline.run_quality_gate"],
+                },
+                "update_budgets": {
+                    "method": "POST",
+                    "scopes": sorted(DEFAULT_OPERATIONAL_BUDGET_SCOPES),
+                },
+                "cleanup": {
+                    "method": "POST",
+                    "targets": ["temporary_files", "deleted_kbs", "minio_objects", "archived_artifacts"],
+                    "dry_run_default": True,
+                },
+            },
+        }
+
+    def _effective_budget_scopes(self, snapshot: dict[str, Any]) -> dict[str, dict[str, float]]:
+        effective = {scope: dict(defaults) for scope, defaults in DEFAULT_OPERATIONAL_BUDGET_SCOPES.items()}
+        kb = snapshot.get("knowledge_base") or {}
+        additional = kb.get("additional_params") if isinstance(kb.get("additional_params"), dict) else {}
+        worldline_ops = additional.get("worldline_operational") if isinstance(additional, dict) else {}
+        configured = worldline_ops.get("budgets") if isinstance(worldline_ops, dict) else {}
+        if not isinstance(configured, dict):
+            configured = {}
+        for scope, defaults in DEFAULT_OPERATIONAL_BUDGET_SCOPES.items():
+            scoped_updates = configured.get(scope) if isinstance(configured.get(scope), dict) else {}
+            for key in defaults:
+                if key in scoped_updates:
+                    effective[scope][key] = max(0.0, float(scoped_updates[key]))
+        return effective
 
     def _next_actions(
         self,
@@ -347,7 +467,7 @@ class WorldlineOperationalHealthService:
             actions.append("restore Redis/ARQ queue availability before dispatching retry jobs")
         if failures["summary"]["total_failed_records"] > 0:
             actions.append("review recent failure evidence and requeue through controlled service APIs")
-        if budget_report["violations"]:
+        if budget_report["violations"] or budget_report.get("scopes", {}).get("violations"):
             actions.append("lower cost/latency or adjust budgets with recorded justification")
         if not actions:
             actions.append("continue monitoring operational health before public demo")
@@ -412,4 +532,14 @@ class WorldlineOperationalHealthService:
             "cost_stats": row.cost_stats or {},
             "latency_stats": row.latency_stats or {},
             "completed_at": self._iso(row.completed_at),
+        }
+
+    def _serialize_kb(self, row: KnowledgeBase | None) -> dict[str, Any]:
+        if row is None:
+            return {}
+        return {
+            "db_id": row.db_id,
+            "name": row.name,
+            "query_params": row.query_params or {},
+            "additional_params": row.additional_params or {},
         }

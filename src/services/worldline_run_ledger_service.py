@@ -476,6 +476,72 @@ class WorldlineRunLedgerService:
 
         return {**run, "latestEvent": event}
 
+    async def cleanup_archived_artifacts(
+        self,
+        *,
+        dry_run: bool = True,
+        prune: bool = False,
+        actor: str = "system",
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        """Prune registered artifacts from archived runs under explicit control."""
+
+        normalized_limit = max(1, min(int(limit or 20), 100))
+        pruned_count = 0
+        async with _LEDGER_LOCK:
+            ledger = await self._load_ledger()
+            archived_runs = [
+                _as_dict(run)
+                for run in _as_dict(ledger.get("runs")).values()
+                if _as_dict(run).get("status") == "archived"
+            ][:normalized_limit]
+            candidates = []
+            for run in archived_runs:
+                run_id = str(run.get("id") or "")
+                artifacts = self._artifacts_for_run(ledger, run_id, run)
+                status = "would_prune" if artifacts else "empty"
+                candidates.append(
+                    {
+                        "run_id": run_id,
+                        "artifact_count": len(artifacts),
+                        "status": status,
+                    }
+                )
+                if dry_run or not prune or not artifacts:
+                    continue
+                now = _now_iso()
+                ledger.setdefault("artifacts", {})[run_id] = []
+                run["artifacts"] = []
+                run["updatedAt"] = now
+                run["maintenance"] = {
+                    **_as_dict(run.get("maintenance")),
+                    "artifactCleanup": {
+                        "prunedAt": now,
+                        "prunedBy": actor,
+                        "previousArtifactCount": len(artifacts),
+                    },
+                }
+                event = self._event(
+                    run_id,
+                    event_type="artifact.cleanup",
+                    actor=actor,
+                    summary={"previousArtifactCount": len(artifacts), "status": "pruned"},
+                )
+                ledger["runs"][run_id] = run
+                ledger["events"].setdefault(run_id, []).append(event)
+                pruned_count += 1
+            if not dry_run and prune:
+                await self._save_ledger(ledger)
+
+        return {
+            "storage": {"type": "worldline_run_ledger"},
+            "dry_run": dry_run,
+            "prune": prune,
+            "candidates": candidates,
+            "candidate_count": len(candidates),
+            "pruned_count": pruned_count,
+        }
+
     async def _update_branch_status(
         self,
         run_id: str,
