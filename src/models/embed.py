@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import re
 from abc import ABC, abstractmethod
 
 import httpx
@@ -8,6 +9,17 @@ import requests
 
 from src import config
 from src.utils import get_docker_safe_url, hashstr, logger
+
+
+_ENV_VAR_NAME_PATTERN = re.compile(r"^[A-Z_][A-Z0-9_]*$")
+_PLACEHOLDER_API_KEYS = {
+    "replace-with-api-key",
+    "replace-with-siliconflow-api-key",
+    "your-api-key",
+    "your_api_key",
+    "sk-xxx",
+    "sk-your-api-key",
+}
 
 
 class BaseEmbeddingModel(ABC):
@@ -36,9 +48,52 @@ class BaseEmbeddingModel(ABC):
         self.model = model or name
         self.dimension = dimension
         self.base_url = get_docker_safe_url(base_url)
-        self.api_key = os.getenv(api_key, api_key)
+        self.api_key_source = api_key
+        env_api_key = os.getenv(api_key) if api_key else None
+        self.api_key_loaded_from_env = env_api_key is not None
+        self.api_key = (env_api_key if env_api_key is not None else api_key or "").strip()
         self.batch_size = int(batch_size or 40)
         self.embed_state = {}
+
+    def validate_configuration(self) -> None:
+        """Validate provider-specific settings before sending requests."""
+        return None
+
+    def _api_key_error(self) -> str | None:
+        if self.api_key == "no_api_key":
+            return None
+
+        source = self.api_key_source or "api_key"
+        source_name = source if _ENV_VAR_NAME_PATTERN.match(source) else "api_key"
+        if not self.api_key:
+            return f"Embedding model `{self.model}` is missing `{source_name}`. Please set a valid API key."
+
+        if self.api_key.startswith("#"):
+            return (
+                f"Embedding model `{self.model}` has an invalid `{source_name}`: it looks like an inline comment. "
+                f"Put comments on separate lines and set `{source_name}` to a real API key."
+            )
+
+        if self.api_key.lower() in _PLACEHOLDER_API_KEYS:
+            return f"Embedding model `{self.model}` is using a placeholder `{source_name}`. Please set a real API key."
+
+        if (
+            source
+            and _ENV_VAR_NAME_PATTERN.match(source)
+            and not self.api_key_loaded_from_env
+            and self.api_key == source
+        ):
+            return f"Embedding model `{self.model}` is missing `{source}`. Please set a valid API key."
+
+        try:
+            self.api_key.encode("ascii")
+        except UnicodeEncodeError:
+            return (
+                f"Embedding model `{self.model}` has an invalid `{source_name}`: HTTP Authorization headers only "
+                "support ASCII. Check the .env file and keep Chinese comments outside the value."
+            )
+
+        return None
 
     @abstractmethod
     def encode(self, message: list[str] | str) -> list[list[float]]:
@@ -183,7 +238,19 @@ class OllamaEmbedding(BaseEmbeddingModel):
 class OtherEmbedding(BaseEmbeddingModel):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
+        self.headers = {"Content-Type": "application/json"}
+
+    def validate_configuration(self) -> None:
+        error = self._api_key_error()
+        if error:
+            raise ValueError(error)
+
+    def build_headers(self) -> dict:
+        self.validate_configuration()
+        headers = dict(self.headers)
+        if self.api_key and self.api_key != "no_api_key":
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
 
     def build_payload(self, message: list[str] | str) -> dict:
         return {"model": self.model, "input": message}
@@ -191,7 +258,7 @@ class OtherEmbedding(BaseEmbeddingModel):
     def encode(self, message: list[str] | str) -> list[list[float]]:
         payload = self.build_payload(message)
         try:
-            response = requests.post(self.base_url, json=payload, headers=self.headers, timeout=60)
+            response = requests.post(self.base_url, json=payload, headers=self.build_headers(), timeout=60)
             response.raise_for_status()
             result = response.json()
             if not isinstance(result, dict) or "data" not in result:
@@ -205,7 +272,7 @@ class OtherEmbedding(BaseEmbeddingModel):
         payload = self.build_payload(message)
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(self.base_url, json=payload, headers=self.headers, timeout=60)
+                response = await client.post(self.base_url, json=payload, headers=self.build_headers(), timeout=60)
                 response.raise_for_status()
                 result = response.json()
                 if not isinstance(result, dict) or "data" not in result:
