@@ -12,6 +12,7 @@
 
         <div class="header-actions">
           <router-link class="ghost-link" to="/">首页</router-link>
+          <router-link class="ghost-link" to="/worldline/share/demo-branch-evidence">Public Demo</router-link>
           <router-link class="ghost-link" to="/worldline/agent">Agent</router-link>
           <router-link class="ghost-link" to="/themes">模块</router-link>
           <a v-if="docsUrl" class="ghost-link" :href="docsUrl" target="_blank" rel="noopener noreferrer">文档</a>

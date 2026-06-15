@@ -35,6 +35,7 @@ ROUTER_GROUPS: Final[tuple[tuple[str, tuple[RouterSpec, ...]], ...]] = (
             ("server.routers.skill_router", "skills"),
             ("server.routers.tool_router", "tools"),
             ("server.routers.worldline_run_router", "worldline_runs"),
+            ("server.routers.worldline_public_demo_router", "worldline_public_demo"),
         ),
     ),
 )

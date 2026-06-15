@@ -76,6 +76,35 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
 
     for task_dir in WorldlineReleaseGateService.REQUIRED_TASK_DIRS:
         _touch(tmp_path / task_dir / "EVIDENCE.md")
+    _touch(tmp_path / ".ai/tasks/2026-06-15-p5-public-demo-share-export/ALIGNMENT.md")
+    _touch(tmp_path / ".ai/tasks/2026-06-15-p5-public-demo-share-export/DESIGN.md")
+
+    _touch(
+        tmp_path / "docs/product/public-demo.md",
+        "\n".join(
+            [
+                "# P5 Public Demo",
+                "/worldline/share/demo-branch-evidence",
+                "JSON evidence bundle",
+                "Markdown evidence bundle",
+                "## Rollback",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "docs/product/worldline-completion-matrix.md",
+        "\n".join(
+            [
+                "| Area | Current Status | Work To Complete | Recommended Plugins / Tools |",
+                "|---|---|---|---|",
+                "| Public demo dataset | Done | Safe dataset, reproducible screenshots, no secrets. | Browser |",
+                "| Read-only shared branch views | Done | Read-only Worldline branch share view. | Browser |",
+                "| Evidence bundle export | Done | Exportable evidence/replay capsule. | Documents |",
+                "| GitHub PR/issue integration | External | Requires user authorization. | GitHub |",
+                "| Optional ingestion tools | External | Requires source and secret review. | MCP governance |",
+            ]
+        ),
+    )
 
     _touch(
         tmp_path / "src/services/mcp_service.py",
@@ -171,6 +200,73 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
             ]
         ),
     )
+    _touch(
+        tmp_path / "src/services/worldline_public_demo_service.py",
+        "\n".join(
+            [
+                "PUBLIC_DEMO_DATASET = {}",
+                "class WorldlinePublicDemoService:",
+                "    def get_branch_share(self):",
+                "        return {'readOnly': True}",
+                "    def build_evidence_bundle(self):",
+                "        return {}",
+                "    def build_bundle_markdown(self):",
+                "        return ''",
+                "    def safety_report(self):",
+                "        return {'status': 'passed'}",
+                '    read_only_flag = {"readOnly": True}',
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "server/routers/worldline_public_demo_router.py",
+        "\n".join(
+            [
+                '@worldline_public_demo.get("/dataset")',
+                "async def dataset():",
+                "    pass",
+                '@worldline_public_demo.get("/branches/{share_id}")',
+                "async def branch():",
+                "    pass",
+                '@worldline_public_demo.get("/evidence-bundle")',
+                "async def bundle():",
+                "    return PlainTextResponse('bundle')",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "server/utils/auth_middleware.py",
+        'PUBLIC_PATHS = [r"^/api/worldline/public-demo(?:/.*)?$"]',
+    )
+    _touch(
+        tmp_path / "web/src/apis/worldline_api.js",
+        "\n".join(
+            [
+                "export const worldlinePublicDemoApi = {",
+                "  getDataset: () => apiGet('/api/worldline/public-demo/dataset', {}, false),",
+                "}",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "web/src/router/index.js",
+        "\n".join(
+            [
+                "path: 'share/:shareId',",
+                "component: () => import('../views/worldline/WorldlinePublicShareView.vue'),",
+            ]
+        ),
+    )
+    _touch(
+        tmp_path / "web/src/views/worldline/WorldlinePublicShareView.vue",
+        "\n".join(
+            [
+                '<div data-worldline-public-share="true">',
+                '<button data-evidence-bundle-export="true">Markdown</button>',
+                "</div>",
+            ]
+        ),
+    )
 
     skills_root = tmp_path / "codex-skills"
     for skill_name in WorldlineReleaseGateService.REQUIRED_SKILLS:
@@ -194,6 +290,29 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
         json.dumps({"report": report_items, "failures": []}),
         encoding="utf-8",
     )
+    p5_screenshots_dir = tmp_path / ".ai/tasks/2026-06-15-p5-public-demo-share-export/screenshots"
+    p5_screenshots_dir.mkdir(parents=True, exist_ok=True)
+    p5_checks = []
+    for label, viewport in (("desktop", "1440x900"), ("mobile", "390x844")):
+        screenshot = p5_screenshots_dir / f"p5-public-demo-{label}.png"
+        screenshot.write_bytes(b"\x89PNG\r\n\x1a\n")
+        p5_checks.append(
+            {
+                "label": label,
+                "viewport": viewport,
+                "screenshot": str(screenshot),
+                "metrics": {
+                    "sharePresent": True,
+                    "bundleExportPresent": True,
+                    "overflowX": 0,
+                    "clipped": [],
+                },
+            }
+        )
+    (tmp_path / WorldlineReleaseGateService.PUBLIC_DEMO_QA_REPORT).write_text(
+        json.dumps({"status": "passed", "checks": p5_checks, "failures": []}),
+        encoding="utf-8",
+    )
 
     service = WorldlineReleaseGateService(project_root=tmp_path, codex_skills_root=skills_root)
     report = service.run_static_gate()
@@ -210,5 +329,8 @@ def test_phase7_static_release_gate_passes_with_complete_fixture(tmp_path: Path)
         "connector_rollback_policy",
         "worldline_manifest_contract",
         "worldline_operational_readiness_contract",
+        "worldline_public_demo_readiness_contract",
+        "worldline_public_demo_secret_hygiene",
+        "worldline_public_demo_screenshot_report",
         "worldline_ui_screenshot_report",
     } <= check_names

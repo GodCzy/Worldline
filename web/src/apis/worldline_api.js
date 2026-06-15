@@ -1,4 +1,4 @@
-import { apiAdminGet, apiAdminPost } from './base'
+import { apiAdminGet, apiAdminPost, apiGet } from './base'
 
 const encodeSegment = (value = '') => encodeURIComponent(String(value || '').trim())
 
@@ -154,4 +154,19 @@ export const worldlineRunApi = {
     ),
 
   proposeSkill: (runId, payload = {}) => apiAdminPost(`/api/worldline/runs/${encodeSegment(runId)}/skills/propose`, payload)
+}
+
+export const worldlinePublicDemoApi = {
+  getDataset: () => apiGet('/api/worldline/public-demo/dataset', {}, false),
+
+  getBranchShare: (shareId) =>
+    apiGet(`/api/worldline/public-demo/branches/${encodeSegment(shareId)}`, {}, false),
+
+  exportEvidenceBundle: ({ shareId = 'demo-branch-evidence', format = 'json' } = {}) =>
+    apiGet(
+      `/api/worldline/public-demo/evidence-bundle${queryString({ share_id: shareId, format })}`,
+      {},
+      false,
+      format === 'markdown' ? 'text' : 'json'
+    )
 }

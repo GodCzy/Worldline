@@ -116,6 +116,20 @@ const router = createRouter({
           }
         },
         {
+          path: 'share/:shareId',
+          name: 'WorldlinePublicShare',
+          component: () => import('../views/worldline/WorldlinePublicShareView.vue'),
+          meta: {
+            keepAlive: false,
+            requiresAuth: false,
+            themeContext: {
+              scene: 'public_share',
+              version: 'worldline-public-demo-v0.1',
+              entry: 'worldline-public-share'
+            }
+          }
+        },
+        {
           path: ':themeId',
           name: 'WorldlineWorkbench',
           component: () => import('../views/worldline/WorldlineWorkbenchView.vue'),

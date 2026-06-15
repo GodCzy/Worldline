@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import datetime as dt
+import re
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +24,7 @@ class WorldlineReleaseGateService:
         "docs/architecture/mcp-skill-governance.md",
         "docs/architecture/operational-hardening.md",
         "docs/architecture/evaluation-gates.md",
+        "docs/product/worldline-completion-matrix.md",
     )
     REQUIRED_TASK_DIRS = (
         ".ai/tasks/2026-06-03-worldline-reset",
@@ -31,6 +33,7 @@ class WorldlineReleaseGateService:
         ".ai/tasks/2026-06-03-phase3-4-wiki-graph",
         ".ai/tasks/2026-06-03-home-theme-auth-fix",
         ".ai/tasks/2026-06-03-phase6-7-governance-release",
+        ".ai/tasks/2026-06-15-p5-public-demo-share-export",
     )
     REQUIRED_SKILLS = (
         "worldline-orient",
@@ -42,6 +45,28 @@ class WorldlineReleaseGateService:
     )
     REQUIRED_SCREENSHOT_PAGES = {"home", "themes", "worldline-hub", "agent-login-redirect", "authenticated-sidebar"}
     REQUIRED_SCREENSHOT_VIEWPORTS = {"1920x1080", "1440x900", "390x844"}
+    PUBLIC_DEMO_QA_REPORT = ".ai/tasks/2026-06-15-p5-public-demo-share-export/p5-public-demo-qa-report.json"
+    PUBLIC_DEMO_SECRET_SCAN_PATHS = (
+        "docs/product/public-demo.md",
+        "docs/product/worldline-completion-matrix.md",
+        "src/services/worldline_public_demo_service.py",
+        "server/routers/worldline_public_demo_router.py",
+        "server/utils/auth_middleware.py",
+        "web/src/apis/worldline_api.js",
+        "web/src/router/index.js",
+        "web/src/views/worldline/WorldlinePublicShareView.vue",
+        ".ai/tasks/2026-06-15-p5-public-demo-share-export/ALIGNMENT.md",
+        ".ai/tasks/2026-06-15-p5-public-demo-share-export/DESIGN.md",
+        ".ai/tasks/2026-06-15-p5-public-demo-share-export/EVIDENCE.md",
+    )
+    PUBLIC_DEMO_SECRET_PATTERNS = (
+        re.compile(r"sk-[A-Za-z0-9_\-]{20,}"),
+        re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}"),
+        re.compile(r"AKIA[0-9A-Z]{16}"),
+        re.compile(r"(?i)\b(password|passwd|secret)\s*[:=]\s*[^\s,;]{6,}"),
+        re.compile(r"(?i)\btoken\s*[:=]\s*[A-Za-z0-9_\-\.]{12,}"),
+        re.compile(r"(?i)\b(api[_-]?key)\s*[:=]\s*[A-Za-z0-9_\-\.]{12,}"),
+    )
 
     def __init__(
         self,
@@ -60,6 +85,9 @@ class WorldlineReleaseGateService:
         checks.extend(self._mcp_checks())
         checks.extend(self._manifest_checks())
         checks.append(self._operational_readiness_check())
+        checks.append(self._public_demo_readiness_check())
+        checks.append(self._public_demo_secret_hygiene_check())
+        checks.append(self._public_demo_screenshot_check())
         checks.append(self._screenshot_check())
 
         failed = [check for check in checks if not check["passed"]]
@@ -304,6 +332,156 @@ class WorldlineReleaseGateService:
             },
         }
 
+    def _public_demo_readiness_check(self) -> dict[str, Any]:
+        service_source = self._read_project_file("src/services/worldline_public_demo_service.py")
+        router_source = self._read_project_file("server/routers/worldline_public_demo_router.py")
+        auth_source = self._read_project_file("server/utils/auth_middleware.py")
+        api_source = self._read_project_file("web/src/apis/worldline_api.js")
+        web_router_source = self._read_project_file("web/src/router/index.js")
+        share_view_source = self._read_project_file("web/src/views/worldline/WorldlinePublicShareView.vue")
+        docs_source = self._read_project_file("docs/product/public-demo.md")
+        matrix_source = self._read_project_file("docs/product/worldline-completion-matrix.md")
+
+        service_fragments = [
+            "class WorldlinePublicDemoService",
+            "PUBLIC_DEMO_DATASET",
+            "def get_branch_share",
+            "def build_evidence_bundle",
+            "def build_bundle_markdown",
+            "def safety_report",
+            '"readOnly": True',
+        ]
+        router_fragments = [
+            '@worldline_public_demo.get("/dataset")',
+            '@worldline_public_demo.get("/branches/{share_id}")',
+            '@worldline_public_demo.get("/evidence-bundle")',
+            "PlainTextResponse",
+        ]
+        public_boundary_fragments = [
+            r"^/api/worldline/public-demo(?:/.*)?$",
+            "worldlinePublicDemoApi",
+            "apiGet('/api/worldline/public-demo/dataset', {}, false)",
+            "path: 'share/:shareId'",
+            "WorldlinePublicShareView",
+            'data-worldline-public-share="true"',
+            'data-evidence-bundle-export="true"',
+        ]
+        docs_fragments = [
+            "P5 Public Demo",
+            "/worldline/share/demo-branch-evidence",
+            "Rollback",
+            "JSON evidence bundle",
+            "Markdown evidence bundle",
+        ]
+        matrix_fragments = [
+            "| Public demo dataset | Done |",
+            "| Read-only shared branch views | Done |",
+            "| Evidence bundle export | Done |",
+            "| GitHub PR/issue integration | External |",
+            "| Optional ingestion tools | External |",
+        ]
+
+        missing = {
+            "service": [item for item in service_fragments if item not in service_source],
+            "router": [item for item in router_fragments if item not in router_source],
+            "public_boundary": [
+                item
+                for item in public_boundary_fragments
+                if item not in f"{auth_source}\n{api_source}\n{web_router_source}\n{share_view_source}"
+            ],
+            "docs": [item for item in docs_fragments if item not in docs_source],
+            "matrix": [item for item in matrix_fragments if item not in matrix_source],
+        }
+        passed = not any(missing.values())
+        return {
+            "name": "worldline_public_demo_readiness_contract",
+            "passed": passed,
+            "severity": "required",
+            "details": {
+                "dataset_endpoint": "/api/worldline/public-demo/dataset",
+                "share_route": "/worldline/share/demo-branch-evidence",
+                "bundle_endpoint": "/api/worldline/public-demo/evidence-bundle",
+                "external_rows_remain_gated": ["GitHub PR/issue integration", "Optional ingestion tools"],
+                "missing_fragments": missing,
+            },
+        }
+
+    def _public_demo_secret_hygiene_check(self) -> dict[str, Any]:
+        findings: list[dict[str, Any]] = []
+        missing_files = []
+        scanned_files = []
+        for relative_path in self.PUBLIC_DEMO_SECRET_SCAN_PATHS:
+            path = self.project_root / relative_path
+            if not path.is_file():
+                missing_files.append(relative_path)
+                continue
+            scanned_files.append(relative_path)
+            text = path.read_text(encoding="utf-8")
+            for pattern in self.PUBLIC_DEMO_SECRET_PATTERNS:
+                for match in pattern.finditer(text):
+                    findings.append(
+                        {
+                            "path": relative_path,
+                            "pattern": pattern.pattern,
+                            "sample": self._redact_secret_like_value(match.group(0)),
+                        }
+                    )
+        return {
+            "name": "worldline_public_demo_secret_hygiene",
+            "passed": not findings and not missing_files,
+            "severity": "required",
+            "details": {
+                "scanned_files": scanned_files,
+                "missing_files": missing_files,
+                "finding_count": len(findings),
+                "findings": findings[:20],
+            },
+        }
+
+    def _public_demo_screenshot_check(self) -> dict[str, Any]:
+        report_path = self.project_root / self.PUBLIC_DEMO_QA_REPORT
+        if not report_path.is_file():
+            return {
+                "name": "worldline_public_demo_screenshot_report",
+                "passed": False,
+                "severity": "required",
+                "details": {"missing": str(report_path)},
+            }
+
+        try:
+            payload = json.loads(report_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            return {
+                "name": "worldline_public_demo_screenshot_report",
+                "passed": False,
+                "severity": "required",
+                "details": {"error": str(exc), "path": str(report_path)},
+            }
+
+        checks = payload.get("checks") or []
+        labels = {item.get("label") for item in checks}
+        missing_labels = sorted({"desktop", "mobile"} - labels)
+        missing_files = [
+            item.get("screenshot")
+            for item in checks
+            if item.get("screenshot") and not self._screenshot_path_exists(str(item["screenshot"]))
+        ]
+        failures = payload.get("failures") or []
+        passed = payload.get("status") == "passed" and not failures and not missing_labels and not missing_files
+        return {
+            "name": "worldline_public_demo_screenshot_report",
+            "passed": passed,
+            "severity": "required",
+            "details": {
+                "path": str(report_path),
+                "status": payload.get("status"),
+                "check_count": len(checks),
+                "missing_labels": missing_labels,
+                "missing_files": missing_files,
+                "failure_count": len(failures),
+            },
+        }
+
     def _screenshot_check(self) -> dict[str, Any]:
         report_path = (
             self.project_root
@@ -367,6 +545,12 @@ class WorldlineReleaseGateService:
         if not path.is_file():
             return ""
         return path.read_text(encoding="utf-8")
+
+    @staticmethod
+    def _redact_secret_like_value(value: str) -> str:
+        if len(value) <= 8:
+            return "***"
+        return f"{value[:4]}...{value[-4:]}"
 
     @staticmethod
     def _default_project_root() -> Path:

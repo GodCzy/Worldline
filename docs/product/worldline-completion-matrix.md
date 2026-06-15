@@ -1,6 +1,6 @@
 # Worldline Completion Matrix
 
-Updated: 2026-06-14
+Updated: 2026-06-15
 
 This matrix breaks "finish all Worldline work" into verifiable slices. The current source of truth is `D:\dev\Worldline`, current `.ai/tasks` evidence, OutputMD summaries, and runnable validation results. `D:\document\Worldline` is only a pointer.
 
@@ -57,19 +57,20 @@ This matrix breaks "finish all Worldline work" into verifiable slices. The curre
 
 | Area | Current Status | Work To Complete | Recommended Plugins / Tools |
 |---|---|---|---|
-| Public demo dataset | Partial | Safe dataset, reproducible screenshots, no secrets. | Browser, Documents |
-| Read-only shared branch views | Not Started | Read-only Worldline branch share view. | Browser, Product Design |
-| Evidence bundle export | Not Started | Exportable evidence/replay capsule. | Documents, Spreadsheets |
-| GitHub PR/issue integration | External | Requires user authorization before remote project management integration. | GitHub |
-| Optional ingestion tools | External | Firecrawl/Tavily-style tools require source, permission, and secret evaluation. | MCP governance |
+| Public demo dataset | Done | Safe deterministic dataset is served by `WorldlinePublicDemoService`; P5 QA covers reproducible screenshots and no-secret scan. | Browser, Documents |
+| Read-only shared branch views | Done | `/worldline/share/demo-branch-evidence` renders a read-only Worldline branch share view backed by public demo API. | Browser, Product Design |
+| Evidence bundle export | Done | JSON and Markdown evidence/replay capsules export branch, evidence, Wiki, graph, timeline, gate, replay, rollback, and checksum sections. | Documents, Spreadsheets |
+| GitHub PR/issue integration | External | Requires Joy authorization before remote project management integration; connector scope and rollback remain gated. | GitHub |
+| Optional ingestion tools | External | Firecrawl/Tavily-style tools require source, permission, and secret evaluation before enablement. | MCP governance |
 
 ## Next Concrete Work
 
 Do not repeat "new KB compact creation"; it is already done. Continue in this order:
 
-1. P5 demo/share/export: safe public dataset, read-only branch view, evidence bundle export.
-2. Keep P4 regression checks in the release path: focused backend tests, production build, dashboard static QA, and docs build.
-3. Keep P3 regression checks in the release path: focused backend tests, production build, and desktop plus `390x844` screenshots for future UI changes.
+1. Treat local P5 demo/share/export as complete; only external connector authorization remains outside repo control.
+2. Keep P5 release checks in the release path: public-demo focused tests, production build, share-route static QA, docs build, and release gate.
+3. Keep P4 regression checks in the release path: focused backend tests, production build, dashboard static QA, and docs build.
+4. Keep P3 regression checks in the release path: focused backend tests, production build, and desktop plus `390x844` screenshots for future UI changes.
 
 ## Workflow Rule
 

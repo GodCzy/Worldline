@@ -1,0 +1,36 @@
+{
+  "status": "passed",
+  "server": "http://127.0.0.1:5195",
+  "screenshots": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-15-p5-public-demo-share-export/screenshots",
+  "checks": [
+    {
+      "label": "desktop",
+      "viewport": "1440x900",
+      "url": "http://127.0.0.1:5195/qa-seed",
+      "metrics": {
+        "path": "/worldline/share/demo-branch-evidence",
+        "sharePresent": true,
+        "datasetPresent": true,
+        "bundleExportPresent": true,
+        "overflowX": 0,
+        "clipped": []
+      },
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-15-p5-public-demo-share-export/screenshots/p5-public-demo-desktop.png"
+    },
+    {
+      "label": "mobile",
+      "viewport": "390x844",
+      "url": "http://127.0.0.1:5195/qa-seed",
+      "metrics": {
+        "path": "/worldline/share/demo-branch-evidence",
+        "sharePresent": true,
+        "datasetPresent": true,
+        "bundleExportPresent": true,
+        "overflowX": 0,
+        "clipped": []
+      },
+      "screenshot": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-15-p5-public-demo-share-export/screenshots/p5-public-demo-mobile.png"
+    }
+  ],
+  "failures": []
+}

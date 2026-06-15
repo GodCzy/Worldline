@@ -1,0 +1,221 @@
+{
+  "status": "passed",
+  "phase": "phase6_7_release",
+  "project_root": "/mnt/d/dev/Worldline",
+  "codex_skills_root": "/mnt/c/Users/Joy/.codex/skills",
+  "generated_at": "2026-06-15T01:44:52.942300",
+  "summary": {
+    "check_count": 12,
+    "passed_count": 12,
+    "failed_count": 0
+  },
+  "checks": [
+    {
+      "name": "required_docs_present",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "required": [
+          "README.md",
+          "AGENTS.md",
+          "docs/index.md",
+          "docs/product/worldline-project-book.md",
+          "docs/product/public-demo.md",
+          "docs/architecture/knowledge-compiler.md",
+          "docs/architecture/llm-wiki.md",
+          "docs/architecture/temporal-evidence-graph.md",
+          "docs/architecture/worldline-ui.md",
+          "docs/architecture/mcp-skill-governance.md",
+          "docs/architecture/operational-hardening.md",
+          "docs/architecture/evaluation-gates.md",
+          "docs/product/worldline-completion-matrix.md"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "phase_task_dirs_present",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "required": [
+          ".ai/tasks/2026-06-03-worldline-reset",
+          ".ai/tasks/2026-06-03-worldline-frontier-stack",
+          ".ai/tasks/2026-06-03-knowledge-compiler-v1",
+          ".ai/tasks/2026-06-03-phase3-4-wiki-graph",
+          ".ai/tasks/2026-06-03-home-theme-auth-fix",
+          ".ai/tasks/2026-06-03-phase6-7-governance-release",
+          ".ai/tasks/2026-06-15-p5-public-demo-share-export"
+        ],
+        "missing": [],
+        "evidence_missing": []
+      }
+    },
+    {
+      "name": "codex_worldline_skills_installed",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "required": [
+          "worldline-orient",
+          "worldline-knowledge-pipeline",
+          "worldline-backend-contract",
+          "worldline-frontend-workbench",
+          "worldline-mcp-governance",
+          "worldline-eval-release"
+        ],
+        "missing": []
+      }
+    },
+    {
+      "name": "mcp_default_governance",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "policy": {
+          "default_enabled_allowlist": [
+            "worldline"
+          ],
+          "conditional_servers": [
+            "mcp-server-chart",
+            "sequentialthinking"
+          ],
+          "external_agent_write_boundary": "worldline_service_boundary",
+          "external_codex_tools": [
+            "GitHub",
+            "Browser/Playwright"
+          ]
+        },
+        "missing_source_fragments": []
+      }
+    },
+    {
+      "name": "mcp_disabled_tool_policy",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "policy": {
+          "task_required_enablement_requires_review": true,
+          "conditional_servers_disabled_by_default": [
+            "mcp-server-chart",
+            "sequentialthinking"
+          ]
+        },
+        "missing_source_fragments": []
+      }
+    },
+    {
+      "name": "connector_rollback_policy",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "required": [
+          "connector_policy",
+          "rollback_checklist",
+          "remove_secrets",
+          "revoke_remote_authorization"
+        ],
+        "missing_source_fragments": []
+      }
+    },
+    {
+      "name": "worldline_manifest_contract",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "server": {
+          "name": "worldline"
+        },
+        "tool_count": 15,
+        "write_tool_count": 4,
+        "subagent_lane_count": 4,
+        "failures": []
+      }
+    },
+    {
+      "name": "worldline_operational_readiness_contract",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "service": "WorldlineOperationalHealthService",
+        "admin_endpoint": "/api/dashboard/worldline/operational-health",
+        "action_service": "WorldlineOperationalActionService",
+        "action_endpoint": "/api/dashboard/worldline/operational-health/actions",
+        "missing_service_fragments": [],
+        "missing_action_fragments": [],
+        "missing_router_fragments": []
+      }
+    },
+    {
+      "name": "worldline_public_demo_readiness_contract",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "dataset_endpoint": "/api/worldline/public-demo/dataset",
+        "share_route": "/worldline/share/demo-branch-evidence",
+        "bundle_endpoint": "/api/worldline/public-demo/evidence-bundle",
+        "external_rows_remain_gated": [
+          "GitHub PR/issue integration",
+          "Optional ingestion tools"
+        ],
+        "missing_fragments": {
+          "service": [],
+          "router": [],
+          "public_boundary": [],
+          "docs": [],
+          "matrix": []
+        }
+      }
+    },
+    {
+      "name": "worldline_public_demo_secret_hygiene",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "scanned_files": [
+          "docs/product/public-demo.md",
+          "docs/product/worldline-completion-matrix.md",
+          "src/services/worldline_public_demo_service.py",
+          "server/routers/worldline_public_demo_router.py",
+          "server/utils/auth_middleware.py",
+          "web/src/apis/worldline_api.js",
+          "web/src/router/index.js",
+          "web/src/views/worldline/WorldlinePublicShareView.vue",
+          ".ai/tasks/2026-06-15-p5-public-demo-share-export/ALIGNMENT.md",
+          ".ai/tasks/2026-06-15-p5-public-demo-share-export/DESIGN.md",
+          ".ai/tasks/2026-06-15-p5-public-demo-share-export/EVIDENCE.md"
+        ],
+        "missing_files": [],
+        "finding_count": 0,
+        "findings": []
+      }
+    },
+    {
+      "name": "worldline_public_demo_screenshot_report",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "path": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-15-p5-public-demo-share-export/p5-public-demo-qa-report.json",
+        "status": "passed",
+        "check_count": 2,
+        "missing_labels": [],
+        "missing_files": [],
+        "failure_count": 0
+      }
+    },
+    {
+      "name": "worldline_ui_screenshot_report",
+      "passed": true,
+      "severity": "required",
+      "details": {
+        "path": "/mnt/d/dev/Worldline/.ai/tasks/2026-06-03-home-theme-auth-fix/screenshots/ui-screenshot-report.json",
+        "screenshot_count": 15,
+        "failure_count": 0,
+        "missing_pages": [],
+        "missing_viewports": [],
+        "missing_files": []
+      }
+    }
+  ],
+  "next_step": "ready_for_phase6_7_demo"
+}
